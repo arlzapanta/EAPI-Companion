@@ -1,14 +1,14 @@
 // Login.tsx
 import React, { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, Alert } from 'react-native';
-import { useAuth, getstyleUtil } from '../index';
+import { useAuth, getStyleUtil } from '../index';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { onLogin } = useAuth();
 
-  const dynamicStyles = getstyleUtil({
+  const dynamicStyles = getStyleUtil({
   });
 
   const handleLogin = async () => {

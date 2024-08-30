@@ -1,7 +1,9 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { API_URL_ENV, TOKEN_USERNAME_ENV, TOKEN_PASSWORD_ENV } from '@env';
 import axios from 'axios';
+import { View } from 'react-native';
+import { Text } from 'react-native-elements';
 
 interface AuthProps {
     authState: { token: string | null; authenticated: boolean };
@@ -15,9 +17,7 @@ const AuthContext = createContext<AuthProps>({
     onLogout: async () => {},
 });
 
-// variables
 const TOKEN_KEY = 'my-jwt';
-let token = '';
 
 export const useAuth = () => {
     return useContext(AuthContext);
@@ -28,19 +28,64 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         token: null,
         authenticated: false,
     });
+    const [loading, setLoading] = useState(true); // To handle loading state
+
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const token = await SecureStore.getItemAsync(TOKEN_KEY);
+                if (token) {
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                    const response = await axios.get(`${API_URL_ENV}/user/validate`, { 
+                        headers: {
+                            "Content-Type": "application/json",
+                        }
+                    });
+
+                    if (response.data.isValid) {
+                        setAuthState({
+                            token,
+                            authenticated: true,
+                        });
+                    } else {
+                        await SecureStore.deleteItemAsync(TOKEN_KEY);
+                        setAuthState({
+                            token: null,
+                            authenticated: false,
+                        });
+                    }
+                } else {
+                    setAuthState({
+                        token: null,
+                        authenticated: false,
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking authentication:', error);
+                setAuthState({
+                    token: null,
+                    authenticated: false,
+                });
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        checkAuth();
+    }, []);
 
     const login = async (email: string, password: string) => {
         try {
             const getTokenResponse = await axios.post(`${API_URL_ENV}/login`, {
                 username: TOKEN_USERNAME_ENV,
-                password: TOKEN_PASSWORD_ENV
+                password: TOKEN_PASSWORD_ENV,
             }, {
                 headers: {
                     "Content-Type": "application/json",
                 }
             });
 
-            token = getTokenResponse.data.token;
+            const token = getTokenResponse.data.token;
             await SecureStore.setItemAsync(TOKEN_KEY, token);
             if (!token) {
                 return { error: true, msg: 'Failed to get token' };
@@ -88,5 +133,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         authState
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider value={value}>
+            {loading ? <View><Text>Loading...</Text></View> : children}
+        </AuthContext.Provider>
+    );
 };
