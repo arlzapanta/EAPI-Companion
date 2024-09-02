@@ -17,7 +17,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#046f37"
+        "backgroundColor": "#000"
       }
     },
     "web": {
@@ -28,7 +28,7 @@
       [
         "expo-screen-orientation",
         {
-          "initialOrientation": "DEFAULT"
+          "initialOrientation": "landscape"
         }
       ]
     ]

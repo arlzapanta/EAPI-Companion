@@ -5,7 +5,7 @@ interface styleUtilProps {
   theme?: 'dark' | 'light';
 }
 
-export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
+export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
   const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
 
   return {
@@ -15,12 +15,36 @@ export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
     container: {
       flex: 1,
       padding: 16,
-      alignItems: 'center',
+      flexDirection: 'column',
+      justifyContent: 'space-between',
       backgroundColor: currentTheme.containerBackgroundColor,
     } as ViewStyle,
+    containerCenter: {
+      flex: 1,
+      padding: 16,
+      flexDirection: 'column',
+      alignContent: 'center',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: currentTheme.containerBackgroundColor,
+    } as ViewStyle,
+    centerItems: {
+      alignContent: 'center',
+      alignItems: 'center',
+    }as ViewStyle,
+    card: {
+      padding: 30,
+      borderRadius: 20,
+      backgroundColor: '#fff',
+    },
     title: {
       fontSize: 24,
       fontWeight: 'bold',
+      marginBottom: 20,
+      color: currentTheme.titleColor,
+    } as TextStyle,
+    text: {
+      fontSize: 18,
       marginBottom: 20,
       color: currentTheme.titleColor,
     } as TextStyle,
@@ -31,6 +55,7 @@ export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
       borderRadius: 8,
       alignItems: 'center',
       width: 400,
+      marginVertical: 8,
     } as ViewStyle,
     buttonText: {
       color: currentTheme.buttonTextColor,
@@ -44,15 +69,17 @@ export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
       borderColor: currentTheme.inputBorderColor,
       borderWidth: 1,
       borderRadius: 4,
+      maxWidth: 450,
       color: currentTheme.textColor,
       caretColor: currentTheme.caretColor,
     } as ViewStyle,
     buttonContainer: {
       width: '100%',
-      padding: 12,
+      padding: 15,
       backgroundColor: currentTheme.buttonColor,
       borderRadius: 4,
       alignItems: 'center',
+      maxWidth: 450,
       marginTop: 10,
     } as ViewStyle,
     buttonContainerLogout: {
@@ -99,17 +126,25 @@ export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
     contentContainer_home: {
       flex: 1,
       backgroundColor: currentTheme.containerBackgroundColor,
-      padding: 10,
     },
+    // ***************************************************************************************
+    // *  LOGIN STYLES
+    // ***************************************************************************************
+    containerLogin: {
+      flex: 1,
+      padding: 16,
+      backgroundColor: currentTheme.containerBackgroundColor,
+    } as ViewStyle,
+    cardLogin: {
+      justifyContent: 'center',
+      padding: 30,
+      borderRadius: 20,
+      backgroundColor: '#fff',
+      height: '100%',
+    } as ViewStyle,
     // ***************************************************************************************
     // *  SETTING STYLES
     // ***************************************************************************************
-    container_settings: {
-      flex: 1,
-      padding: 16,
-      alignItems: 'center',
-      backgroundColor: currentTheme.containerBackgroundColor,
-    } as ViewStyle,
     title_settings: {
       fontSize: 24,
       fontWeight: 'bold',
@@ -124,9 +159,18 @@ export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
       alignItems: 'center',
       width: 400,
     } as ViewStyle,
+    button_logout: {
+      backgroundColor: "red",
+      paddingVertical: 12,
+      paddingHorizontal: 24,
+      borderRadius: 8,
+      alignItems: 'center',
+      width: 400,
+      marginVertical: 16,
+    } as ViewStyle,
     buttonText_settings: {
       color: currentTheme.buttonTextColor,
-      fontSize: 16,
+      fontSize: 20,
       fontWeight: 'bold',
     } as TextStyle,
     // ***************************************************************************************
@@ -143,7 +187,7 @@ export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
       marginVertical: 5,
     } as ViewStyle,
     activeNavLink: {
-      backgroundColor: '#2d8b4b',
+      backgroundColor: '#046E37',
     },
     navIcon: {
       fontSize: 30,
@@ -161,18 +205,14 @@ export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
     container_dashboard: {
       flex: 1,
       padding: 16,
+      flexDirection: 'column',
+      justifyContent: 'space-between',
       backgroundColor: currentTheme.containerBackgroundColor,
     } as ViewStyle,
     announcementContainer_dashboard: {
       padding: 16,
       backgroundColor: currentTheme.announcementBackgroundColor,
       marginBottom: 16,
-    } as ViewStyle,
-    chartContainer_dashboard: {
-      flex: 1,
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      marginHorizontal: 8,
     } as ViewStyle,
     chartRow: {
       flexDirection: 'row',
@@ -181,7 +221,8 @@ export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
     } as ViewStyle,
     chart_dashboard: {
       flex: 1,
-      marginHorizontal: 8,
+      justifyContent: 'center',
+      alignItems: 'center',
       backgroundColor: currentTheme.chartBackgroundColor,
       padding: 16,
       borderRadius: 8,
@@ -202,5 +243,67 @@ export const getStyleUtil = ({ theme = 'dark' }: styleUtilProps) => {
       marginTop: 10,
       resizeMode: 'stretch',
     } as ImageStyle,
+    // *************************************
+    // *  DASH BOARD - CHART STYLES
+    // *************************************
+    card_chart: {
+      padding: 30,
+      borderRadius: 20,
+      backgroundColor: currentTheme.chartColor,
+    },
+    title_chart: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: 'bold',
+    } as TextStyle,
+    legendContainer_chart: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      marginBottom: 10,
+    } as ViewStyle,
+    legendItem_chart: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      width: 120,
+      marginRight: 20,
+    } as ViewStyle,
+    legendText_chart: {
+      color: 'white',
+    },
+    dot_chart: {
+      height: 10,
+      width: 10,
+      borderRadius: 5,
+      marginRight: 10,
+    },
+    // daily chart
+    centerLabelContainer_dailyChart: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    }as ViewStyle,
+    centerLabelText_dailyChart: {
+      fontSize: 22,
+      color: 'white',
+      fontWeight: 'bold',
+    } as TextStyle,
+    centerLabelSubtext_dailyChart: {
+      fontSize: 14,
+      color: 'white',
+    },
+    //actual target chart 
+    referenceLine_actualvTarget: {
+      position: 'absolute',
+      width: '100%',
+      height: 2,
+      backgroundColor: '#FF0000',
+      left: 0,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    referenceLineText_actualvTarget: {
+      color: '#FF0000',
+      fontWeight: 'bold',
+      fontSize: 14,
+    },
   };
 };

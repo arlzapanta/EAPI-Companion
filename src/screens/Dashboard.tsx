@@ -1,149 +1,152 @@
-import React from 'react';
-import { View, Text, Image, Dimensions, StyleSheet } from 'react-native';
-import { getStyleUtil } from '../index';
-import { LineChart, BarChart, PieChart, ProgressChart, ContributionGraph } from 'react-native-chart-kit';
+import React from "react";
+import { View, Text, Image, processColor } from "react-native";
+import { getStyleUtil } from "../index";
+import { PieChart, BarChart } from "react-native-gifted-charts";
+import { ruleTypes } from "gifted-charts-core";
 
-const { width } = Dimensions.get('window');
-const dynamicStyles = getStyleUtil({}); // Change theme as needed, e.g., { theme: 'light' } or { theme: 'dark' }
+const dynamicStyles = getStyleUtil({}); //  { theme: 'light' or 'dark'  }
 
 const Dashboard = () => {
-  const announcementText = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
+  const announcementText =
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
   const imageUrl = "https://picsum.photos/200/100";
 
-  const lineChartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-    datasets: [
-      {
-        data: [20, 45, 28, 80, 99, 43, 50],
-      },
-    ],
-  };
+  interface BarDataItem {
+    value: number;
+    frontColor: string;
+    gradientColor: string;
+    spacing: number;
+    label?: string;
+  }
 
-  const barChartData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'],
-    datasets: [
-      {
-        data: [30, 40, 70, 60, 90],
-      },
-    ],
-  };
-
-  const pieChartData = [
+  const data: BarDataItem[] = [
     {
-      name: 'A',
-      population: 215,
-      color: '#f00',
-      legendFontColor: '#000',
-      legendFontSize: 15
+      value: 250,
+      frontColor: "#006DFF",
+      gradientColor: "#009FFF",
+      spacing: 6,
+      label: "Jan",
     },
     {
-      name: 'B',
-      population: 130,
-      color: '#0f0',
-      legendFontColor: '#000',
-      legendFontSize: 15
+      value: 300,
+      frontColor: "#006DFF",
+      gradientColor: "#009FFF",
+      spacing: 6,
+      label: "Feb",
     },
     {
-      name: 'C',
-      population: 98,
-      color: '#00f',
-      legendFontColor: '#000',
-      legendFontSize: 15
+      value: 350,
+      frontColor: "#006DFF",
+      gradientColor: "#009FFF",
+      spacing: 6,
+      label: "Mar",
     },
-    {
-      name: 'D',
-      population: 85,
-      color: '#ff0',
-      legendFontColor: '#000',
-      legendFontSize: 15
-    }
+    // Add more months as needed
   ];
 
-  const progressChartData = {
-    labels: ['January', 'February', 'March'],
-    data: [0.4, 0.6, 0.8],
-  };
+  interface dailyCompletionData {
+    value: number;
+    color: string;
+  }
 
-const chartConfig = {
-  backgroundGradientFrom: dynamicStyles.chartBackgroundColor,
-  backgroundGradientTo: dynamicStyles.chartBackgroundColor,
-  color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-  strokeWidth: 2,
-  propsForBackgroundLines: {
-    strokeWidth: 1,
-    stroke: "#e3e3e3",
-  },
-  propsForLabels: {
-    fontSize: 12,
-    fill: "#fff",
-  },
-  propsForVerticalLabels: {
-    fontSize: 12,
-    fill: "#fff",
-  },
-  propsForHorizontalLabels: {
-    fontSize: 12,
-    fill: "#fff",
-  },
-  barPercentage: 0.5,
-  useShadowColorFromDataset: false,
-};
-
+  const dailyData: dailyCompletionData[] = [
+    { value: 70, color: "#009FFF" },
+    { value: 30, color: "wheat" },
+  ];
 
   return (
-    <View style={dynamicStyles.container_dashboard}>
+    <View style={dynamicStyles.container}>
       <View style={dynamicStyles.announcementContainer_dashboard}>
         <Text style={dynamicStyles.text_dashboard}>Announcement</Text>
         <Text style={dynamicStyles.subtext_dashboard}>{announcementText}</Text>
-        <Image source={{ uri: imageUrl }} style={dynamicStyles.announcementImage} />
+        <Image
+          source={{ uri: imageUrl }}
+          style={dynamicStyles.announcementImage}
+        />
       </View>
-      <View style={dynamicStyles.chartContainer_dashboard}>
-        <View style={dynamicStyles.chartRow}>
-          <View style={dynamicStyles.chart_dashboard}>
-            <Text style={dynamicStyles.text_dashboard}>Line Chart</Text>
-            <LineChart
-              data={lineChartData}
-              width={width / 2 - 24}
-              height={220}
-              chartConfig={chartConfig}
-              bezier
-            />
-          </View>
-          <View style={dynamicStyles.chart_dashboard}>
-            <Text style={dynamicStyles.text_dashboard}>Bar Chart</Text>
-            <BarChart
-              data={barChartData}
-              width={width / 2 - 24}
-              height={220}
-              chartConfig={chartConfig}
-              verticalLabelRotation={30}
-              yAxisLabel="$"
-              yAxisSuffix="k"
+      <View style={dynamicStyles.chartRow}>
+        <View style={dynamicStyles.chart_dashboard}>
+          <View style={dynamicStyles.card_chart}>
+            <Text style={dynamicStyles.title_chart}>Daily Completion</Text>
+            <PieChart
+              data={dailyData}
+              donut
+              showGradient
+              sectionAutoFocus
+              radius={200}
+              innerRadius={130}
+              innerCircleColor={"#232B5D"}
+              centerLabelComponent={() => (
+                <View style={dynamicStyles.centerLabelContainer_dailyChart}>
+                  <Text style={dynamicStyles.centerLabelText_dailyChart}>
+                    70%
+                  </Text>
+                </View>
+              )}
             />
           </View>
         </View>
-        <View style={dynamicStyles.chartRow}>
-          <View style={dynamicStyles.chart_dashboard}>
-            <Text style={dynamicStyles.text_dashboard}>Pie Chart</Text>
-            <PieChart
-              data={pieChartData}
-              width={width / 2 - 24}
-              height={220}
-              chartConfig={chartConfig}
-              accessor="population"
-              backgroundColor="transparent"
-              paddingLeft="15"
+      </View>
+      <View style={dynamicStyles.chartRow}>
+        <View style={dynamicStyles.chart_dashboard}>
+          <View style={dynamicStyles.card_chart}>
+            <Text style={dynamicStyles.title_chart}>Actual VS Target</Text>
+            <BarChart
+              data={data}
+              barWidth={16}
+              initialSpacing={300}
+              spacing={14}
+              barBorderRadius={4}
+              yAxisThickness={0}
+              xAxisType={ruleTypes.DASHED}
+              xAxisColor={"lightgray"}
+              yAxisTextStyle={{ color: "lightgray" }}
+              stepValue={50}
+              maxValue={400}
+              noOfSections={8}
+              yAxisLabelTexts={[
+                "400",
+                "350",
+                "300",
+                "250",
+                "200",
+                "150",
+                "100",
+              ]}
+              labelWidth={40}
+              xAxisLabelTextStyle={{
+                color: "lightgray",
+                textAlign: "center",
+              }}
+              showLine
+              lineConfig={{
+                color: "#F29C6E",
+                thickness: 3,
+                curved: true,
+                hideDataPoints: true,
+                shiftY: 20,
+                initialSpacing: 0,
+              }}
             />
           </View>
-          <View style={dynamicStyles.chart_dashboard}>
-            <Text style={dynamicStyles.text_dashboard}>Progress Chart</Text>
-            <ProgressChart
-              data={progressChartData}
-              width={width / 2 - 24}
-              height={220}
-              chartConfig={chartConfig}
-            />
-          </View>
+        </View>
+        <View style={dynamicStyles.chart_dashboard}>
+          <Text style={dynamicStyles.text_dashboard}>Weekly Performance</Text>
+          {/*  */}
+        </View>
+      </View>
+      <View style={dynamicStyles.chartRow}>
+        <View style={dynamicStyles.chart_dashboard}>
+          <Text style={dynamicStyles.text_dashboard}>
+            Monthly Call Frequency
+          </Text>
+          {/*  */}
+        </View>
+        <View style={dynamicStyles.chart_dashboard}>
+          <Text style={dynamicStyles.text_dashboard}>
+            Monthly Call Performance VS Target {/* current year */}
+          </Text>
+          {/*  */}
         </View>
       </View>
     </View>
