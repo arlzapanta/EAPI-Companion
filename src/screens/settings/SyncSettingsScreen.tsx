@@ -1,45 +1,13 @@
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  Button,
-  FlatList,
-  StyleSheet,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, TouchableOpacity, Button, FlatList } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth, getStyleUtil } from "../../index";
 import { SyncScreenNavigationProp } from "../../type/navigation";
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { API_URL_ENV } from "@env";
-
-const getCurrentWeekDates = () => {
-  const timezoneOffset = 8 * 60; // 8 hours in minutes
-
-  const today = new Date();
-  const localTime = today.getTime();
-  const utcOffset = today.getTimezoneOffset();
-
-  const phTime = new Date(localTime + (timezoneOffset - utcOffset) * 60000);
-
-  const dayOfWeek = phTime.getDay(); // Sunday - Saturday : 0 - 6
-  const startOfWeek = new Date(phTime);
-  const endOfWeek = new Date(phTime);
-
-  startOfWeek.setDate(phTime.getDate() - dayOfWeek + 1); // Monday
-  startOfWeek.setHours(0, 0, 0, 0);
-
-  endOfWeek.setDate(phTime.getDate() - dayOfWeek + 5); // Friday
-  endOfWeek.setHours(23, 59, 59, 999);
-
-  const formatDate = (date: Date) =>
-    `${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}-${(
-      "0" + date.getDate()
-    ).slice(-2)}`;
-
-  return { startDate: formatDate(startOfWeek), endDate: formatDate(endOfWeek) };
-};
+import { saveUserAttendanceLocalDb } from "../../utils/localDbUtils";
+import { apiTimeIn, apiTimeOut } from "../../utils/apiUtility";
 
 const SyncSettingsScreen: React.FC = () => {
   const navigation = useNavigation<SyncScreenNavigationProp>();
@@ -48,66 +16,66 @@ const SyncSettingsScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [schedules, setSchedules] = useState<any[]>([]);
+  const [userInfo, setUserInfo] = useState<{
+    first_name: string;
+    last_name: string;
+    email: string;
+    sales_portal_id: string;
+  } | null>(null);
 
-  const fetchSchedules = async () => {
+  useEffect(() => {
     if (authState.authenticated && authState.user) {
-      const { first_name, sales_portal_id } = authState.user;
+      const { first_name, last_name, email, sales_portal_id } = authState.user;
+      setUserInfo({
+        first_name,
+        last_name,
+        email,
+        sales_portal_id,
+      });
+    }
+  }, [authState]);
 
-      const userInfo = {
-        firstName: first_name,
-        salesPortalId: sales_portal_id,
-      };
+  const timeIn = async () => {
+    if (!userInfo) {
+      setError("User information is missing.");
+      return;
+    }
 
-      const { startDate, endDate } = getCurrentWeekDates();
+    try {
+      await apiTimeIn(userInfo);
+    } catch (error: any) {
+      console.log(error, "after successful login > apiTimeIn");
+    }
 
-      setLoading(true);
-      setError(null);
+    try {
+      await saveUserAttendanceLocalDb(userInfo, "in");
+    } catch (error: any) {
+      console.log(error, "after successful login > saveUserAttendanceLocalDb");
+    }
+  };
 
-      try {
-        const response = await axios.post(
-          `${API_URL_ENV}/checkSchedules?start=${startDate}&end=${endDate}`,
-          { salesPortalId: userInfo.salesPortalId },
-          {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
+  const timeOut = async () => {
+    if (!userInfo) {
+      setError("User information is missing.");
+      return;
+    }
 
-        console.log(response, "response");
+    try {
+      await apiTimeOut(userInfo);
+    } catch (error: any) {
+      console.log(error, "after successful login > apiTimeOut");
+    }
 
-        setSchedules(response.data);
-        console.log(response.data);
-      } catch (error: any) {
-        if (axios.isAxiosError(error)) {
-          const { response, request, message } = error;
-          console.error("Error message:", message);
-          console.error("Error response data:", response?.data);
-          console.error("Error response status:", response?.status);
-          console.error("Error response headers:", response?.headers);
-          console.error("Error request:", request);
-        } else {
-          console.error("An unexpected error occurred:", error);
-        }
-
-        setError("Error fetching schedules. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
+    try {
+      await saveUserAttendanceLocalDb(userInfo, "out");
+    } catch (error: any) {
+      console.log(error, "after successful login > saveUserAttendanceLocalDb");
     }
   };
 
   const handleBack = () => {
     navigation.goBack();
   };
-
-  const renderItem = ({ item }: { item: any }) => (
-    <View>
-      <Text>{item.field1}</Text>
-      <Text>{item.field2}</Text>
-      <Text>{item.field3}</Text>
-    </View>
-  );
 
   return (
     <View style={styles.container}>
@@ -118,74 +86,13 @@ const SyncSettingsScreen: React.FC = () => {
         <View style={styles.centerItems}>
           <Text style={styles.title_settings}>Sync Settings</Text>
           <Text style={styles.text}>Manage your sync settings</Text>
-          <Button
-            title="Fetch Schedules"
-            onPress={fetchSchedules}
-            disabled={loading}
-          />
-          {loading && <Text>Loading...</Text>}
-          {error && <Text style={{ color: "red" }}>{error}</Text>}
-          {schedules.length > 0 ? (
-            <FlatList
-              data={schedules}
-              renderItem={renderItem}
-              keyExtractor={(item, index) => index.toString()}
-              ListHeaderComponent={() => (
-                <View>
-                  <Text>Field 1</Text>
-                  <Text>Field 2</Text>
-                  <Text>Field 3</Text>
-                </View>
-              )}
-            />
-          ) : (
-            !loading && <Text>No schedules available.</Text>
-          )}
+          {/* time in */}
+          <Button title="Time In" onPress={timeIn} disabled={loading} />
+          <Button title="Time Out" onPress={timeOut} disabled={loading} />
         </View>
       </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 16,
-  },
-  card: {
-    marginBottom: 20,
-  },
-  centerItems: {
-    alignItems: "center",
-  },
-  title_settings: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  text: {
-    fontSize: 16,
-    marginVertical: 8,
-  },
-  row: {
-    flexDirection: "row",
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#ccc",
-  },
-  cell: {
-    flex: 1,
-    textAlign: "center",
-  },
-  header: {
-    flexDirection: "row",
-    padding: 10,
-    backgroundColor: "#f0f0f0",
-  },
-  headerCell: {
-    flex: 1,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-});
 
 export default SyncSettingsScreen;

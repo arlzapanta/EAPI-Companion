@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Animated, ScrollView } from "react-native";
-import { Dashboard, SettingsScreen, NavLinkComponent } from "../index";
+import {
+  Dashboard,
+  SettingsScreen,
+  NavLinkComponent,
+  Schedules,
+} from "../index";
 import { getStyleUtil } from "../index";
 
 const Home = () => {
   const [selectedScreen, setSelectedScreen] = useState<
-    "dashboard" | "settings"
+    "dashboard" | "settings" | "schedules"
   >("dashboard");
   const [fadeAnim] = useState(new Animated.Value(1));
 
@@ -15,6 +20,8 @@ const Home = () => {
     switch (selectedScreen) {
       case "dashboard":
         return <Dashboard />;
+      case "schedules":
+        return <Schedules />;
       case "settings":
         return <SettingsScreen />;
       default:
@@ -48,6 +55,11 @@ const Home = () => {
           iconName="settings"
           onPress={() => setSelectedScreen("settings")}
           active={selectedScreen === "settings"}
+        />
+        <NavLinkComponent
+          iconName="calendar"
+          onPress={() => setSelectedScreen("schedules")}
+          active={selectedScreen === "schedules"}
         />
       </View>
       <Animated.View

@@ -4,8 +4,6 @@ import { API_URL_ENV, TOKEN_USERNAME_ENV, TOKEN_PASSWORD_ENV } from "@env";
 import axios from "axios";
 import { View } from "react-native";
 import { Text } from "react-native-elements";
-import { saveUserLoginToLocalDb } from "../utils/localDbUtils";
-import { apiTimeIn } from "../utils/apiTimeIn";
 
 interface User {
   created_at: string;
@@ -145,18 +143,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           authenticated: true,
           user: user,
         });
-
-        try {
-          await apiTimeIn(user);
-        } catch (error: any) {
-          console.log(error, "after successful login > apiTimeIn");
-        }
-
-        try {
-          await saveUserLoginToLocalDb(user);
-        } catch (error: any) {
-          console.log(error, "after successful login > saveUserLoginToLocalDb");
-        }
 
         return true;
       } else {

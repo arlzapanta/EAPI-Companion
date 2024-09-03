@@ -53,7 +53,7 @@ const Settings = () => {
         <View style={styles.centerItems}>
           <Text style={styles.title_settings}>Settings</Text>
           <TouchableOpacity style={styles.button} onPress={handleSyncSettings}>
-            <Text style={styles.buttonText_settings}>Sync Settings</Text>
+            <Text style={styles.buttonText_settings}>Sync</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button_logout} onPress={handleLogout}>
