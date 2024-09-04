@@ -6,10 +6,8 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../type/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
-type SettingsScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "Home"
->;
+type SettingsScreenNavigationProp =
+  NativeStackNavigationProp<RootStackParamList>;
 
 const Settings = () => {
   const { onLogout } = useAuth();
@@ -43,8 +41,12 @@ const Settings = () => {
     );
   };
 
-  const handleSyncSettings = () => {
+  const handleSyncSettingsOnPress = () => {
     navigation.navigate("Sync");
+  };
+
+  const handleAttendanceOnPress = () => {
+    navigation.navigate("Attendance");
   };
 
   return (
@@ -52,8 +54,16 @@ const Settings = () => {
       <View style={styles.card}>
         <View style={styles.centerItems}>
           <Text style={styles.title_settings}>Settings</Text>
-          <TouchableOpacity style={styles.button} onPress={handleSyncSettings}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleSyncSettingsOnPress}>
             <Text style={styles.buttonText_settings}>Sync</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleAttendanceOnPress}>
+            <Text style={styles.buttonText_settings}>Attendance</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.button_logout} onPress={handleLogout}>

@@ -29,7 +29,6 @@ export const apiTimeIn = async (user: User) => {
         },
       }
     );
-    console.log(response,'api-time-in-response');
 
     return response.data;
   } catch (error: any) {
@@ -68,8 +67,6 @@ export const apiTimeOut = async (user: User) => {
         },
       }
     );
-
-    console.log(response.data,'api-time-out-response');
 
     return response.data;
   } catch (error: any) {

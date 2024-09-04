@@ -7,7 +7,7 @@ import { RootStackParamList } from "./src/type/navigation";
 import Home from "./src/screens/Home";
 import Login from "./src/screens/Login";
 import SyncSettingsScreen from "./src/screens/settings/SyncSettingsScreen";
-import SchedulesScreenNavigationProp from "./src/screens/settings/SyncSettingsScreen";
+import AttendanceScreen from "./src/screens/settings/AttendanceScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -24,10 +24,7 @@ const Layout = () => {
           <>
             <Stack.Screen name="Home" component={Home} />
             <Stack.Screen name="Sync" component={SyncSettingsScreen} />
-            <Stack.Screen
-              name="Schedules"
-              component={SchedulesScreenNavigationProp}
-            />
+            <Stack.Screen name="Attendance" component={AttendanceScreen} />
           </>
         ) : (
           <Stack.Screen name="Login" component={Login} />

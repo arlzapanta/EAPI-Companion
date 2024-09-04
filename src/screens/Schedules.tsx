@@ -21,7 +21,7 @@ const Schedules = () => {
   const { authState } = useAuth();
 
   const getCurrentWeekDates = () => {
-    const timezoneOffset = 8 * 60; // 8 hours in minutes
+    const timezoneOffset = 8 * 60;
 
     const today = new Date();
     const localTime = today.getTime();
@@ -29,14 +29,14 @@ const Schedules = () => {
 
     const phTime = new Date(localTime + (timezoneOffset - utcOffset) * 60000);
 
-    const dayOfWeek = phTime.getDay(); // Sunday - Saturday : 0 - 6
+    const dayOfWeek = phTime.getDay();
     const startOfWeek = new Date(phTime);
     const endOfWeek = new Date(phTime);
 
-    startOfWeek.setDate(phTime.getDate() - dayOfWeek + 1); // Monday
+    startOfWeek.setDate(phTime.getDate() - dayOfWeek + 1);
     startOfWeek.setHours(0, 0, 0, 0);
 
-    endOfWeek.setDate(phTime.getDate() - dayOfWeek + 5); // Friday
+    endOfWeek.setDate(phTime.getDate() - dayOfWeek + 5);
     endOfWeek.setHours(23, 59, 59, 999);
 
     const formatDate = (date: Date) =>

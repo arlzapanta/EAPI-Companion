@@ -1,4 +1,4 @@
-import { ViewStyle, TextStyle, ImageStyle } from 'react-native';
+import { ViewStyle, TextStyle, ImageStyle,  } from 'react-native';
 import { lightTheme, darkTheme } from './themes'; 
 
 interface styleUtilProps {
@@ -19,6 +19,30 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       justifyContent: 'space-between',
       backgroundColor: currentTheme.containerBackgroundColor,
     } as ViewStyle,
+    scrollViewContainer:{
+      position: 'relative',
+      flex: 1
+    } as ViewStyle,
+    scrollViewContent: {
+      flexGrow: 1,
+      paddingBottom: 60, 
+    },
+    content: {
+      flex: 1,
+      padding: 15,
+    } as ViewStyle,
+    floatingButtonContainer: {
+      position: 'absolute',
+      top: 15,
+      left: 15,
+      zIndex: 1000, 
+      backgroundColor: 'rgba(50, 211, 211, 0.8)',
+      padding: 12,
+      borderRadius: 50,
+    } as ViewStyle,
+    floatingButton: {
+      // Add any
+    },
     containerCenter: {
       flex: 1,
       padding: 16,
@@ -148,6 +172,7 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     title_settings: {
       fontSize: 24,
       fontWeight: 'bold',
+      left: 60,
       marginBottom: 20,
       color: currentTheme.titleColor,
     } as TextStyle,
