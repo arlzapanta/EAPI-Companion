@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { RootStackParamList } from "./src/type/navigation";
 import Home from "./src/screens/Home";
 import Login from "./src/screens/Login";
+import Test from "./src/components/Test";
 import SyncSettingsScreen from "./src/screens/settings/SyncSettingsScreen";
 import AttendanceScreen from "./src/screens/settings/AttendanceScreen";
 
@@ -38,7 +39,7 @@ const App = () => {
   return (
     <AuthProvider>
       <NavigationContainer>
-        <Layout />
+        <Test />
       </NavigationContainer>
     </AuthProvider>
   );

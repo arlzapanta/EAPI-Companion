@@ -12,6 +12,7 @@
     "@react-native-picker/picker": "^2.8.0",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
+    "@types/react-native": "^0.73.0",
     "axios": "^1.7.5",
     "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
