@@ -1,21 +1,31 @@
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
+import moment from 'moment-timezone';
+
 import * as SecureStore from "expo-secure-store";
+import { format, parseISO } from 'date-fns';
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-const DATE_KEY = 'current_date_ph';
+const DATE_KEY ='current_date_ph';
 export const getCurrentDatePH = async (): Promise<string> => {
   const storedDate = await SecureStore.getItemAsync(DATE_KEY);
-  const currentDate = dayjs().tz("Asia/Manila").format("YYYY-MM-DD");
+  const currentDate = moment().tz('Asia/Manila').format('YYYY-MM-DD');
 
   if (storedDate && storedDate === currentDate) {
     return storedDate;
   } else {
     await SecureStore.setItemAsync(DATE_KEY, currentDate);
     return currentDate;
+  }
+};
+
+const TIME_KEY = 'current_time_ph';
+export const getCurrentTimePH = async (): Promise<string> => {
+  const storedTime = await SecureStore.getItemAsync(TIME_KEY);
+  const currentTime = moment().format('HH:mm:ss');
+
+  if (storedTime && storedTime === currentTime) {
+    return storedTime;
+  } else {
+    await SecureStore.setItemAsync(TIME_KEY, currentTime);
+    return currentTime;
   }
 };
 
@@ -55,3 +65,8 @@ export async function getRelevantDateRange(): Promise<string[]> {
 
   return dates;
 }
+
+export const formatDate = (dateString: string) => {
+  const date = parseISO(dateString);
+  return format(date, "MMM d, yyyy EEEE");
+};

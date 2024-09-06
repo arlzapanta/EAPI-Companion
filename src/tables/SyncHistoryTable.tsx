@@ -6,7 +6,7 @@ import { format, parseISO } from "date-fns";
 
 interface SyncHistoryRecord {
   id: number;
-  created_at: string;
+  date: string;
   email: string;
   sales_portal_id: string;
   type: number;
@@ -29,11 +29,11 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
 
   // Extract unique dates from the data
   const uniqueDates = Array.from(
-    new Set(data.map((item) => formatDate(item.created_at)))
+    new Set(data.map((item) => formatDate(item.date)))
   );
 
   const filteredData = data.filter(
-    (user) => !selectedDate || formatDate(user.created_at) === selectedDate
+    (user) => !selectedDate || formatDate(user.date) === selectedDate
   );
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -82,9 +82,13 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
             {currentData.map((user) => (
               <DataTable.Row style={styles.databeBox} key={user.id}>
                 <DataTable.Cell>
-                  {user.type === "in" ? "Time In" : "Time Out"}
+                  {user.type === 1
+                    ? "Morning Sync"
+                    : user.type === 2
+                    ? "Mid Sync"
+                    : "Evening Sync"}
                 </DataTable.Cell>
-                <DataTable.Cell>{formatDate(user.created_at)}</DataTable.Cell>
+                <DataTable.Cell>{formatDate(user.date)}</DataTable.Cell>
               </DataTable.Row>
             ))}
           </DataTable>

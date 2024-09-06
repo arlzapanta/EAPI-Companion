@@ -57,6 +57,7 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       alignItems: 'center',
     }as ViewStyle,
     card: {
+      flex:1,
       padding: 30,
       borderRadius: 20,
       backgroundColor: '#fff',
@@ -170,6 +171,12 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     // *  SETTING STYLES
     // ***************************************************************************************
     title_settings: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      marginBottom: 20,
+      color: currentTheme.titleColor,
+    } as TextStyle,
+    title_stack_settings: {
       fontSize: 24,
       fontWeight: 'bold',
       left: 60,

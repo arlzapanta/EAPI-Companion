@@ -6,7 +6,6 @@ import {
   Button,
   Alert,
   ScrollView,
-  StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth, getStyleUtil } from "../../index";
@@ -14,8 +13,7 @@ import { AttendanceScreenNavigationProp } from "../../type/navigation";
 import Icon from "react-native-vector-icons/Ionicons";
 import {
   saveUserAttendanceLocalDb,
-  getUserAttendanceSyncRecordsLocalDb,
-  dropLocalTablesDb,
+  getUserAttendanceRecordsLocalDb,
 } from "../../utils/localDbUtils";
 import { apiTimeIn, apiTimeOut } from "../../utils/apiUtility";
 import AttendanceTable from "../../tables/AttendanceTable";
@@ -46,18 +44,18 @@ const Attendance: React.FC = () => {
     }
   }, [authState]);
 
-  useEffect(() => {
-    const fetchAttendanceData = async () => {
-      if (userInfo) {
-        try {
-          const data = await getUserAttendanceSyncRecordsLocalDb(userInfo);
-          setAttendanceData(data);
-        } catch (error: any) {
-          console.log("fetchAttendanceData error", error);
-        }
+  const fetchAttendanceData = async () => {
+    if (userInfo) {
+      try {
+        const data = await getUserAttendanceRecordsLocalDb(userInfo);
+        setAttendanceData(data);
+      } catch (error: any) {
+        console.log("fetchAttendanceData error", error);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchAttendanceData();
   }, [userInfo]);
 
@@ -69,8 +67,13 @@ const Attendance: React.FC = () => {
 
     setLoading(true);
     try {
-      await saveUserAttendanceLocalDb(userInfo, "in");
-      await apiTimeIn(userInfo);
+      const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
+      if (checkIfTimedIn === 1) {
+        Alert.alert("Failed", "Already timed In today");
+      } else {
+        await apiTimeIn(userInfo);
+        await fetchAttendanceData();
+      }
     } catch (error) {
       Alert.alert("Error", "Failed to time in.");
     } finally {
@@ -86,8 +89,13 @@ const Attendance: React.FC = () => {
 
     setLoading(true);
     try {
-      await apiTimeOut(userInfo);
-      await saveUserAttendanceLocalDb(userInfo, "out");
+      const checkIfTimedOut = await saveUserAttendanceLocalDb(userInfo, "out");
+      if (checkIfTimedOut === 1) {
+        Alert.alert("Failed", "Already timed Out today");
+      } else {
+        await apiTimeOut(userInfo);
+        await fetchAttendanceData();
+      }
     } catch (error) {
       Alert.alert("Error", "Failed to time out.");
     } finally {
@@ -103,8 +111,8 @@ const Attendance: React.FC = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.content}>
-          <Text style={styles.title_settings}>Attendance</Text>
-          <Text style={styles.text}>Manage your attendance</Text>
+          <Text style={styles.title_stack_settings}>Attendance</Text>
+          {/* <Text style={styles.text}>Manage your attendance</Text> */}
           {/* Time In */}
           <Button title="Time In" onPress={timeIn} disabled={loading} />
           {/* Time Out */}

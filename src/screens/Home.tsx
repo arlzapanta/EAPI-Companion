@@ -64,7 +64,9 @@ const Home = () => {
       </View>
       <Animated.View
         style={[dynamicStyles.contentContainer_home, { opacity: fadeAnim }]}>
-        <ScrollView>{renderContent()}</ScrollView>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+          {renderContent()}
+        </ScrollView>
       </Animated.View>
     </View>
   );
