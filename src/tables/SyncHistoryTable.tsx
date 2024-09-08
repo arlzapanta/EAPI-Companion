@@ -3,6 +3,7 @@ import { View, StyleSheet, Dimensions } from "react-native";
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
+import { dropLocalTablesDb } from "../utils/localDbUtils";
 
 interface SyncHistoryRecord {
   id: number;
@@ -43,6 +44,7 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
   );
 
   const clearDateSelection = () => {
+    dropLocalTablesDb();
     setSelectedDate("");
     setCurrentPage(1);
   };
@@ -61,9 +63,18 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
             selectedValue={selectedDate}
             onValueChange={(itemValue) => setSelectedDate(itemValue)}
             style={styles.picker}>
-            <Picker.Item label="Select Date" value="" />
+            <Picker.Item
+              label="Select Date"
+              value=""
+              style={styles.pickerInitialLabel}
+            />
             {uniqueDates.map((date) => (
-              <Picker.Item label={date} value={date} key={date} />
+              <Picker.Item
+                label={date}
+                value={date}
+                key={date}
+                style={styles.pickerLabel}
+              />
             ))}
           </Picker>
           <Button
@@ -127,14 +138,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
   },
+  pickerInitialLabel: {
+    color: "lightgray",
+  },
+  pickerLabel: {
+    color: "black",
+  },
   picker: {
-    width: Dimensions.get("window").width * 0.3,
+    width: Dimensions.get("window").width * 0.4,
     height: 30,
-    backgroundColor: "lightgray",
+    backgroundColor: "#f9f9f9",
   },
   clearButton: {
+    backgroundColor: "#046E37",
     marginLeft: 10,
-    width: Dimensions.get("window").width * 0.1,
+    width: Dimensions.get("window").width * 0.2,
   },
   databeBox: {
     margin: 1,

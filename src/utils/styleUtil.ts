@@ -36,7 +36,8 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       top: 15,
       left: 15,
       zIndex: 1000, 
-      backgroundColor: 'rgba(50, 211, 211, 0.8)',
+      // backgroundColor: 'rgba(50, 211, 211, 0.8)',
+      backgroundColor: 'rgba(4, 110, 55, 0.8)',
       padding: 12,
       borderRadius: 50,
     } as ViewStyle,
@@ -131,6 +132,14 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       elevation: 5,
       alignItems: 'center' as ViewStyle['alignItems'],
     } as ViewStyle,
+    buttonDisabled: {
+      backgroundColor: '#B0BEC5',
+    },
+    statusLabel: {
+      fontSize: 16,
+      textAlign: "center",
+      marginBottom: 15,
+    } as TextStyle,
     // ***************************************************************************************
     // *  HOME STYLES
     // ***************************************************************************************
@@ -257,7 +266,6 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       alignItems: 'center',
       backgroundColor: currentTheme.chartBackgroundColor,
       padding: 16,
-      borderRadius: 8,
     } as ViewStyle,
     text_dashboard: {
       fontSize: 18,
@@ -273,19 +281,22 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       height: 100,   
       borderRadius: 8,
       marginTop: 10,
-      resizeMode: 'stretch',
+      resizeMode: 'cover',
     } as ImageStyle,
     // *************************************
     // *  DASH BOARD - CHART STYLES
     // *************************************
     card_chart: {
-      padding: 30,
+      padding: 40,
+      flex:1,
+      minWidth: 500,
       borderRadius: 20,
-      backgroundColor: currentTheme.chartColor,
+      // backgroundColor: currentTheme.chartColor,
     },
     title_chart: {
-      color: 'white',
+      color: 'black',
       fontSize: 16,
+      marginBottom: 15,
       fontWeight: 'bold',
     } as TextStyle,
     legendContainer_chart: {
@@ -315,12 +326,12 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     }as ViewStyle,
     centerLabelText_dailyChart: {
       fontSize: 22,
-      color: 'white',
+      color: 'black',
       fontWeight: 'bold',
     } as TextStyle,
     centerLabelSubtext_dailyChart: {
       fontSize: 14,
-      color: 'white',
+      color: 'black',
     },
     //actual target chart 
     referenceLine_actualvTarget: {

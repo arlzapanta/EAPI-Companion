@@ -80,7 +80,7 @@ export const apiTimeOut = async (user: User) => {
         },
       }
     );
-
+    console.log(response);
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {

@@ -450,7 +450,7 @@ export const dropLocalTablesDb = async () => {
     useNewConnection: true,
   });
 
-  const tableName = 'schedules_tbl';
+  const tableName = 'user_attendance_tbl';
 
   const query = `DROP TABLE ${tableName};`;
 

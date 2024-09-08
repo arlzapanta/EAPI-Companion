@@ -135,15 +135,27 @@ const SyncSettingsScreen: React.FC = () => {
         <View style={styles.content}>
           <Text style={styles.title_stack_settings}>Sync</Text>
           {/* <Text style={styles.text}>Manage your sync settings</Text> */}
-          <Button title={snycBtnTitle} onPress={syncNow} disabled={loading} />
+          <View style={styles.centerItems}>
+            <TouchableOpacity
+              onPress={syncNow}
+              disabled={loading}
+              style={[
+                styles.buttonContainer,
+                loading && styles.buttonDisabled,
+              ]}>
+              <Text style={styles.buttonText}>Sync</Text>
+            </TouchableOpacity>
+          </View>
           <SyncTable data={syncData} />
         </View>
       </ScrollView>
-      <View style={styles.floatingButtonContainer}>
-        <TouchableOpacity onPress={handleBack} style={styles.floatingButton}>
-          <Icon name="arrow-back" size={30} color="#000" />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        onPress={handleBack}
+        style={styles.floatingButtonContainer}>
+        <View style={styles.floatingButton}>
+          <Icon name="arrow-back" size={20} color="#000" />
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };

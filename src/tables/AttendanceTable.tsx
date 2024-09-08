@@ -3,6 +3,7 @@ import { View, StyleSheet, Dimensions } from "react-native";
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
+import { dropLocalTablesDb } from "../utils/localDbUtils";
 
 interface AttendanceRecord {
   id: number;
@@ -15,19 +16,16 @@ interface AttendanceRecord {
 interface AttendanceTableProps {
   data: AttendanceRecord[];
 }
-
 const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
-  // Format the date in 'YYYY-MM-DD' format from the fetched data
   const formatDate = (dateString: string) => {
     const date = parseISO(dateString);
     return format(date, "MMM d, yyyy EEEE");
   };
 
-  // Extract unique dates from the data
   const uniqueDates = Array.from(
     new Set(data.map((item) => formatDate(item.date)))
   );
@@ -61,9 +59,18 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
             selectedValue={selectedDate}
             onValueChange={(itemValue) => setSelectedDate(itemValue)}
             style={styles.picker}>
-            <Picker.Item label="Select Date" value="" />
+            <Picker.Item
+              label="Select Date"
+              value=""
+              style={styles.pickerInitialLabel}
+            />
             {uniqueDates.map((date) => (
-              <Picker.Item label={date} value={date} key={date} />
+              <Picker.Item
+                label={date}
+                value={date}
+                key={date}
+                style={styles.pickerLabel}
+              />
             ))}
           </Picker>
           <Button
@@ -123,14 +130,21 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 15,
   },
+  pickerInitialLabel: {
+    color: "lightgray",
+  },
+  pickerLabel: {
+    color: "black",
+  },
   picker: {
-    width: Dimensions.get("window").width * 0.3,
+    width: Dimensions.get("window").width * 0.4,
     height: 30,
-    backgroundColor: "lightgray",
+    backgroundColor: "#f9f9f9",
   },
   clearButton: {
+    backgroundColor: "#046E37",
     marginLeft: 10,
-    width: Dimensions.get("window").width * 0.1,
+    width: Dimensions.get("window").width * 0.2,
   },
   databeBox: {
     margin: 1,

@@ -38,6 +38,8 @@ const AuthContext = createContext<AuthProps>({
 });
 
 const TOKEN_KEY = "my-jwt";
+const emailC = "my-jwt";
+const pwC = "my-jwt";
 
 export const useAuth = () => {
   return useContext(AuthContext);
@@ -52,51 +54,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = await SecureStore.getItemAsync(TOKEN_KEY);
-        if (token) {
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-          const response = await axios.get(`${API_URL_ENV}/user/validate`, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
-
-          if (response.data.isValid) {
-            setAuthState({
-              token,
-              authenticated: true,
-              user: response.data.user,
-            });
-          } else {
-            await SecureStore.deleteItemAsync(TOKEN_KEY);
-            setAuthState({
-              token: null,
-              authenticated: false,
-              user: null,
-            });
-          }
-        } else {
-          setAuthState({
-            token: null,
-            authenticated: false,
-            user: null,
-          });
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        setAuthState({
-          token: null,
-          authenticated: false,
-          user: null,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
+    // dev notes : add token expiration handling here
+    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -137,7 +96,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (checkCredentialsResponse.data.isProceed) {
         const user: User = checkCredentialsResponse.data.user;
-
+        await SecureStore.setItemAsync(emailC, email);
+        await SecureStore.setItemAsync(pwC, password);
         setAuthState({
           token,
           authenticated: true,

@@ -3,9 +3,9 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Button,
   Alert,
   ScrollView,
+  StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth, getStyleUtil } from "../../index";
@@ -30,7 +30,11 @@ const Attendance: React.FC = () => {
     sales_portal_id: string;
   } | null>(null);
 
-  const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
+  const [hasTimedIn, setHasTimedIn] = useState(false);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [statusColor, setStatusColor] = useState<string>("");
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
@@ -44,11 +48,55 @@ const Attendance: React.FC = () => {
     }
   }, [authState]);
 
+  interface AttendanceRecord {
+    id: number;
+    date: string;
+    email: string;
+    sales_portal_id: string;
+    type: string;
+  }
+
   const fetchAttendanceData = async () => {
     if (userInfo) {
       try {
-        const data = await getUserAttendanceRecordsLocalDb(userInfo);
+        const data = (await getUserAttendanceRecordsLocalDb(
+          userInfo
+        )) as AttendanceRecord[];
         setAttendanceData(data);
+        console.log(data);
+
+        const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+        // Convert the date field to match the 'YYYY-MM-DD' format
+        const recordsToday = data.filter((record) => {
+          const recordDate = record.date.split(" ")[0]; // Extract 'YYYY-MM-DD' from 'YYYY-MM-DD HH:MM:SS'
+          return recordDate === today;
+        });
+
+        const hasTimedInToday = recordsToday.some(
+          (record) => record.type === "in"
+        );
+        const hasTimedOutToday = recordsToday.some(
+          (record) => record.type === "out"
+        );
+
+        setHasTimedIn(hasTimedInToday);
+        setHasTimedOut(hasTimedOutToday);
+
+        // Set status message and color
+        if (hasTimedInToday && hasTimedOutToday) {
+          setStatusMessage("You have already timed in and out today.");
+          setStatusColor("red");
+        } else if (hasTimedInToday) {
+          setStatusMessage("You have already timed in today.");
+          setStatusColor("red");
+        } else if (hasTimedOutToday) {
+          setStatusMessage("You have already timed out today.");
+          setStatusColor("red");
+        } else {
+          setStatusMessage(null);
+          setStatusColor("");
+        }
       } catch (error: any) {
         console.log("fetchAttendanceData error", error);
       }
@@ -112,19 +160,35 @@ const Attendance: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.content}>
           <Text style={styles.title_stack_settings}>Attendance</Text>
-          {/* <Text style={styles.text}>Manage your attendance</Text> */}
-          {/* Time In */}
-          <Button title="Time In" onPress={timeIn} disabled={loading} />
-          {/* Time Out */}
-          <Button title="Time Out" onPress={timeOut} disabled={loading} />
+          {statusMessage && (
+            <Text style={[styles.statusLabel, { color: statusColor }]}>
+              {statusMessage}
+            </Text>
+          )}
+          <View style={styles.centerItems}>
+            {!hasTimedIn && !loading && (
+              <TouchableOpacity onPress={timeIn} style={styles.buttonContainer}>
+                <Text style={styles.buttonText}>Time In</Text>
+              </TouchableOpacity>
+            )}
+            {!hasTimedOut && hasTimedIn && !loading && (
+              <TouchableOpacity
+                onPress={timeOut}
+                style={styles.buttonContainer}>
+                <Text style={styles.buttonText}>Time Out</Text>
+              </TouchableOpacity>
+            )}
+          </View>
           <AttendanceTable data={attendanceData} />
         </View>
       </ScrollView>
-      <View style={styles.floatingButtonContainer}>
-        <TouchableOpacity onPress={handleBack} style={styles.floatingButton}>
-          <Icon name="arrow-back" size={30} color="#000" />
-        </TouchableOpacity>
-      </View>
+      <TouchableOpacity
+        onPress={handleBack}
+        style={styles.floatingButtonContainer}>
+        <View style={styles.floatingButton}>
+          <Icon name="arrow-back" size={20} color="#000" />
+        </View>
+      </TouchableOpacity>
     </View>
   );
 };
