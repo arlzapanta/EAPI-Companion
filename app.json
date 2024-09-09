@@ -18,7 +18,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000"
-      }
+      },
+      "package": "com.akainzapantadev.EAPICompanion"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,6 +32,11 @@
           "initialOrientation": "landscape"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9ee2a6a9-c3cf-4412-8deb-d2407b509a8e"
+      }
+    }
   }
 }

@@ -5,6 +5,7 @@ import { getStyleUtil } from "../index";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../type/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { dropLocalTablesDb, insertDummyRecords } from "../utils/localDbUtils";
 
 type SettingsScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -49,6 +50,11 @@ const Settings = () => {
     navigation.navigate("Attendance");
   };
 
+  const dropLocalTables = async () => {
+    await insertDummyRecords();
+    await dropLocalTablesDb();
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.card}>
@@ -57,7 +63,7 @@ const Settings = () => {
           <TouchableOpacity
             style={styles.button}
             onPress={handleSyncSettingsOnPress}>
-            <Text style={styles.buttonText_settings}>Sync</Text>
+            <Text style={styles.buttonText_settings}>Sync History</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -68,6 +74,14 @@ const Settings = () => {
 
           <TouchableOpacity style={styles.button_logout} onPress={handleLogout}>
             <Text style={styles.buttonText_settings}>Logout</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button_logout}
+            onPress={dropLocalTables}>
+            <Text style={styles.buttonText_settings}>
+              DROP ALL LOCAL DB TABLES (FORTESTINGONLY)
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

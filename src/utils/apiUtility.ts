@@ -1,6 +1,8 @@
 import axios from "axios";
 import { API_URL_ENV } from "@env";
 import {
+  deleteCallsTodayLocalDb,
+  getCallsTodayLocalDb,
   getScheduleAPIRecordsLocalDb,
 } from "../utils/localDbUtils";
 
@@ -80,7 +82,6 @@ export const apiTimeOut = async (user: User) => {
         },
       }
     );
-    console.log(response);
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
@@ -99,7 +100,7 @@ export const apiTimeOut = async (user: User) => {
 
 export const syncUser = async (user: User): Promise<any> => {
   try {
-    const localRecords = await getScheduleAPIRecordsLocalDb();
+    const localRecords = await getCallsTodayLocalDb();
     const recordsToSync: ApiPayload[] = localRecords.map(record => ({
       schedules_id: record.schedules_id,
       call_start: record.call_start,
@@ -111,7 +112,6 @@ export const syncUser = async (user: User): Promise<any> => {
       photo_location: record.photo_location
     }));
 
-    console.log(recordsToSync);
     if (recordsToSync.length === 0) {
       console.log('No records to sync.');
       return 'No records to sync';
@@ -126,6 +126,11 @@ export const syncUser = async (user: User): Promise<any> => {
         },
       }
     );
+
+    // delete today's calls which is already sync to the server
+    if(response.data.isProceed){
+      await deleteCallsTodayLocalDb();
+    }
 
     return response.data;
   } catch (error: any) {
@@ -144,7 +149,7 @@ export const syncUser = async (user: User): Promise<any> => {
 };
 
 // get schedules 
-export const initialSyncUser = async (user: User): Promise<any> => {
+export const getSChedulesAPI = async (user: User): Promise<any> => {
   try {
     const {sales_portal_id } = user;
     const response = await axios.post(

@@ -14,8 +14,16 @@ import Icon from "react-native-vector-icons/Ionicons";
 import {
   saveUserAttendanceLocalDb,
   getUserAttendanceRecordsLocalDb,
+  saveUserSyncHistoryLocalDb,
+  saveSchedulesAPILocalDb,
+  getCallsTodayLocalDb,
 } from "../../utils/localDbUtils";
-import { apiTimeIn, apiTimeOut } from "../../utils/apiUtility";
+import {
+  apiTimeIn,
+  apiTimeOut,
+  getSChedulesAPI,
+  syncUser,
+} from "../../utils/apiUtility";
 import AttendanceTable from "../../tables/AttendanceTable";
 
 const Attendance: React.FC = () => {
@@ -59,15 +67,13 @@ const Attendance: React.FC = () => {
   const fetchAttendanceData = async () => {
     if (userInfo) {
       try {
+        setLoading(true);
         const data = (await getUserAttendanceRecordsLocalDb(
           userInfo
         )) as AttendanceRecord[];
         setAttendanceData(data);
-        console.log(data);
 
         const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-
-        // Convert the date field to match the 'YYYY-MM-DD' format
         const recordsToday = data.filter((record) => {
           const recordDate = record.date.split(" ")[0]; // Extract 'YYYY-MM-DD' from 'YYYY-MM-DD HH:MM:SS'
           return recordDate === today;
@@ -83,22 +89,23 @@ const Attendance: React.FC = () => {
         setHasTimedIn(hasTimedInToday);
         setHasTimedOut(hasTimedOutToday);
 
-        // Set status message and color
         if (hasTimedInToday && hasTimedOutToday) {
-          setStatusMessage("You have already timed in and out today.");
-          setStatusColor("red");
+          setStatusMessage("You have already timed out today.");
+          setStatusColor("green");
         } else if (hasTimedInToday) {
           setStatusMessage("You have already timed in today.");
-          setStatusColor("red");
+          setStatusColor("green");
         } else if (hasTimedOutToday) {
           setStatusMessage("You have already timed out today.");
-          setStatusColor("red");
+          setStatusColor("green");
         } else {
           setStatusMessage(null);
           setStatusColor("");
         }
       } catch (error: any) {
         console.log("fetchAttendanceData error", error);
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -112,15 +119,31 @@ const Attendance: React.FC = () => {
       Alert.alert("Error", "User information is missing.");
       return;
     }
-
     setLoading(true);
     try {
-      const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
-      if (checkIfTimedIn === 1) {
-        Alert.alert("Failed", "Already timed In today");
-      } else {
-        await apiTimeIn(userInfo);
-        await fetchAttendanceData();
+      const timeInIsProceed = await apiTimeIn(userInfo);
+
+      if (timeInIsProceed.isProceed) {
+        const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
+        if (checkIfTimedIn === 1) {
+          Alert.alert("Failed", "Already timed In today");
+        } else {
+          await fetchAttendanceData();
+          const scheduleData = await getSChedulesAPI(userInfo);
+          if (scheduleData) {
+            const result = await saveSchedulesAPILocalDb(scheduleData);
+            {
+              result == "Success"
+                ? Alert.alert("Success", "Successfully synced data from server")
+                : Alert.alert("Failed", "Error syncing");
+            }
+            const res = await saveUserSyncHistoryLocalDb(userInfo, 1);
+            console.log(
+              "AttendanceScreen > timeIn > saveUserSyncHistoryLocalDb > res : ",
+              res
+            );
+          }
+        }
       }
     } catch (error) {
       Alert.alert("Error", "Failed to time in.");
@@ -134,21 +157,48 @@ const Attendance: React.FC = () => {
       Alert.alert("Error", "User information is missing.");
       return;
     }
-
     setLoading(true);
-    try {
+
+    const timeOutIsProceed = await apiTimeOut(userInfo);
+    if (timeOutIsProceed.isProceed) {
       const checkIfTimedOut = await saveUserAttendanceLocalDb(userInfo, "out");
       if (checkIfTimedOut === 1) {
-        Alert.alert("Failed", "Already timed Out today");
+        Alert.alert("Failed", "Already timed out today");
       } else {
-        await apiTimeOut(userInfo);
         await fetchAttendanceData();
+        const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
+        console.log(
+          "AttendanceScreen > timeOut > saveUserSyncHistoryLocalDb > res : ",
+          res
+        );
+        const syncLocalToAPI = await syncUser(userInfo);
+        if (syncLocalToAPI != "No records to sync") {
+          Alert.alert("Success", "Successfully Sync data to server");
+        } else {
+          console.log(
+            "AttendanceScreen > timeOut > syncUser > res : No records to sync"
+          );
+        }
       }
-    } catch (error) {
-      Alert.alert("Error", "Failed to time out.");
-    } finally {
-      setLoading(false);
     }
+  };
+
+  const showConfirmAlert = (action: () => void, actionName: string) => {
+    Alert.alert(
+      `Confirm ${actionName}`,
+      `Are you sure you want to ${actionName.toLowerCase()}?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "OK",
+          onPress: action,
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const handleBack = () => {
@@ -167,13 +217,15 @@ const Attendance: React.FC = () => {
           )}
           <View style={styles.centerItems}>
             {!hasTimedIn && !loading && (
-              <TouchableOpacity onPress={timeIn} style={styles.buttonContainer}>
+              <TouchableOpacity
+                onPress={() => showConfirmAlert(timeIn, "Time In")}
+                style={styles.buttonContainer}>
                 <Text style={styles.buttonText}>Time In</Text>
               </TouchableOpacity>
             )}
             {!hasTimedOut && hasTimedIn && !loading && (
               <TouchableOpacity
-                onPress={timeOut}
+                onPress={() => showConfirmAlert(timeOut, "Time Out")}
                 style={styles.buttonContainer}>
                 <Text style={styles.buttonText}>Time Out</Text>
               </TouchableOpacity>
@@ -186,7 +238,7 @@ const Attendance: React.FC = () => {
         onPress={handleBack}
         style={styles.floatingButtonContainer}>
         <View style={styles.floatingButton}>
-          <Icon name="arrow-back" size={20} color="#000" />
+          <Icon name="arrow-back" size={20} color="#fff" />
         </View>
       </TouchableOpacity>
     </View>

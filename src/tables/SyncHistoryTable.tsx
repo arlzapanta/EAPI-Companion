@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
 import { dropLocalTablesDb } from "../utils/localDbUtils";
+import Icon from "react-native-vector-icons/Ionicons";
 
 interface SyncHistoryRecord {
   id: number;
@@ -20,15 +21,23 @@ interface SyncHistoryTableProps {
 const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const itemsPerPage = 10;
+  const [loading, setLoading] = useState<boolean>(true); // Added loading state
+  const itemsPerPage = 8;
 
-  // Format the date in 'YYYY-MM-DD' format from the fetched data
+  useEffect(() => {
+    // Simulate loading delay
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000); // Adjust the time as needed
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const formatDate = (dateString: string) => {
     const date = parseISO(dateString);
     return format(date, "MMM d, yyyy EEEE");
   };
 
-  // Extract unique dates from the data
   const uniqueDates = Array.from(
     new Set(data.map((item) => formatDate(item.date)))
   );
@@ -58,72 +67,107 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
   return (
     <Provider>
       <View style={styles.mainbox}>
-        <View style={styles.rowContainer}>
-          <Picker
-            selectedValue={selectedDate}
-            onValueChange={(itemValue) => setSelectedDate(itemValue)}
-            style={styles.picker}>
-            <Picker.Item
-              label="Select Date"
-              value=""
-              style={styles.pickerInitialLabel}
-            />
-            {uniqueDates.map((date) => (
-              <Picker.Item
-                label={date}
-                value={date}
-                key={date}
-                style={styles.pickerLabel}
-              />
-            ))}
-          </Picker>
-          <Button
-            mode="contained"
-            onPress={clearDateSelection}
-            style={styles.clearButton}>
-            Reset
-          </Button>
-        </View>
-        <Card>
-          <DataTable>
-            <DataTable.Header style={styles.databeHeader}>
-              <DataTable.Title>Type</DataTable.Title>
-              <DataTable.Title>Date</DataTable.Title>
-            </DataTable.Header>
-            {currentData.map((user) => (
-              <DataTable.Row style={styles.databeBox} key={user.id}>
-                <DataTable.Cell>
-                  {user.type === 1
-                    ? "Morning Sync"
-                    : user.type === 2
-                    ? "Mid Sync"
-                    : "Evening Sync"}
-                </DataTable.Cell>
-                <DataTable.Cell>{formatDate(user.date)}</DataTable.Cell>
-              </DataTable.Row>
-            ))}
-          </DataTable>
-        </Card>
-        <View style={styles.paginationContainer}>
-          <Button
-            mode="outlined"
-            onPress={() => goToPage(currentPage - 1)}
-            disabled={currentPage === 1}
-            style={styles.paginationButton}>
-            Previous
-          </Button>
-          <Text style={styles.paginationText}>
-            Page {currentPage} of {totalPages}
-          </Text>
-          <Button
-            mode="outlined"
-            onPress={() => goToPage(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            style={styles.paginationButton}>
-            Next
-          </Button>
-        </View>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#046E37" />
+          </View>
+        ) : (
+          <>
+            <View style={styles.rowContainer}>
+              <Picker
+                selectedValue={selectedDate}
+                onValueChange={(itemValue) => setSelectedDate(itemValue)}
+                style={styles.picker}>
+                <Picker.Item
+                  label="Select Date"
+                  value=""
+                  style={styles.pickerInitialLabel}
+                />
+                {uniqueDates.map((date) => (
+                  <Picker.Item
+                    label={date}
+                    value={date}
+                    key={date}
+                    style={styles.pickerLabel}
+                  />
+                ))}
+              </Picker>
+              <Button
+                mode="contained"
+                onPress={clearDateSelection}
+                style={styles.clearButton}>
+                Reset
+              </Button>
+            </View>
+            <Card>
+              <DataTable>
+                <DataTable.Header style={styles.databeHeader}>
+                  <DataTable.Title>Type</DataTable.Title>
+                  <DataTable.Title>Date</DataTable.Title>
+                </DataTable.Header>
+                {currentData.map((user) => (
+                  <DataTable.Row style={styles.databeBox} key={user.id}>
+                    <DataTable.Cell>
+                      {user.type === 1 ? (
+                        <>
+                          <Text>Time in Sync</Text>
+                          <Icon name="arrow-down" size={20} color="green" />
+                        </>
+                      ) : user.type === 2 ? (
+                        <>
+                          <Text>Time Out Sync</Text>
+                          <Icon name="arrow-up" size={20} color="green" />
+                        </>
+                      ) : (
+                        <Text>Mid Sync</Text>
+                      )}
+                    </DataTable.Cell>
+                    <DataTable.Cell>{formatDate(user.date)}</DataTable.Cell>
+                  </DataTable.Row>
+                ))}
+              </DataTable>
+            </Card>
+            <View style={styles.paginationContainer}>
+              <Button
+                mode="outlined"
+                onPress={() => goToPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                style={[
+                  styles.paginationButton,
+                  currentPage === 1 && styles.disabledButton,
+                ]}>
+                <Text
+                  style={[
+                    styles.paginationText,
+                    currentPage === 1 && styles.disabledText,
+                  ]}>
+                  Previous
+                </Text>
+              </Button>
+              <Text style={styles.paginationText}>
+                Page {currentPage} of {totalPages}
+              </Text>
+              <Button
+                mode="outlined"
+                onPress={() => goToPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                style={[
+                  styles.paginationButton,
+                  currentPage === totalPages && styles.disabledButton,
+                ]}>
+                <Text
+                  style={[
+                    styles.paginationText,
+                    currentPage === totalPages && styles.disabledText,
+                  ]}>
+                  Next
+                </Text>
+              </Button>
+            </View>
+          </>
+        )}
       </View>
+      {loading && <View style={styles.overlay}></View>}
     </Provider>
   );
 };
@@ -170,10 +214,31 @@ const styles = StyleSheet.create({
   paginationButton: {
     flex: 1,
     marginHorizontal: 5,
+    borderColor: "#046E37",
   },
   paginationText: {
     flex: 2,
     textAlign: "center",
+    color: "#046E37",
+  },
+  disabledButton: {
+    borderColor: "gray",
+  },
+  disabledText: {
+    color: "gray",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    height: Dimensions.get("window").height * 0.8,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
   },
 });
 

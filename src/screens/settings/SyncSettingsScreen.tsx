@@ -14,10 +14,8 @@ import Icon from "react-native-vector-icons/Ionicons";
 import {
   saveUserSyncHistoryLocalDb,
   getSyncHistoryRecordsLocalDb,
-  saveUserSyncUpLocalDb,
-  saveUserSyncDownLocalDb,
 } from "../../utils/localDbUtils";
-import { syncUser, initialSyncUser } from "../../utils/apiUtility";
+import { syncUser } from "../../utils/apiUtility";
 import { getCurrentTimePH } from "../../utils/dateUtils";
 import SyncTable from "../../tables/SyncHistoryTable";
 
@@ -65,64 +63,6 @@ const SyncSettingsScreen: React.FC = () => {
 
   const syncNow = async () => {
     console.log("test syncNow", "@@@@@@@@@@@@@@@@@@@@@");
-    setLoading(true);
-
-    if (!userInfo) {
-      Alert.alert("Error", "User information is missing.");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const storedTime = await getCurrentTimePH();
-      const [hours, minutes] = storedTime.split(":").map(Number);
-
-      let type = 1;
-      let syncBtnTitle = "Sync";
-      let syncMethod = syncUser; // Default sync method
-
-      syncMethod = initialSyncUser;
-
-      // if (hours === 8 && hours > 10 && minutes < 59) {
-      //   type = 1;
-      //   syncBtnTitle = "Sync (1/3)";
-      //   syncMethod = initialSyncUser; // Use initialSyncUser for type 1
-      // } else if ((hours === 11 && minutes >= 1) || (hours > 11 && hours < 14)) {
-      //   type = 2;
-      //   syncBtnTitle = "Sync (2/3)";
-      // } else if (hours >= 17 && hours < 23 && minutes < 59) {
-      //   type = 3;
-      //   syncBtnTitle = "Sync (3/3)";
-      // } else {
-      //   Alert.alert("Failed", "Synchronization is not valid at this hour.");
-      //   setLoading(false);
-      //   return;
-      // }
-
-      setSnycBtnTitle(syncBtnTitle);
-
-      const syncLocalResult = await saveUserSyncHistoryLocalDb(userInfo, type);
-
-      if (syncLocalResult === "Success") {
-        const syncRes = await syncMethod(userInfo);
-        if (syncRes) {
-          const result = await saveUserSyncUpLocalDb(syncRes);
-          {
-            result == "Success"
-              ? Alert.alert("Success", "Successfully synced data")
-              : Alert.alert("Failed", "Error syncing");
-          }
-          setLoading(false);
-        }
-        await fetchSyncData();
-      } else {
-        Alert.alert("Failed", syncLocalResult);
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to sync.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   const handleBack = () => {
@@ -133,9 +73,8 @@ const SyncSettingsScreen: React.FC = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.content}>
-          <Text style={styles.title_stack_settings}>Sync</Text>
-          {/* <Text style={styles.text}>Manage your sync settings</Text> */}
-          <View style={styles.centerItems}>
+          <Text style={styles.title_stack_settings}>Sync History</Text>
+          {/* <View style={styles.centerItems}>
             <TouchableOpacity
               onPress={syncNow}
               disabled={loading}
@@ -145,7 +84,7 @@ const SyncSettingsScreen: React.FC = () => {
               ]}>
               <Text style={styles.buttonText}>Sync</Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
           <SyncTable data={syncData} />
         </View>
       </ScrollView>
@@ -153,7 +92,7 @@ const SyncSettingsScreen: React.FC = () => {
         onPress={handleBack}
         style={styles.floatingButtonContainer}>
         <View style={styles.floatingButton}>
-          <Icon name="arrow-back" size={20} color="#000" />
+          <Icon name="arrow-back" size={20} color="#fff" />
         </View>
       </TouchableOpacity>
     </View>

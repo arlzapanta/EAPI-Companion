@@ -151,7 +151,7 @@ interface CallAPIDown {
   photo_location: string | null;
 }
 
-export const saveUserSyncDownLocalDb = async (schedules: CallAPIDown[]): Promise<string> => {
+export const saveActualCallsAPILocalDb = async (schedules: CallAPIDown[]): Promise<string> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
@@ -221,7 +221,7 @@ interface ScheduleAPIRecord {
 }
 
 
-export const saveUserSyncUpLocalDb = async (schedules: ScheduleAPIRecord[]): Promise<string> => {
+export const saveSchedulesAPILocalDb = async (schedules: ScheduleAPIRecord[]): Promise<string> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
@@ -261,7 +261,6 @@ export const saveUserSyncUpLocalDb = async (schedules: ScheduleAPIRecord[]): Pro
   try {
     await Promise.all(insertPromises);
       const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
-      console.log('All records:', testRecords);
     return 'Success';
   } catch (error) {
     console.error('Error saving data:', error);
@@ -372,6 +371,75 @@ export const getScheduleAPIRecordsLocalDb = async (): Promise<ScheduleRecord[]> 
   }
 };
 
+export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS calls_tbl (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+      schedule_id TEXT, 
+      address TEXT, 
+      call_start TEXT, 
+      call_end TEXT, 
+      date TEXT, 
+      doctor_name TEXT, 
+      municipality_city TEXT, 
+      photo TEXT, 
+      photo_location TEXT, 
+      province TEXT, 
+      signature TEXT, 
+      signature_location TEXT
+    );
+  `);
+
+  const currentDate = await getCurrentDatePH();
+  const query = `SELECT * FROM calls_tbl WHERE DATE(created_date) = ?`;
+
+  try {
+    const result = await db.getAllAsync(query, [currentDate]);
+    const existingRows = result as ScheduleRecord[];
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching data for today:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const deleteCallsTodayLocalDb = async (): Promise<void> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  const tableExistsQuery = `
+    SELECT name FROM sqlite_master WHERE type='table' AND name='calls_tbl';
+  `;
+
+  try {
+    const tableResult = await db.getAllAsync(tableExistsQuery);
+    if (tableResult.length === 0) {
+      console.log('Table calls_tbl does not exist.');
+      return; 
+    }
+
+    const currentDate = await getCurrentDatePH();
+    const deleteQuery = `DELETE FROM calls_tbl WHERE DATE(created_date) = ?`;
+
+    const result = await db.getAllAsync(deleteQuery, [currentDate]);
+    console.log('Records deleted successfully.', result);
+
+  } catch (error) {
+    console.error('Error deleting records for today:', error);
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+
 export const insertDummyRecords = async (): Promise<void> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -379,7 +447,7 @@ export const insertDummyRecords = async (): Promise<void> => {
 
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS schedules_tbl (
+    CREATE TABLE IF NOT EXISTS calls_tbl (
       id INTEGER PRIMARY KEY NOT NULL, 
       schedules_id INTEGER, 
       call_start TEXT NOT NULL,
@@ -418,8 +486,9 @@ export const insertDummyRecords = async (): Promise<void> => {
 
   try {
     for (const record of dummyRecords) {
+      
       await db.runAsync(
-        `INSERT INTO schedules_tbl (
+        `INSERT INTO calls_tbl (
           schedules_id, call_start, call_end,
           signature, signature_attempts, signature_location,
           photo, photo_location
@@ -450,10 +519,13 @@ export const dropLocalTablesDb = async () => {
     useNewConnection: true,
   });
 
-  const tableName = 'user_attendance_tbl';
+  // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl'];
+  const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
+  for (const tableName of tableNames) {
+    const query = `DROP TABLE IF EXISTS ${tableName};`;
+    await db.getAllAsync(query);
+    console.log(tableName, 'has been dropped');
+  }
 
-  const query = `DROP TABLE ${tableName};`;
-
-  await db.getAllAsync(query);
-  await db.closeAsync(); 
+  await db.closeAsync();
 }
