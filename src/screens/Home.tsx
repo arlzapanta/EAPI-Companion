@@ -5,12 +5,13 @@ import {
   SettingsScreen,
   NavLinkComponent,
   Schedules,
+  ActualCalls,
 } from "../index";
 import { getStyleUtil } from "../index";
 
 const Home = () => {
   const [selectedScreen, setSelectedScreen] = useState<
-    "dashboard" | "settings" | "schedules"
+    "dashboard" | "settings" | "schedules" | "actualcalls"
   >("dashboard");
   const [fadeAnim] = useState(new Animated.Value(1));
 
@@ -24,6 +25,8 @@ const Home = () => {
         return <Schedules />;
       case "settings":
         return <SettingsScreen />;
+      case "actualcalls":
+        return <ActualCalls />;
       default:
         return <Dashboard />;
     }
@@ -60,6 +63,12 @@ const Home = () => {
           iconName="calendar"
           onPress={() => setSelectedScreen("schedules")}
           active={selectedScreen === "schedules"}
+        />
+
+        <NavLinkComponent
+          iconName="list"
+          onPress={() => setSelectedScreen("actualcalls")}
+          active={selectedScreen === "actualcalls"}
         />
       </View>
       <Animated.View

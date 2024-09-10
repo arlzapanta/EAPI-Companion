@@ -1,10 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
 import { useAuth, getStyleUtil } from "../index";
-import { getScheduleAPIRecordsLocalDb } from "../utils/localDbUtils";
+import {
+  getSchedulesTodayLocalDb,
+  getSchedulesLocalDb,
+} from "../utils/localDbUtils";
 import CallComponents from "../components/CallComponents";
 import { getCurrentDatePH, formatDate } from "../utils/dateUtils";
 import moment from "moment";
+import { Ionicons } from "@expo/vector-icons"; // Import Ionicons for the icon
 
 const Schedules = () => {
   const [loading, setLoading] = useState(false);
@@ -22,8 +32,8 @@ const Schedules = () => {
       try {
         const getDate = await getCurrentDatePH();
         const formattedDate = formatDate(getDate);
-        getCurrentDate(getDate);
-        const data = await getScheduleAPIRecordsLocalDb();
+        getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
+        const data = await getSchedulesLocalDb();
         setScheduleData(data);
       } catch (error: any) {
         console.log("fetchScheduleData error", error);
@@ -38,25 +48,51 @@ const Schedules = () => {
   }, [authState]);
 
   const toggleAccordion = () => {
-    console.log("Toggling accordion:", accordionExpanded);
     setAccordionExpanded(!accordionExpanded);
+    if (!accordionExpanded) {
+      setSelectedSchedule(null);
+    }
   };
 
   const handleScheduleClick = (schedule: any) => {
     setSelectedSchedule(schedule);
   };
 
+  const NoScheduleSelected = () => {
+    return (
+      <View style={styles1.containerNoSched}>
+        <Ionicons
+          name="information-circle"
+          size={24}
+          color="#007BFF"
+          style={styles1.iconNoSched}
+        />
+        <Text style={styles1.messageNoSched}>
+          Select a schedule to view details
+        </Text>
+      </View>
+    );
+  };
+
   return (
-    <View style={styles.container}>
+    <View style={styles1.container}>
       <View style={styles1.row}>
         <View style={styles1.column1}>
           <View style={styles1.innerCard}>
             <Text style={styles1.columnTitle}>Schedules</Text>
-
-            <TouchableOpacity onPress={toggleAccordion}>
+            <Text style={styles1.columnSubTitle}>{currentDate}</Text>
+            <TouchableOpacity
+              onPress={toggleAccordion}
+              style={styles1.accordionButton}>
               <Text style={styles1.accordionTitle}>
                 {accordionExpanded ? "Hide Today" : "View Today"}
               </Text>
+              <Ionicons
+                name={accordionExpanded ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#007BFF"
+                style={styles1.icon}
+              />
             </TouchableOpacity>
 
             {accordionExpanded && (
@@ -66,11 +102,11 @@ const Schedules = () => {
                     key={schedule.schedule_id}
                     onPress={() => handleScheduleClick(schedule)}
                     style={styles1.scheduleItem}>
-                    <Text>
+                    <Text style={styles1.scheduleText}>
                       {schedule.full_name}
                       {`${
                         schedule.municipality_city
-                          ? ` - ${schedule.municipality_city} / ${schedule.province}`
+                          ? ` - ${schedule.municipality_city} - ${schedule.province}`
                           : ""
                       }`}
                     </Text>
@@ -83,18 +119,25 @@ const Schedules = () => {
 
         <View style={styles1.column2}>
           <View style={styles1.innerCard}>
-            {/* add start call here */}
+            {/* Add start call here */}
             {selectedSchedule ? (
               <>
                 <Text style={styles1.columnTitle}>
-                  {String(selectedSchedule.full_name)} {currentDate}
+                  {String(selectedSchedule.full_name)}
+                </Text>
+                <Text style={styles1.columnSubTitle}>
+                  {moment(selectedSchedule.date).format("MMMM DD, dddd")}
+                </Text>
+                <Text style={styles1.columnSubTitle}>
+                  {selectedSchedule.municipality_city} {" - "}
+                  {selectedSchedule.province}
                 </Text>
                 <CallComponents
                   scheduleId={String(selectedSchedule.schedule_id)}
                 />
               </>
             ) : (
-              <Text>Select a schedule to view details</Text>
+              <NoScheduleSelected />
             )}
           </View>
         </View>
@@ -106,11 +149,14 @@ const Schedules = () => {
 const styles1 = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
+    paddingVertical: 20,
+    paddingEnd: 20,
+    backgroundColor: "#F0F0F0",
   },
   row: {
     flexDirection: "row",
     flex: 1,
+    marginTop: 10,
   },
   column1: {
     width: "30%",
@@ -123,101 +169,79 @@ const styles1 = StyleSheet.create({
   innerCard: {
     height: "100%",
     padding: 16,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 8,
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    elevation: 2, // For Android shadow
+    shadowColor: "#000", // For iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
   },
   columnTitle: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: "bold",
+    color: "#343a40",
     marginBottom: 8,
+  },
+  columnSubTitle: {
+    fontSize: 16,
+    color: "#6c757d",
+  },
+  accordionButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#e9ecef",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginVertical: 10,
   },
   accordionTitle: {
     fontSize: 16,
-    color: "#007BFF",
-    marginBottom: 10,
+    color: "#046E37",
+  },
+  icon: {
+    marginLeft: 10,
+    color: "#046E37",
   },
   scheduleItem: {
     padding: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    borderBottomColor: "#e9ecef",
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    marginVertical: 4,
+  },
+  scheduleText: {
+    fontSize: 16,
+    color: "#343a40",
   },
   accordionContent: {
-    backgroundColor: "#f0f0f0",
-    borderRadius: 8,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 8,
-    marginTop: 10,
   },
-  modalButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 10,
-  },
-  startCallButton: {
-    backgroundColor: "red",
-    padding: 10,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  startDetailerButton: {
-    backgroundColor: "green",
-    padding: 10,
-    borderRadius: 8,
-  },
-  modalButtonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-  modalContent: {
-    backgroundColor: "#fff",
+  containerNoSched: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
+    backgroundColor: "#e9ecef",
     borderRadius: 10,
+    borderColor: "#046E37",
+    borderWidth: 1,
   },
-  modalTitle: {
+  iconNoSched: {
+    marginBottom: 10,
+    color: "#046E37",
+  },
+  messageNoSched: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 10,
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  modalInput: {
-    borderColor: "#ddd",
-    borderWidth: 1,
-    borderRadius: 4,
-    padding: 8,
-    marginBottom: 10,
-  },
-  preCallSection: {
-    marginTop: 20,
-  },
-  preCallHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  preCallTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  preCallInput: {
-    borderColor: "#ddd",
-    borderWidth: 1,
-    borderRadius: 4,
-    padding: 8,
-    marginBottom: 10,
-  },
-  noteItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  removeNote: {
-    color: "red",
-    marginLeft: 10,
+    color: "#046E37",
+    textAlign: "center",
   },
 });
 

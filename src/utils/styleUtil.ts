@@ -154,8 +154,8 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     navContainer_home: {
       backgroundColor: currentTheme.containerBackgroundColor,
       paddingVertical: 10,
-      paddingHorizontal: 10,
-      width: 70,
+      justifyContent: 'center', 
+      alignItems: 'center', 
     } as ViewStyle,
     contentContainer_home: {
       flex: 1,
@@ -218,7 +218,7 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     // *  NAVLINK STYLES
     // ***************************************************************************************
     navLink: {
-      width: 50,
+      width: 40,
       height: 50,
       justifyContent: 'center',
       alignItems: 'center',

@@ -66,7 +66,7 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
 
   return (
     <Provider>
-      <View style={styles.mainbox}>
+      <View style={styles.container}>
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#046E37" />
@@ -99,14 +99,14 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
                 Reset
               </Button>
             </View>
-            <Card>
+            <Card style={styles.card}>
               <DataTable>
-                <DataTable.Header style={styles.databeHeader}>
+                <DataTable.Header style={styles.tableHeader}>
                   <DataTable.Title>Type</DataTable.Title>
                   <DataTable.Title>Date</DataTable.Title>
                 </DataTable.Header>
                 {currentData.map((user) => (
-                  <DataTable.Row style={styles.databeBox} key={user.id}>
+                  <DataTable.Row style={styles.tableRow} key={user.id}>
                     <DataTable.Cell>
                       {user.type === 1 ? (
                         <>
@@ -166,16 +166,16 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
             </View>
           </>
         )}
+        {loading && <View style={styles.overlay}></View>}
       </View>
-      {loading && <View style={styles.overlay}></View>}
     </Provider>
   );
 };
 
 const styles = StyleSheet.create({
-  mainbox: {
-    margin: 15,
+  container: {
     flex: 1,
+    margin: 15,
   },
   rowContainer: {
     flexDirection: "row",
@@ -189,21 +189,34 @@ const styles = StyleSheet.create({
     color: "black",
   },
   picker: {
-    width: Dimensions.get("window").width * 0.4,
-    height: 30,
+    width: Dimensions.get("window").width * 0.55,
+    height: 40,
     backgroundColor: "#f9f9f9",
+    borderRadius: 4,
+    borderColor: "#ddd",
+    borderWidth: 1,
   },
   clearButton: {
     backgroundColor: "#046E37",
     marginLeft: 10,
     width: Dimensions.get("window").width * 0.2,
+    borderRadius: 5,
   },
-  databeBox: {
+  card: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  tableHeader: {
+    backgroundColor: "#f9f9f9",
+  },
+  tableRow: {
     margin: 1,
     alignItems: "center",
-  },
-  databeHeader: {
-    margin: 2,
   },
   paginationContainer: {
     flexDirection: "row",
@@ -231,11 +244,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    height: Dimensions.get("window").height * 0.8,
+    height: Dimensions.get("window").height * 0.5,
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    backgroundColor: "transparent",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1000,

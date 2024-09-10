@@ -3,7 +3,6 @@ import { API_URL_ENV } from "@env";
 import {
   deleteCallsTodayLocalDb,
   getCallsTodayLocalDb,
-  getScheduleAPIRecordsLocalDb,
 } from "../utils/localDbUtils";
 
 interface User {
@@ -98,6 +97,7 @@ export const apiTimeOut = async (user: User) => {
   }
 };
 
+// sync calls from local to api
 export const syncUser = async (user: User): Promise<any> => {
   try {
     const localRecords = await getCallsTodayLocalDb();
@@ -149,7 +149,7 @@ export const syncUser = async (user: User): Promise<any> => {
 };
 
 // get schedules 
-export const getSChedulesAPI = async (user: User): Promise<any> => {
+  export const getSChedulesAPI = async (user: User): Promise<any> => {
   try {
     const {sales_portal_id } = user;
     const response = await axios.post(
@@ -180,3 +180,4 @@ export const getSChedulesAPI = async (user: User): Promise<any> => {
   }
 };
 
+// get calls from server

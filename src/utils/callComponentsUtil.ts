@@ -42,11 +42,46 @@ export const savePostCallNotesLocalDb = async ({
     const testRecords = await db.getAllAsync(
       "SELECT * FROM post_call_notes_tbl "
     );
-    console.log("All post-call records:", testRecords);
+    // console.log("All post-call records:", testRecords);
 
     db.closeSync();
   } catch (error) {
     console.error("Error saving post-call notes:", error);
+  }
+};
+
+export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<PostCallNotesParams[]> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS post_call_notes_tbl (
+      id INTEGER PRIMARY KEY NOT NULL, 
+      mood TEXT NOT NULL, 
+      feedback TEXT NOT NULL, 
+      schedule_id TEXT NOT NULL, 
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const query = `SELECT mood, feedback, schedule_id FROM post_call_notes_tbl WHERE schedule_id = ?`;
+
+  try {
+    const result = await db.getAllAsync(query, [scheduleId]);
+    const existingRows = result as { mood: string; feedback: string; schedule_id: string }[];
+
+    return existingRows.map(row => ({
+      mood: row.mood,
+      feedback: row.feedback,
+      scheduleId: row.schedule_id,
+    }));
+  } catch (error) {
+    console.error("Error fetching post-call notes:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
   }
 };
 
@@ -69,6 +104,8 @@ export const savePreCallNotesLocalDb = async ({
       );
     `);
 
+    await deleteAllPreCallNotes({ scheduleId });
+
     const notesJson = JSON.stringify(notesArray);
 
     await db.runAsync(
@@ -80,11 +117,63 @@ export const savePreCallNotesLocalDb = async ({
     const testRecords = await db.getAllAsync(
       "SELECT * FROM pre_call_notes_tbl "
     );
-    console.log("All records:", testRecords);
+    // console.log("All records:", testRecords);
 
     db.closeSync();
   } catch (error) {
     console.error("Error saving pre-call notes:", error);
+  }
+};
+
+export const getPreCallNotesLocalDb = async (scheduleId: string): Promise<PreCallNotesParams[]> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS pre_call_notes_tbl (
+      id INTEGER PRIMARY KEY NOT NULL, 
+      notes TEXT NOT NULL, 
+      schedule_id TEXT NOT NULL, 
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const query = `SELECT notes, schedule_id FROM pre_call_notes_tbl WHERE schedule_id = ?`;
+
+  try {
+    const result = await db.getAllAsync(query, [scheduleId]);
+    const existingRows = result as { notes: string; schedule_id: string }[];
+    return existingRows.map(row => ({
+      notesArray: JSON.parse(row.notes),
+      scheduleId: row.schedule_id,
+    }));
+  } catch (error) {
+    console.error("Error fetching pre-call notes:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const deleteAllPreCallNotes = async ({ scheduleId }: { scheduleId: string }) => {
+
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  try {
+    await db.runAsync(
+      `DELETE FROM pre_call_notes_tbl WHERE schedule_id = ?`,
+      scheduleId
+    );
+
+    // console.log(`Successfully deleted all pre-call notes for scheduleId: ${scheduleId}`);
+  } catch (error) {
+    console.error("Error deleting pre-call notes:", error);
+  } finally {
+    await db.closeAsync();
   }
 };
 

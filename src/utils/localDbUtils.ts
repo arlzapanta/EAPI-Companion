@@ -260,7 +260,7 @@ export const saveSchedulesAPILocalDb = async (schedules: ScheduleAPIRecord[]): P
 
   try {
     await Promise.all(insertPromises);
-      const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+      // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
     return 'Success';
   } catch (error) {
     console.error('Error saving data:', error);
@@ -331,7 +331,7 @@ export const getSyncHistoryRecordsLocalDb = async (user: User) => {
   }
 };
 
-export const getScheduleAPIRecordsLocalDb = async (): Promise<ScheduleRecord[]> => {
+export const getSchedulesLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
@@ -339,6 +339,74 @@ export const getScheduleAPIRecordsLocalDb = async (): Promise<ScheduleRecord[]> 
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS schedule_API_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      schedule_id TEXT, 
+      address TEXT, 
+      date TEXT, 
+      doctor_id TEXT, 
+      full_name TEXT, 
+      municipality_city TEXT, 
+      province TEXT
+    );
+  `);
+
+  const query = `SELECT * FROM schedule_API_tbl`;
+
+  try {
+    const result = await db.getAllAsync(query);
+    const existingRows = result as ScheduleAPIRecord[];
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching schedule records data:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getSchedulesTodayLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      schedule_id TEXT, 
+      address TEXT, 
+      date TEXT, 
+      doctor_id TEXT, 
+      full_name TEXT, 
+      municipality_city TEXT, 
+      province TEXT
+    );
+  `);
+
+  const currentDate = await getCurrentDatePH();
+  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) = ?`;
+
+  try {
+    const result = await db.getAllAsync(query, [currentDate]);
+    const existingRows = result as ScheduleAPIRecord[];
+
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching schedule records data:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getCallsTestLocalDb = async (): Promise<ScheduleRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS calls_tbl (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
       schedule_id TEXT, 
       address TEXT, 
@@ -355,22 +423,20 @@ export const getScheduleAPIRecordsLocalDb = async (): Promise<ScheduleRecord[]> 
     );
   `);
 
-  const dateRange = await getRelevantDateRange(); 
-  const placeholders = dateRange.map(() => '?').join(', ');
-  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) IN (${placeholders})`;
+  const currentDate = await getCurrentDatePH();
+  const query = `SELECT * FROM calls_tbl`;
 
   try {
-    const result = await db.getAllAsync(query, [...dateRange]);
+    const result = await db.getAllAsync(query, [currentDate]);
     const existingRows = result as ScheduleRecord[];
     return existingRows;
   } catch (error) {
-    console.error('Error fetching sync users data:', error);
+    console.error('Error fetching data for today:', error);
     return [];
   } finally {
     await db.closeAsync();
   }
 };
-
 export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -439,6 +505,28 @@ export const deleteCallsTodayLocalDb = async (): Promise<void> => {
   }
 };
 
+export const fetchDetailerImages = async (category: string): Promise<string[]> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  try {
+    const query = `SELECT image FROM detailers_tbl WHERE category = ?`;
+    const result = await db.getAllAsync(query, [`category${category}`]);
+
+    const rows: { image: string }[] = result as { image: string }[];
+    const imageUrls = rows.map(row => row.image);
+    // console.log(imageUrls.length , 'fetchDetailerImages > imageUrls.length');
+    return imageUrls;
+  } catch (error) {
+    console.error("Error fetching detailer images:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+
 
 export const insertDummyRecords = async (): Promise<void> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
@@ -447,10 +535,10 @@ export const insertDummyRecords = async (): Promise<void> => {
 
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS calls_tbl (
+    CREATE TABLE IF NOT EXISTS detailers_tbl (
       id INTEGER PRIMARY KEY NOT NULL, 
       schedules_id INTEGER, 
-      call_start TEXT NOT NULL,
+      image64 TEXT NOT NULL,
       call_end TEXT NOT NULL,
       signature TEXT NOT NULL,
       signature_attempts TEXT NOT NULL,
@@ -501,6 +589,49 @@ export const insertDummyRecords = async (): Promise<void> => {
         record.signature_location,
         record.photo,
         record.photo_location
+      );
+    }
+    // const testRecords = await db.getAllAsync('SELECT * FROM schedules_tbl');
+    // console.log('All records:', testRecords);
+    
+    console.log('Dummy records inserted successfully.');
+  } catch (error) {
+    console.error('Error inserting dummy records:', error);
+  } finally {
+    db.closeSync();
+  }
+};
+
+export const insertImage64Dummy = async (): Promise<void> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS detailers_tbl (
+      id INTEGER PRIMARY KEY NOT NULL,
+      image64 TEXT NOT NULL,
+    );
+  `);
+
+  const dummyRecords = [
+    {
+      image64: 1,
+    },
+    {
+      image64: 2,
+    }
+  ];
+
+  try {
+    for (const record of dummyRecords) {
+      
+      await db.runAsync(
+        `INSERT INTO detailers_tbl (
+          image64, 
+        ) VALUES (?)`,
+        record.image64,
       );
     }
     // const testRecords = await db.getAllAsync('SELECT * FROM schedules_tbl');

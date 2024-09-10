@@ -3,28 +3,21 @@ import {
   View,
   Text,
   TouchableOpacity,
-  Button,
-  Alert,
   ScrollView,
+  StyleSheet,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { useAuth, getStyleUtil } from "../../index";
 import { SyncScreenNavigationProp } from "../../type/navigation";
 import Icon from "react-native-vector-icons/Ionicons";
-import {
-  saveUserSyncHistoryLocalDb,
-  getSyncHistoryRecordsLocalDb,
-} from "../../utils/localDbUtils";
-import { syncUser } from "../../utils/apiUtility";
-import { getCurrentTimePH } from "../../utils/dateUtils";
+import { getSyncHistoryRecordsLocalDb } from "../../utils/localDbUtils";
 import SyncTable from "../../tables/SyncHistoryTable";
 
 const SyncSettingsScreen: React.FC = () => {
   const navigation = useNavigation<SyncScreenNavigationProp>();
-  const styles = getStyleUtil({});
   const { authState } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [snycBtnTitle, setSnycBtnTitle] = useState("Sync");
   const [userInfo, setUserInfo] = useState<{
     first_name: string;
     last_name: string;
@@ -61,10 +54,6 @@ const SyncSettingsScreen: React.FC = () => {
     fetchSyncData();
   }, [fetchSyncData]);
 
-  const syncNow = async () => {
-    console.log("test syncNow", "@@@@@@@@@@@@@@@@@@@@@");
-  };
-
   const handleBack = () => {
     navigation.goBack();
   };
@@ -73,18 +62,7 @@ const SyncSettingsScreen: React.FC = () => {
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.content}>
-          <Text style={styles.title_stack_settings}>Sync History</Text>
-          {/* <View style={styles.centerItems}>
-            <TouchableOpacity
-              onPress={syncNow}
-              disabled={loading}
-              style={[
-                styles.buttonContainer,
-                loading && styles.buttonDisabled,
-              ]}>
-              <Text style={styles.buttonText}>Sync</Text>
-            </TouchableOpacity>
-          </View> */}
+          <Text style={styles.title}>Sync History</Text>
           <SyncTable data={syncData} />
         </View>
       </ScrollView>
@@ -98,5 +76,47 @@ const SyncSettingsScreen: React.FC = () => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    padding: 20,
+  },
+  content: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: "#333",
+  },
+  floatingButtonContainer: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    backgroundColor: "#046E37",
+    borderRadius: 50,
+    padding: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  floatingButton: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+});
 
 export default SyncSettingsScreen;

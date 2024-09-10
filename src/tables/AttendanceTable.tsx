@@ -70,16 +70,14 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
 
   return (
     <Provider>
-      <View style={styles.mainbox}>
+      <View style={styles.container}>
         {loading ? (
           <View style={styles.loadingOverlay}>
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#046E37" />
-            </View>
+            <ActivityIndicator size="large" color="#046E37" />
           </View>
         ) : (
           <>
-            <View style={styles.rowContainer}>
+            <View style={styles.filterContainer}>
               <Picker
                 selectedValue={selectedDate}
                 onValueChange={(itemValue) => setSelectedDate(itemValue)}
@@ -101,18 +99,18 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
               <Button
                 mode="contained"
                 onPress={clearDateSelection}
-                style={styles.clearButton}>
+                style={styles.resetButton}>
                 Reset
               </Button>
             </View>
-            <Card>
+            <Card style={styles.card}>
               <DataTable>
-                <DataTable.Header style={styles.databeHeader}>
+                <DataTable.Header>
                   <DataTable.Title>Type</DataTable.Title>
                   <DataTable.Title>Date</DataTable.Title>
                 </DataTable.Header>
                 {currentData.map((user) => (
-                  <DataTable.Row style={styles.databeBox} key={user.id}>
+                  <DataTable.Row style={styles.dataTableRow} key={user.id}>
                     <DataTable.Cell>
                       {user.type === "in" ? "Time In" : "Time Out"}
                     </DataTable.Cell>
@@ -130,13 +128,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
                   styles.paginationButton,
                   currentPage === 1 && styles.disabledButton,
                 ]}>
-                <Text
-                  style={[
-                    styles.paginationText,
-                    currentPage === 1 && styles.disabledText,
-                  ]}>
-                  Previous
-                </Text>
+                Previous
               </Button>
               <Text style={styles.paginationText}>
                 Page {currentPage} of {totalPages}
@@ -149,13 +141,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
                   styles.paginationButton,
                   currentPage === totalPages && styles.disabledButton,
                 ]}>
-                <Text
-                  style={[
-                    styles.paginationText,
-                    currentPage === totalPages && styles.disabledText,
-                  ]}>
-                  Next
-                </Text>
+                Next
               </Button>
             </View>
           </>
@@ -166,14 +152,23 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
 };
 
 const styles = StyleSheet.create({
-  mainbox: {
+  container: {
     margin: 15,
     flex: 1,
   },
-  rowContainer: {
+  filterContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 15,
+    justifyContent: "space-between",
+  },
+  picker: {
+    width: Dimensions.get("window").width * 0.55,
+    height: 40,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 4,
+    borderColor: "#ddd",
+    borderWidth: 1,
   },
   pickerInitialLabel: {
     color: "lightgray",
@@ -181,22 +176,23 @@ const styles = StyleSheet.create({
   pickerLabel: {
     color: "black",
   },
-  picker: {
-    width: Dimensions.get("window").width * 0.4,
-    height: 30,
-    backgroundColor: "#f9f9f9",
-  },
-  clearButton: {
+  resetButton: {
     backgroundColor: "#046E37",
-    marginLeft: 10,
-    width: Dimensions.get("window").width * 0.2,
+    height: 40,
+    justifyContent: "center",
+    paddingHorizontal: 15,
   },
-  databeBox: {
-    margin: 1,
-    alignItems: "center",
+  card: {
+    padding: 10,
+    borderRadius: 8,
+    elevation: 3,
   },
-  databeHeader: {
-    margin: 2,
+  dataTableHeader: {
+    color: "#fff",
+  },
+  dataTableRow: {
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
   },
   paginationContainer: {
     flexDirection: "row",
@@ -207,6 +203,7 @@ const styles = StyleSheet.create({
   paginationButton: {
     flex: 1,
     marginHorizontal: 5,
+    borderColor: "#046E37",
   },
   paginationText: {
     flex: 2,
@@ -215,9 +212,6 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     borderColor: "gray",
-  },
-  disabledText: {
-    color: "gray",
   },
   loadingOverlay: {
     position: "absolute",
@@ -229,20 +223,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1,
-  },
-  loadingContainer: {
-    padding: 20,
-    borderRadius: 10,
-  },
-  backButton: {
-    position: "absolute",
-    top: 15,
-    left: 15,
-    zIndex: 2,
-  },
-  backButtonText: {
-    fontSize: 16,
-    color: "#046E37",
   },
 });
 
