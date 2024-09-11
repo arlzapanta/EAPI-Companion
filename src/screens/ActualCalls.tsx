@@ -1,17 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Animated,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useAuth, getStyleUtil } from "../index";
 import { getCallsTestLocalDb } from "../utils/localDbUtils";
 import { getCurrentDatePH } from "../utils/dateUtils";
 import moment from "moment";
 import { Ionicons } from "@expo/vector-icons";
+import MapComponent from "../components/MapView";
 
 const ActualCalls = () => {
   const [loading, setLoading] = useState(false);
@@ -108,6 +102,16 @@ const ActualCalls = () => {
           <Image
             source={{ uri: `data:image/jpeg;base64,${call.signature}` }} // Adjust to the correct format if needed
             style={styles1.signature}
+          />
+        )}
+      </View>
+      <View style={styles1.mapContainer}>
+        {call.photo_location && (
+          <MapComponent
+            latitude={14.603977037849905}
+            longitude={121.01772589899825}
+            containerStyle={styles1.mapWrapper}
+            mapStyle={styles1.map}
           />
         )}
       </View>
@@ -228,23 +232,72 @@ const styles1 = StyleSheet.create({
     marginLeft: 10,
     color: "#046E37",
   },
-  callItem: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e9ecef",
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    marginVertical: 4,
-  },
-  callText: {
-    fontSize: 16,
-    color: "#343a40",
-  },
   accordionContent: {
     backgroundColor: "#f8f9fa",
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 8,
+  },
+  callItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#dee2e6",
+  },
+  callText: {
+    fontSize: 16,
+    color: "#495057",
+  },
+  detailsCard: {
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    padding: 20,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  detailsTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#343a40",
+  },
+  detailRow: {
+    flexDirection: "row",
+    marginBottom: 10,
+  },
+  detailLabel: {
+    fontWeight: "bold",
+    color: "#343a40",
+  },
+  detailValue: {
+    marginStart: 8,
+    color: "#495057",
+  },
+  mapContainer: {
+    marginTop: 20,
+    height: 200, // Adjust the height as needed
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  mapWrapper: {
+    flex: 1,
+  },
+  map: {
+    flex: 1,
+  },
+  photo: {
+    width: 100,
+    height: 100,
+    marginTop: 10,
+    borderRadius: 10,
+  },
+  signature: {
+    width: 100,
+    height: 100,
+    marginTop: 10,
+    borderRadius: 10,
   },
   containerNoCallData: {
     flex: 1,
@@ -265,46 +318,6 @@ const styles1 = StyleSheet.create({
     fontWeight: "bold",
     color: "#046E37",
     textAlign: "center",
-  },
-  detailsCard: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#e9ecef",
-    borderRadius: 10,
-    borderColor: "#046E37",
-    borderWidth: 1,
-  },
-  detailsTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#343a40",
-    marginBottom: 10,
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 8,
-  },
-  detailLabel: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#6c757d",
-  },
-  detailValue: {
-    fontSize: 14,
-    color: "#343a40",
-  },
-  photo: {
-    width: 100,
-    height: 100,
-    marginVertical: 10,
-    borderRadius: 8,
-  },
-  signature: {
-    width: 100,
-    height: 100,
-    marginVertical: 10,
-    borderRadius: 8,
   },
 });
 

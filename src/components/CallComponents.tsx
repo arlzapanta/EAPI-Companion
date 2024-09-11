@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   TextInput,
@@ -8,35 +8,46 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  GestureResponderEvent,
 } from "react-native";
-import { RadioButton } from "react-native-paper";
+import { useNavigation, useRoute } from "@react-navigation/native";
+import { RootStackParamList } from "../type/navigation";
+import { RouteProp } from "@react-navigation/native";
+type HomeScreenRouteProp = RouteProp<RootStackParamList, "Home">;
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Icon from "react-native-vector-icons/Ionicons";
 import DetailerModal from "../modals/DetailerModal";
 import * as ImagePicker from "expo-image-picker";
-
+import * as ImageManipulator from "expo-image-manipulator";
+import { formatTimeHoursMinutes } from "../utils/dateUtils";
 import {
   savePreCallNotesLocalDb,
   savePostCallNotesLocalDb,
   getPreCallNotesLocalDb,
   getPostCallNotesLocalDb,
 } from "../utils/callComponentsUtil";
-
-import { fetchDetailerImages } from "../utils/localDbUtils";
 import { customToast } from "../utils/customToast";
 import { uploadImage } from "../utils/uploadImages";
-import * as ImageManipulator from "expo-image-manipulator";
 
 interface CallComponentsProps {
   scheduleId: string;
 }
 
+type OnCallScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
+  const navigation = useNavigation<OnCallScreenNavigationProp>();
   const [note, setNote] = useState<string>("");
   const [notes, setNotes] = useState<string[]>([]);
   const [selectedMood, setSelectedMood] = useState<string>("cold");
   const [feedback, setFeedback] = useState<string>("");
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedDetailer, setSelectedDetailer] = useState<number | null>(null);
+  const [timer, setTimer] = useState<number>(0);
+  const [callStartTime, setCallStartTime] = useState<string>("");
+  const [callEndTimeValue, setCallEndTimeValue] = useState<Date | null>(null);
+  const [base64Image, setBase64Image] = useState<string[]>([]);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const fetchPreCallNotes = async () => {
@@ -80,6 +91,24 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
     customToast("Notes saved");
   };
 
+  const startTimer = () => {
+    if (intervalRef.current) return;
+    intervalRef.current = setInterval(() => {
+      setTimer((prev) => prev + 1);
+    }, 1000);
+  };
+
+  const executeStartCall = () => {
+    const formatNewTime = formatTimeHoursMinutes(new Date());
+    setCallStartTime(formatNewTime);
+    navigation.navigate("OnCall", {
+      startCallTime: callStartTime,
+      scheduleIdValue: scheduleId,
+      notesArray: notes,
+    });
+    startTimer();
+  };
+
   const savePostCallNotes = async () => {
     await savePostCallNotesLocalDb({
       mood: selectedMood,
@@ -88,6 +117,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
     });
   };
 
+  const defaultDetailerNumber = 0;
   const openModal = (detailerNumber: number) => {
     setSelectedDetailer(detailerNumber);
     setModalVisible(true);
@@ -98,17 +128,14 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
     setSelectedDetailer(null);
   };
 
-  const [base64Image, setBase64Image] = useState<string[]>([]);
-
   const pickImages = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsMultipleSelection: true, // This allows multiple selections
+      allowsMultipleSelection: true,
       quality: 1,
     });
 
     if (!result.canceled && result.assets) {
-      // Process each selected image
       const imageUris = result.assets.map((asset) => asset.uri);
       const base64Images = await Promise.all(
         imageUris.map(async (uri) => {
@@ -143,6 +170,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
       reader.readAsDataURL(blob);
     });
   };
+
   const handleUploadImages = async () => {
     if (base64Image.length > 0) {
       await uploadImage({
@@ -154,6 +182,13 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.startCallContainer}>
+        <TouchableOpacity
+          style={styles.buttonStartCall}
+          onPress={executeStartCall}>
+          <Text style={styles.buttonTextSave}>START CALL</Text>
+        </TouchableOpacity>
+      </View>
       <View style={styles.cardContainer}>
         <View style={styles.headerContainer}>
           <Text style={styles.sectionTitle}>Notes</Text>
@@ -223,60 +258,60 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
             <Text style={styles.detailerButtonText}>Detailer 3</Text>
           </TouchableOpacity>
         </View>
-        {selectedDetailer !== null && (
+
+        {modalVisible && selectedDetailer !== null && (
           <DetailerModal
             isVisible={modalVisible}
-            onClose={closeModal}
             detailerNumber={selectedDetailer}
+            onClose={closeModal}
           />
         )}
       </View>
-
-      <Button title="Select Images (FOR TESTING ONLY) " onPress={pickImages} />
-      <Button
-        title="Upload Image (FOR TESTING ONLY) "
-        onPress={handleUploadImages}
-      />
       {/* <Button
-        title="Upload (for testing only)"
-        color="#FFA500" // Orange color for warning
-        onPress={handleUploadImages}
-      /> */}
+                title="Upload (for testing only)"
+                color="#FFA500" // Orange color for warning
+                onPress={handleUploadImages}
+              /> */}
       {/* Uncomment and use this section for post-call notes */}
       {/* <View style={styles.cardContainer}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.sectionTitle}>Post Call Notes</Text>
-          <Button
-            title="Save Post-Call Notes"
-            onPress={savePostCallNotes}
-            color="#007bff"
-          />
-        </View>
-        <Text style={styles.label}>Mood:</Text>
-        <View style={styles.radioGroup}>
-          {["cold", "warm", "hot"].map((mood) => (
-            <View key={mood} style={styles.radioButtonContainer}>
-              <RadioButton
-                value={mood}
-                status={selectedMood === mood ? "checked" : "unchecked"}
-                onPress={() => setSelectedMood(mood)}
-              />
-              <Text>{mood.charAt(0).toUpperCase() + mood.slice(1)}</Text>
-            </View>
-          ))}
-        </View>
-        <TextInput
-          style={styles.input}
-          value={feedback}
-          onChangeText={setFeedback}
-          placeholder="Enter feedback"
-        />
-        <Button
-          title="Save Post-Call Notes"
-          onPress={savePostCallNotes}
-          color="#007bff"
-        />
-      </View> */}
+                <View style={styles.headerContainer}>
+                  <Text style={styles.sectionTitle}>Post Call Notes</Text>
+                  <Button
+                    title="Save Post-Call Notes"
+                    onPress={savePostCallNotes}
+                    color="#007bff"
+                  />
+                </View>
+                <Text style={styles.label}>Mood:</Text>
+                <View style={styles.radioGroup}>
+                  {["cold", "warm", "hot"].map((mood) => (
+                    <View key={mood} style={styles.radioButtonContainer}>
+                      <RadioButton
+                        value={mood}
+                        status={selectedMood === mood ? "checked" : "unchecked"}
+                        onPress={() => setSelectedMood(mood)}
+                    {modalVisible && selectedDetailer !== null && (
+                      <DetailerModal
+                        isVisible={modalVisible}
+                        detailerNumber={selectedDetailer}
+                        onClose={closeModal}
+                      />
+                      <Text>{mood.charAt(0).toUpperCase() + mood.slice(1)}</Text>
+                    </View>
+                  ))}
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={feedback}
+                  onChangeText={setFeedback}
+                  placeholder="Enter feedback"
+                />
+                <Button
+                  title="Save Post-Call Notes"
+                  onPress={savePostCallNotes}
+                  color="#007bff"
+                />
+              </View> */}
     </ScrollView>
   );
 };
@@ -297,6 +332,19 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: "#ddd",
+    marginBottom: 10,
+  },
+  startCallContainer: {
+    marginVertical: 10,
+    backgroundColor: "transparent",
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: "lightgray",
     marginBottom: 10,
   },
   headerContainer: {
@@ -385,7 +433,30 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  buttonStartDetail: {
+    marginTop: 10,
+    backgroundColor: "#046E37",
+    padding: 10,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonStartCall: {
+    backgroundColor: "red",
+    color: "white",
+    padding: 30,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   buttonTextSave: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  buttonTextStartDetail: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
@@ -414,6 +485,10 @@ const styles = StyleSheet.create({
   detailerButtonText: {
     fontSize: 16,
     color: "#046E37",
+  },
+  timerText: {
+    fontSize: 18,
+    color: "#333",
   },
 });
 

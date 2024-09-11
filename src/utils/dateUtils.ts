@@ -41,6 +41,15 @@ function getDatesInRange(startDate: Date, endDate: Date): string[] {
   return dates;
 }
 
+export function formatTimeHoursMinutes(date: Date): string {
+  const formattedTime = date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+  return formattedTime;
+}
+
 export async function getRelevantDateRange(): Promise<string[]> {
   const todayStr = await getCurrentDatePH();
   const today = new Date(todayStr);

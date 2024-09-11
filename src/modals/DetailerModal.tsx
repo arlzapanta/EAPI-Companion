@@ -20,8 +20,8 @@ const ShimmerPlaceHolder = createShimmerPlaceHolder(LinearGradient);
 
 interface DetailerModalProps {
   isVisible: boolean;
-  onClose: () => void;
   detailerNumber: number;
+  onClose: () => void;
 }
 
 const DetailerModal: React.FC<DetailerModalProps> = ({
