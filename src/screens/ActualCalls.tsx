@@ -54,15 +54,17 @@ const ActualCalls = () => {
     setSelectedCall(call);
   };
 
-  const NoScheduleSelected = () => (
-    <View style={styles1.containerNoSched}>
+  const NoActualCallSelected = () => (
+    <View style={styles1.containerNoCallData}>
       <Ionicons
         name="information-circle"
         size={24}
         color="#007BFF"
-        style={styles1.iconNoSched}
+        style={styles1.iconNoCallData}
       />
-      <Text style={styles1.messageNoSched}>Select a call to view details</Text>
+      <Text style={styles1.messageNoCallData}>
+        Select a call to view details
+      </Text>
     </View>
   );
 
@@ -158,7 +160,7 @@ const ActualCalls = () => {
             {selectedCall ? (
               <CallDetails call={selectedCall} />
             ) : (
-              <NoScheduleSelected />
+              <NoActualCallSelected />
             )}
           </View>
         </View>
@@ -170,30 +172,30 @@ const ActualCalls = () => {
 const styles1 = StyleSheet.create({
   container: {
     flex: 1,
-    paddingVertical: 20,
-    paddingEnd: 20,
     backgroundColor: "#F0F0F0",
   },
   row: {
     flexDirection: "row",
     flex: 1,
-    marginTop: 10,
+    marginVertical: 10,
+    marginStart: 20,
+    marginEnd: 20,
   },
   column1: {
     width: "30%",
-    padding: 8,
+    marginEnd: 10,
   },
   column2: {
     width: "70%",
-    padding: 8,
   },
   innerCard: {
     height: "100%",
-    padding: 16,
+    paddingHorizontal: 30,
+    paddingVertical: 40,
     backgroundColor: "#ffffff",
     borderRadius: 10,
-    elevation: 2, // For Android shadow
-    shadowColor: "#000", // For iOS shadow
+    elevation: 2,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
@@ -244,7 +246,7 @@ const styles1 = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 8,
   },
-  containerNoSched: {
+  containerNoCallData: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
@@ -254,25 +256,23 @@ const styles1 = StyleSheet.create({
     borderColor: "#046E37",
     borderWidth: 1,
   },
-  iconNoSched: {
+  iconNoCallData: {
     marginBottom: 10,
     color: "#046E37",
   },
-  messageNoSched: {
+  messageNoCallData: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#046E37",
     textAlign: "center",
   },
   detailsCard: {
-    padding: 16,
-    backgroundColor: "#ffffff",
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#e9ecef",
     borderRadius: 10,
-    elevation: 2, // For Android shadow
-    shadowColor: "#000", // For iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
+    borderColor: "#046E37",
+    borderWidth: 1,
   },
   detailsTitle: {
     fontSize: 18,

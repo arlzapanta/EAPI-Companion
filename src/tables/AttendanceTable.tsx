@@ -178,9 +178,9 @@ const styles = StyleSheet.create({
   },
   resetButton: {
     backgroundColor: "#046E37",
-    height: 40,
-    justifyContent: "center",
-    paddingHorizontal: 15,
+    marginLeft: 10,
+    width: Dimensions.get("window").width * 0.2,
+    borderRadius: 5,
   },
   card: {
     padding: 10,
@@ -188,11 +188,11 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   dataTableHeader: {
-    color: "#fff",
+    backgroundColor: "#f9f9f9",
   },
   dataTableRow: {
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    borderBottomColor: "lightgray",
   },
   paginationContainer: {
     flexDirection: "row",
@@ -214,15 +214,11 @@ const styles = StyleSheet.create({
     borderColor: "gray",
   },
   loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.02)",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 1,
+    zIndex: 1000,
   },
 });
 

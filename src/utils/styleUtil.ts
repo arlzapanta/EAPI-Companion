@@ -147,13 +147,15 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       flex: 1,
       backgroundColor: currentTheme.containerBackgroundColor,
       flexDirection: 'row',
+      marginTop: 20,
+      marginEnd: 20,
+      marginBottom: 10
     } as ViewStyle,
     homeText_home: {
       color: currentTheme.textColor, 
     } as TextStyle,
     navContainer_home: {
       backgroundColor: currentTheme.containerBackgroundColor,
-      paddingVertical: 10,
       justifyContent: 'center', 
       alignItems: 'center', 
     } as ViewStyle,

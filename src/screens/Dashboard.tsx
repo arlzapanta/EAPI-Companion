@@ -132,7 +132,7 @@ const Dashboard = () => {
         </View>
       </View>
       <View style={styles.chartRow}>
-        <View style={styles.chartContainer}>
+        <View style={styles.chartContainer1}>
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>Actual VS Target</Text>
             {showLoader ? (
@@ -154,7 +154,7 @@ const Dashboard = () => {
             )}
           </View>
         </View>
-        <View style={styles.chartContainer}>
+        <View style={styles.chartContainer2}>
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>Weekly Performance</Text>
             {showLoader ? (
@@ -220,7 +220,7 @@ const Dashboard = () => {
         </View>
       </View>
       <View style={styles.chartRow}>
-        <View style={styles.chartContainer}>
+        <View style={styles.chartContainer1}>
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>Monthly Call Frequency</Text>
             {showLoader ? (
@@ -251,7 +251,7 @@ const Dashboard = () => {
             )}
           </View>
         </View>
-        <View style={styles.chartContainer}>
+        <View style={styles.chartContainer2}>
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>
               Monthly Call Performance VS Target
@@ -293,24 +293,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F0F0F0",
-    paddingVertical: 20,
-    paddingEnd: 20,
-    paddingStart: 3,
   },
   centerView: {
     alignSelf: "center",
   },
   announcementContainer: {
     backgroundColor: "#FFFFFF",
-    padding: 16,
+    padding: 20,
     borderRadius: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    marginBottom: 16,
-    elevation: 2,
-    marginHorizontal: 8,
+    marginVertical: 10,
+    marginStart: 20,
+    marginEnd: 10,
+    elevation: 5,
+  },
+  chartRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+    marginStart: 20,
+    marginEnd: 10,
+    elevation: 5,
   },
   announcementTitle: {
     fontSize: 18,
@@ -329,19 +335,21 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 8,
   },
-  chartRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 16,
-  },
+
   chartContainer: {
     flex: 1,
-    marginHorizontal: 8,
+  },
+  chartContainer1: {
+    flex: 1,
+    marginEnd: 10,
+  },
+  chartContainer2: {
+    flex: 1,
   },
   chartCard: {
     elevation: 2,
     backgroundColor: "#FFFFFF",
-    padding: 16,
+    padding: 20,
     borderRadius: 8,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },

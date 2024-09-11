@@ -181,6 +181,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 15,
+    justifyContent: "space-between",
   },
   pickerInitialLabel: {
     color: "lightgray",
@@ -215,8 +216,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
   },
   tableRow: {
-    margin: 1,
-    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "lightgray",
   },
   paginationContainer: {
     flexDirection: "row",
@@ -248,7 +249,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(0,0,0,0.02)",
     justifyContent: "center",
     alignItems: "center",
     zIndex: 1000,

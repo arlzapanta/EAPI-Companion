@@ -149,26 +149,28 @@ const Schedules = () => {
 const styles1 = StyleSheet.create({
   container: {
     flex: 1,
-    paddingVertical: 20,
-    paddingEnd: 20,
     backgroundColor: "#F0F0F0",
   },
   row: {
     flexDirection: "row",
     flex: 1,
-    marginTop: 10,
+    marginVertical: 10,
+    marginStart: 20,
+    marginEnd: 20,
   },
   column1: {
     width: "30%",
-    padding: 8,
+    marginEnd: 10,
+    elevation: 5,
   },
   column2: {
     width: "70%",
-    padding: 8,
+    elevation: 5,
   },
   innerCard: {
     height: "100%",
-    padding: 16,
+    paddingHorizontal: 30,
+    paddingVertical: 40,
     backgroundColor: "#ffffff",
     borderRadius: 10,
     elevation: 2, // For Android shadow

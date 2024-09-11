@@ -89,22 +89,21 @@ const Settings = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingVertical: 20,
-    paddingEnd: 20,
-    paddingStart: 3,
     backgroundColor: "#F0F0F0",
   },
   card: {
     flex: 1,
-    padding: 20,
+    padding: 40,
     backgroundColor: "#ffffff",
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 6,
-    elevation: 2,
-    marginBottom: 20,
+    elevation: 5,
+    marginVertical: 10,
+    marginStart: 20,
+    marginEnd: 10,
   },
   title: {
     fontSize: 24,

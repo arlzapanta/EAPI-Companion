@@ -249,43 +249,51 @@ export default Attendance;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5", // Light background color for the whole screen
+    backgroundColor: "#f5f5f5",
   },
   scrollViewContent: {
-    padding: 20,
-    flexGrow: 1, // Ensure scrollable content stretches to fit the screen
+    flex: 1,
+    flexGrow: 1,
+    paddingTop: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    paddingBottom: 10,
+    marginVertical: 10,
+    marginStart: 20,
+    marginEnd: 20,
   },
   content: {
-    backgroundColor: "#fff", // White background for the content area
-    borderRadius: 10, // Rounded corners
-    padding: 20, // Padding inside the content area
-    shadowColor: "#000", // Shadow for elevation effect
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 40,
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 5, // Elevation for Android
+    elevation: 5,
   },
   title_stack_settings: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 10, // Spacing below the title
-    color: "#333", // Dark text color
+    marginBottom: 15,
+    color: "#333",
   },
   statusLabel: {
     fontSize: 16,
-    marginBottom: 20, // Spacing below status message
+    marginBottom: 20,
     fontWeight: "500",
   },
   centerItems: {
     alignItems: "center",
-    marginBottom: 20, // Spacing below the button section
+    marginBottom: 20,
   },
   buttonContainer: {
-    backgroundColor: "#046E37", // Primary color for buttons
+    backgroundColor: "#046E37",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
-    marginBottom: 10, // Spacing between buttons
+    marginBottom: 10,
     elevation: 5,
   },
   buttonText: {
@@ -295,16 +303,17 @@ const styles = StyleSheet.create({
   },
   floatingButtonContainer: {
     position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: "#046E37", // Button background color
-    borderRadius: 50, // Circular button
+    bottom: 40,
+    right: 50,
+    backgroundColor: "#046E37",
+    opacity: 0.9,
+    borderRadius: 10,
     padding: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    elevation: 3, // Elevation for Android
+    elevation: 3,
   },
   floatingButton: {
     alignItems: "center",
