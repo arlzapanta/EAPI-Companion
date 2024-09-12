@@ -4,6 +4,7 @@ import Dashboard from "./screens/Dashboard";
 import Schedules from "./screens/Schedules";
 import SettingsScreen from "./screens/SettingsScreen";
 import ActualCalls from "./screens/ActualCalls";
+import QuickCall from "./screens/call/QuickCall";
 import NavLinkComponent from "./components/NavLink";
 import { customToast } from "./utils/customToast";
 
@@ -16,6 +17,7 @@ export {
   SettingsScreen,
   ActualCalls,
   Schedules,
+  QuickCall,
   // components
   NavLinkComponent,
 };

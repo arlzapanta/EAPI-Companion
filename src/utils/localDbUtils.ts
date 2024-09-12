@@ -6,7 +6,7 @@ interface User {
 }
 interface ScheduleRecord {
   id: number;
-  schedules_id: number;
+  schedule_id: number;
   call_start: string;
   call_end: string;
   signature: string;
@@ -136,7 +136,7 @@ export const saveUserSyncHistoryLocalDb = async (user: User, type: number): Prom
 };
 
 interface CallAPIDown {
-  id?: string; // id is optional for the purpose of insertion
+  id?: string; // id is optional
   schedule_id?: string; // New column
   date: string | null;
   doctor_name: string | null;
@@ -149,18 +149,31 @@ interface CallAPIDown {
   signature_location: string | null;
   photo: string | null;
   photo_location: string | null;
+  signature_attempts: string | null;
+  
 }
 
-export const saveActualCallsAPILocalDb = async (schedules: CallAPIDown[]): Promise<string> => {
+interface SchedToCall {
+  schedule_id: string| null;
+  call_start: string | null;
+  call_end: string | null;
+  signature: string  | null;
+  signature_attempts: string  | null;
+  signature_location: string  | null;
+  photo: string  | null;
+  photo_location: string  | null;
+}
+
+export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<string> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
 
   await db.execAsync(`
-    DROP TABLE IF EXISTS schedule_API_tbl;
+    DROP TABLE IF EXISTS calls_tbl;
     
     PRAGMA journal_mode = WAL;
-    CREATE TABLE schedule_API_tbl (
+    CREATE TABLE IF NOT EXISTS calls_tbl (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
       schedule_id TEXT, 
       address TEXT, 
@@ -173,13 +186,14 @@ export const saveActualCallsAPILocalDb = async (schedules: CallAPIDown[]): Promi
       photo_location TEXT, 
       province TEXT, 
       signature TEXT, 
-      signature_location TEXT
+      signature_location TEXT,
+      signature_attempts TEXT
     );
   `);
 
   const insertPromises = schedules.map((schedule: CallAPIDown) => {
     return db.execAsync(`
-      INSERT INTO schedule_API_tbl (schedule_id, address, call_start, call_end, date, doctor_name, municipality_city, photo, photo_location, province, signature, signature_location)
+      INSERT INTO calls_tbl (schedule_id, address, call_start, call_end, date, doctor_name, municipality_city, photo, photo_location, province, signature, signature_location)
       VALUES (
         ${schedule.id !== undefined && schedule.id !== null ? `'${schedule.id}'` : 'NULL'},
         ${schedule.address !== undefined && schedule.address !== null ? `'${schedule.address}'` : 'NULL'},
@@ -197,11 +211,10 @@ export const saveActualCallsAPILocalDb = async (schedules: CallAPIDown[]): Promi
     `);
   });
   
-
   try {
     await Promise.all(insertPromises);
-      // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
-      // console.log('All records:', testRecords);
+      const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+      console.log('All actual calls records test:', testRecords);
     return 'Success';
   } catch (error) {
     console.error('Error saving data:', error);
@@ -419,7 +432,8 @@ export const getCallsTestLocalDb = async (): Promise<ScheduleRecord[]> => {
       photo_location TEXT, 
       province TEXT, 
       signature TEXT, 
-      signature_location TEXT
+      signature_location TEXT,
+      signature_attempts TEXT
     );
   `);
 
@@ -437,6 +451,7 @@ export const getCallsTestLocalDb = async (): Promise<ScheduleRecord[]> => {
     await db.closeAsync();
   }
 };
+
 export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -457,7 +472,8 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
       photo_location TEXT, 
       province TEXT, 
       signature TEXT, 
-      signature_location TEXT
+      signature_location TEXT,
+      signature_attempts TEXT
     );
   `);
 
@@ -471,6 +487,26 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
   } catch (error) {
     console.error('Error fetching data for today:', error);
     return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const deleteCallByScheduleIdLocalDb = async ({ scheduleId }: { scheduleId: string }) => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  try {
+    await db.runAsync(
+      `DELETE FROM schedule_API_tbl WHERE schedule_id = ?`,
+      scheduleId
+    );
+
+  console.log(`Successfully deleted done scheduled call notes for scheduleId: ${scheduleId}`);
+
+  } catch (error) {
+    console.error('Error deleting records for today:', error);
   } finally {
     await db.closeAsync();
   }
@@ -526,6 +562,99 @@ export const fetchDetailerImages = async (category: string): Promise<string[]> =
   }
 };
 
+interface DetailerRecord{
+    category: string;
+    images: string[];
+};
+
+export const fetchAllDetailers = async (): Promise<DetailerRecord[]> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  try {
+    const query = `SELECT image, category FROM detailers_tbl`;
+    const result = await db.getAllAsync(query);
+
+    const rows: { image: string; category: string }[] = result as { image: string; category: string }[];
+
+    const detailerRecords: DetailerRecord[] = [];
+    const categoryMap: { [key: string]: string[] } = {};
+
+    rows.forEach((row) => {
+      if (!categoryMap[row.category]) {
+        categoryMap[row.category] = [];
+      }
+      categoryMap[row.category].push(row.image);
+    });
+
+    for (const category in categoryMap) {
+      detailerRecords.push({
+        category,
+        images: categoryMap[category],
+      });
+    }
+
+    return detailerRecords;
+  } catch (error) {0
+    console.error("Error fetching detailer images:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails: SchedToCall): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync('cmms', { useNewConnection: true });
+
+  console.log('saveCallsDoneFromSchedules callDetails:', callDetails);
+
+  try {
+    await db.execAsync(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS calls_tbl (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+        schedule_id TEXT, 
+        call_start TEXT, 
+        call_end TEXT, 
+        municipality_city TEXT, 
+        photo TEXT, 
+        photo_location TEXT,
+        signature TEXT, 
+        signature_location TEXT,
+        signature_attempts TEXT
+      );
+    `);
+
+    await db.runAsync(
+      `INSERT INTO calls_tbl (
+        schedule_id, call_start, call_end,
+        signature, signature_attempts, signature_location,
+        photo, photo_location
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        callDetails.schedule_id,
+        callDetails.call_start,
+        callDetails.call_end,
+        callDetails.signature,
+        callDetails.signature_attempts,
+        callDetails.signature_location,
+        callDetails.photo,
+        callDetails.photo_location
+      ]
+    );
+
+    const testRecords = await db.getAllAsync('SELECT * FROM calls_tbl WHERE schedule_id = ?', [scheduleId]);
+    console.log('CHECK NEW CALL IN CALLS_TBL', testRecords);
+
+    return 'Success';
+  } catch (error) {
+    console.error('Error in saveCallsDoneFromSchedules:', error);
+    return 'Failed to process calls done';
+  }
+};
+
+
 
 
 export const insertDummyRecords = async (): Promise<void> => {
@@ -537,7 +666,7 @@ export const insertDummyRecords = async (): Promise<void> => {
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS detailers_tbl (
       id INTEGER PRIMARY KEY NOT NULL, 
-      schedules_id INTEGER, 
+      schedule_id INTEGER, 
       image64 TEXT NOT NULL,
       call_end TEXT NOT NULL,
       signature TEXT NOT NULL,
@@ -551,7 +680,7 @@ export const insertDummyRecords = async (): Promise<void> => {
 
   const dummyRecords = [
     {
-      schedules_id: 1,
+      schedule_id: 1,
       call_start: '10:00:00',
       call_end: '10:30:00',
       signature: 'dummySignature1',
@@ -561,7 +690,7 @@ export const insertDummyRecords = async (): Promise<void> => {
       photo_location: 'dummyPhotoLocation1'
     },
     {
-      schedules_id: 2,
+      schedule_id: 2,
       call_start: '11:00:00',
       call_end: '11:45:00',
       signature: 'dummySignature2',
@@ -577,11 +706,11 @@ export const insertDummyRecords = async (): Promise<void> => {
       
       await db.runAsync(
         `INSERT INTO calls_tbl (
-          schedules_id, call_start, call_end,
+          schedule_id, call_start, call_end,
           signature, signature_attempts, signature_location,
           photo, photo_location
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        record.schedules_id,
+        record.schedule_id,
         record.call_start,
         record.call_end,
         record.signature,
@@ -650,8 +779,8 @@ export const dropLocalTablesDb = async () => {
     useNewConnection: true,
   });
 
-  // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl'];
-  const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
+  const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl'];
+  // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
   for (const tableName of tableNames) {
     const query = `DROP TABLE IF EXISTS ${tableName};`;
     await db.getAllAsync(query);

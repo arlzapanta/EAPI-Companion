@@ -5,7 +5,8 @@ export type RootStackParamList = {
     Login: undefined;
     Sync : undefined;
     Attendance: undefined;
-    OnCall: { startCallTime: string, scheduleIdValue: string, notesArray: string[]};
+    OnCall: { scheduleIdValue: string, notesArray: string[]};
+    QuickCall: undefined;
 };
 
 export type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
@@ -13,3 +14,4 @@ export type LoginScreenNavigationProp = NativeStackNavigationProp<RootStackParam
 export type SyncScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Sync'>;
 export type AttendanceScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Attendance'>;
 export type OnCallScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'OnCall'>;
+export type QuickCallScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'QuickCall'>;

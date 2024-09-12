@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { useAuth, getStyleUtil } from "../index";
 import { getCallsTestLocalDb } from "../utils/localDbUtils";
+import { getPostCallNotesLocalDb } from "../utils/callComponentsUtil";
 import { getCurrentDatePH } from "../utils/dateUtils";
 import moment from "moment";
 import { Ionicons } from "@expo/vector-icons";
@@ -44,7 +45,8 @@ const ActualCalls = () => {
     }
   };
 
-  const handleCallClick = (call: any) => {
+  const handleCallClick = async (call: any) => {
+    const postCallData = await getPostCallNotesLocalDb(call.schedule_id);
     setSelectedCall(call);
   };
 
@@ -81,7 +83,7 @@ const ActualCalls = () => {
       </View>
       <View style={styles1.detailRow}>
         <Text style={styles1.detailLabel}>Schedules ID:</Text>
-        <Text style={styles1.detailValue}>{call.schedules_id}</Text>
+        <Text style={styles1.detailValue}>{call.schedule_id}</Text>
       </View>
       <View style={styles1.detailRow}>
         <Text style={styles1.detailLabel}>Signature Attempts:</Text>
@@ -151,7 +153,7 @@ const ActualCalls = () => {
                     <Text
                       style={
                         styles1.callText
-                      }>{`Schedule Id : ${call.schedules_id}`}</Text>
+                      }>{`Schedule Id : ${call.schedule_id}`}</Text>
                   </TouchableOpacity>
                 ))}
               </View>

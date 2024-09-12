@@ -44,7 +44,6 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [selectedDetailer, setSelectedDetailer] = useState<number | null>(null);
   const [timer, setTimer] = useState<number>(0);
-  const [callStartTime, setCallStartTime] = useState<string>("");
   const [callEndTimeValue, setCallEndTimeValue] = useState<Date | null>(null);
   const [base64Image, setBase64Image] = useState<string[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -58,7 +57,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
     fetchPreCallNotes();
   }, [scheduleId]);
 
-  const addNote = () => {
+  const addNote = async () => {
     if (note.trim()) {
       setNotes([...notes, note]);
       setNote("");
@@ -76,7 +75,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
         },
         {
           text: "OK",
-          onPress: () => {
+          onPress: async () => {
             const updatedNotes = notes.filter((_, i) => i !== index);
             setNotes(updatedNotes);
           },
@@ -86,9 +85,14 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
     );
   };
 
+  useEffect(() => {
+    if (notes.length > 0) {
+      savePreCallNotes();
+    }
+  }, [notes]);
+
   const savePreCallNotes = async () => {
     await savePreCallNotesLocalDb({ notesArray: notes, scheduleId });
-    customToast("Notes saved");
   };
 
   const startTimer = () => {
@@ -100,9 +104,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
 
   const executeStartCall = () => {
     const formatNewTime = formatTimeHoursMinutes(new Date());
-    setCallStartTime(formatNewTime);
     navigation.navigate("OnCall", {
-      startCallTime: callStartTime,
       scheduleIdValue: scheduleId,
       notesArray: notes,
     });
@@ -148,9 +150,32 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
   };
 
   const processImage = async (uri: string) => {
+    const maxWidth = 1024;
+    const maxHeight = 1024;
+
+    const { width: originalWidth, height: originalHeight } =
+      await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: maxWidth } }],
+        { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
+    let width = originalWidth;
+    let height = originalHeight;
+
+    if (width > maxWidth) {
+      height = Math.round((maxWidth / width) * height);
+      width = maxWidth;
+    }
+
+    if (height > maxHeight) {
+      width = Math.round((maxHeight / height) * width);
+      height = maxHeight;
+    }
+
     const { uri: manipulatedUri } = await ImageManipulator.manipulateAsync(
       uri,
-      [{ resize: { width: 1024 } }],
+      [{ resize: { width, height } }],
       { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
     );
 
@@ -175,7 +200,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
     if (base64Image.length > 0) {
       await uploadImage({
         base64Images: base64Image,
-        category: "category1",
+        category: "category3",
       });
     }
   };
@@ -222,7 +247,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
           </View>
         ))}
 
-        {notes.length > 0 && (
+        {/* {notes.length > 0 && (
           <TouchableOpacity
             style={styles.buttonSave}
             onPress={savePreCallNotes}>
@@ -234,7 +259,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
             />
             <Text style={styles.buttonTextSave}>Save</Text>
           </TouchableOpacity>
-        )}
+        )} */}
       </View>
 
       <View style={styles.cardContainer}>
@@ -267,51 +292,16 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
           />
         )}
       </View>
-      {/* <Button
-                title="Upload (for testing only)"
-                color="#FFA500" // Orange color for warning
-                onPress={handleUploadImages}
-              /> */}
-      {/* Uncomment and use this section for post-call notes */}
-      {/* <View style={styles.cardContainer}>
-                <View style={styles.headerContainer}>
-                  <Text style={styles.sectionTitle}>Post Call Notes</Text>
-                  <Button
-                    title="Save Post-Call Notes"
-                    onPress={savePostCallNotes}
-                    color="#007bff"
-                  />
-                </View>
-                <Text style={styles.label}>Mood:</Text>
-                <View style={styles.radioGroup}>
-                  {["cold", "warm", "hot"].map((mood) => (
-                    <View key={mood} style={styles.radioButtonContainer}>
-                      <RadioButton
-                        value={mood}
-                        status={selectedMood === mood ? "checked" : "unchecked"}
-                        onPress={() => setSelectedMood(mood)}
-                    {modalVisible && selectedDetailer !== null && (
-                      <DetailerModal
-                        isVisible={modalVisible}
-                        detailerNumber={selectedDetailer}
-                        onClose={closeModal}
-                      />
-                      <Text>{mood.charAt(0).toUpperCase() + mood.slice(1)}</Text>
-                    </View>
-                  ))}
-                </View>
-                <TextInput
-                  style={styles.input}
-                  value={feedback}
-                  onChangeText={setFeedback}
-                  placeholder="Enter feedback"
-                />
-                <Button
-                  title="Save Post-Call Notes"
-                  onPress={savePostCallNotes}
-                  color="#007bff"
-                />
-              </View> */}
+      <Button
+        title="select images (for testing only)"
+        color="#FFA500"
+        onPress={pickImages}
+      />
+      <Button
+        title="Upload (for testing only)"
+        color="#FFA500"
+        onPress={handleUploadImages}
+      />
     </ScrollView>
   );
 };

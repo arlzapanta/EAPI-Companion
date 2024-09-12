@@ -60,27 +60,29 @@ const Settings = () => {
       <View style={styles.card}>
         <Text style={styles.title}>Settings</Text>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleSyncSettingsOnPress}>
-          <Text style={styles.buttonText}>Sync History</Text>
-        </TouchableOpacity>
+        <View style={styles.centerItems}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleAttendanceOnPress}>
+            <Text style={styles.buttonText}>Attendance</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleAttendanceOnPress}>
-          <Text style={styles.buttonText}>Attendance</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleSyncSettingsOnPress}>
+            <Text style={styles.buttonText}>Sync History</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>
-          <Text style={styles.buttonTextLogout}>Logout</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>
+            <Text style={styles.buttonTextLogout}>Logout</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.buttonTest} onPress={dropLocalTables}>
-          <Text style={styles.buttonTextTest}>
-            DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
-          </Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.buttonTest} onPress={dropLocalTables}>
+            <Text style={styles.buttonTextTest}>
+              DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -90,6 +92,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F0F0F0",
+  },
+  centerItems: {
+    alignContent: "center",
+    alignItems: "center",
   },
   card: {
     flex: 1,
@@ -120,6 +126,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignItems: "center",
     justifyContent: "center",
+    width: 300,
   },
   buttonText: {
     color: "#ffffff",
@@ -134,6 +141,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignItems: "center",
     justifyContent: "center",
+    width: 300,
   },
   buttonTextLogout: {
     color: "#ffffff",
@@ -148,6 +156,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 400,
+    width: 600,
   },
   buttonTextTest: {
     color: "#333",

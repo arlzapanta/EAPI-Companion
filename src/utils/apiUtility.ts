@@ -11,7 +11,7 @@ interface User {
   sales_portal_id: string;
 }
 interface ApiPayload {
-  schedules_id: number;
+  schedule_id: number;
   call_start: string;
   call_end: string;
   signature: string;
@@ -102,7 +102,7 @@ export const syncUser = async (user: User): Promise<any> => {
   try {
     const localRecords = await getCallsTodayLocalDb();
     const recordsToSync: ApiPayload[] = localRecords.map(record => ({
-      schedules_id: record.schedules_id,
+      schedule_id: record.schedule_id,
       call_start: record.call_start,
       call_end: record.call_end,
       signature: record.signature,

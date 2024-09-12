@@ -25,12 +25,14 @@ export const savePostCallNotesLocalDb = async ({
       PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS post_call_notes_tbl (
         id INTEGER PRIMARY KEY NOT NULL, 
-        mood TEXT NOT NULL, 
-        feedback TEXT NOT NULL, 
+        mood TEXT, 
+        feedback TEXT, 
         schedule_id TEXT NOT NULL, 
         date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    await deleteAllPostCallNotes({ scheduleId });
 
     await db.runAsync(
       `INSERT INTO post_call_notes_tbl (mood, feedback, schedule_id) VALUES (?,?,?)`,
@@ -39,9 +41,9 @@ export const savePostCallNotesLocalDb = async ({
       scheduleId
     );
 
-    const testRecords = await db.getAllAsync(
-      "SELECT * FROM post_call_notes_tbl "
-    );
+    // const testRecords = await db.getAllAsync(
+    //   "SELECT * FROM post_call_notes_tbl "
+    // );
     // console.log("All post-call records:", testRecords);
 
     db.closeSync();
@@ -50,7 +52,7 @@ export const savePostCallNotesLocalDb = async ({
   }
 };
 
-export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<PostCallNotesParams[]> => {
+export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<PostCallNotesParams | null> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -59,31 +61,37 @@ export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<PostC
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS post_call_notes_tbl (
       id INTEGER PRIMARY KEY NOT NULL, 
-      mood TEXT NOT NULL, 
-      feedback TEXT NOT NULL, 
+      mood TEXT, 
+      feedback TEXT, 
       schedule_id TEXT NOT NULL, 
       date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
-  const query = `SELECT mood, feedback, schedule_id FROM post_call_notes_tbl WHERE schedule_id = ?`;
+  const query = `SELECT mood, feedback, schedule_id FROM pre_call_notes_tbl WHERE schedule_id = ? LIMIT 1`;
 
   try {
-    const result = await db.getAllAsync(query, [scheduleId]);
-    const existingRows = result as { mood: string; feedback: string; schedule_id: string }[];
+    const result = await db.getAllAsync(query, [scheduleId]); // Fetch a single row instead of all
 
-    return existingRows.map(row => ({
-      mood: row.mood,
-      feedback: row.feedback,
-      scheduleId: row.schedule_id,
-    }));
+    if (result) {
+      // Return the result formatted according to the PostCallNotesParams interface
+      return {
+        mood: result.mood,
+        feedback: result.feedback,
+        scheduleId: result.schedule_id,
+      };
+    } else {
+      return null;
+    }
   } catch (error) {
     console.error("Error fetching post-call notes:", error);
-    return [];
+    return null;
   } finally {
     await db.closeAsync();
   }
 };
+
+
 
 export const savePreCallNotesLocalDb = async ({
   notesArray,
@@ -114,10 +122,10 @@ export const savePreCallNotesLocalDb = async ({
       scheduleId
     );
 
-    const testRecords = await db.getAllAsync(
-      "SELECT * FROM pre_call_notes_tbl "
-    );
-    // console.log("All records:", testRecords);
+    // const testRecords = await db.getAllAsync(
+    //   "SELECT * FROM pre_call_notes_tbl "
+    // );
+    // console.log("All pre_call_notes_tbl:", testRecords);
 
     db.closeSync();
   } catch (error) {
@@ -172,6 +180,26 @@ export const deleteAllPreCallNotes = async ({ scheduleId }: { scheduleId: string
     // console.log(`Successfully deleted all pre-call notes for scheduleId: ${scheduleId}`);
   } catch (error) {
     console.error("Error deleting pre-call notes:", error);
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const deleteAllPostCallNotes = async ({ scheduleId }: { scheduleId: string }) => {
+
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  try {
+    await db.runAsync(
+      `DELETE FROM post_call_notes_tbl WHERE schedule_id = ?`,
+      scheduleId
+    );
+
+    // console.log(`Successfully deleted all pre-call notes for scheduleId: ${scheduleId}`);
+  } catch (error) {
+    console.error("Error deleting post-call notes:", error);
   } finally {
     await db.closeAsync();
   }

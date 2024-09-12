@@ -13,6 +13,9 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Icon from "react-native-vector-icons/Ionicons";
 import { RootStackParamList } from "../../type/navigation";
 import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
+import { saveCallsDoneFromSchedules } from "../../utils/localDbUtils";
+import Detailers from "../../modals/DetailersOnCallModal";
+import { formatTimeHoursMinutes } from "../../utils/dateUtils";
 
 type OnCallScreenRouteProp = RouteProp<RootStackParamList, "OnCall">;
 type OnCallScreenNavigationProp = NativeStackNavigationProp<
@@ -26,11 +29,22 @@ interface Props {
 }
 
 const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { startCallTime, scheduleIdValue, notesArray } = route.params;
+  const { scheduleIdValue, notesArray } = route.params;
   const [timer, setTimer] = useState<number>(0);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [selectedMood, setSelectedMood] = useState<string>("");
   const [feedback, setFeedback] = useState<string>("");
+  const [isModalVisible, setModalVisible] = useState(false);
+  const openModal = () => setModalVisible(true);
+  const closeModal = () => setModalVisible(false);
+
+  const [callStartTime, setCallStartTime] = useState<string>("");
+  const [callEndTime, setCallEndTime] = useState<string>("");
+  const [signatureValue, setSignatureValue] = useState<string>("");
+  const [signatureAttempts, setSignatureAttempts] = useState<number>(0);
+  const [signatureLocation, setSignatureLocation] = useState<string>("");
+  const [photoValue, setPhotoValue] = useState<string>("");
+  const [photoLocation, setPhotoLocation] = useState<string>("");
 
   useEffect(() => {
     startTimer();
@@ -40,6 +54,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
   }, []);
 
   const startTimer = () => {
+    setCallStartTime(formatTimeHoursMinutes(new Date()));
     const id = setInterval(() => {
       setTimer((prev) => prev + 1);
     }, 1000);
@@ -51,12 +66,41 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
     setIntervalId(null);
   };
 
-  const endCall = () => {
+  const [callsData, setCallsData] = useState({});
+
+  const endCall = async () => {
+    setCallEndTime(formatTimeHoursMinutes(new Date()));
     stopTimer();
-    // Remove schedule in schedules_api_tbl
-    // Add calls_tbl
-    // Refresh setScheduleData in schedule screen
-    navigation.navigate("Home");
+    try {
+      await savePostCallNotes();
+
+      const callDetails = {
+        schedule_id: scheduleIdValue,
+        call_start: callStartTime,
+        call_end: formatTimeHoursMinutes(new Date()),
+        signature: signatureValue,
+        signature_attempts: signatureAttempts.toString(),
+        signature_location: signatureLocation,
+        photo: photoValue,
+        photo_location: photoLocation,
+      };
+
+      setCallsData(callDetails); // This sets the callDetails to your state
+
+      console.log(callDetails, "Call details data");
+
+      const result = await saveCallsDoneFromSchedules(
+        scheduleIdValue,
+        callDetails
+      ); // Pass callDetails directly here
+      console.log(result, "end call");
+
+      if (result === "Success") {
+        navigation.navigate("Home");
+      }
+    } catch (error: any) {
+      console.log("ERROR > endCall > OnCallScreen:", error);
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -124,9 +168,15 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
             </TouchableOpacity>
           ))}
         </View>
-        <TouchableOpacity style={styles.saveButton} onPress={savePostCallNotes}>
-          <Text style={styles.saveButtonText}>Save Post-Call Notes</Text>
+      </View>
+
+      <View style={styles.cardContainer}>
+        <TouchableOpacity onPress={openModal} style={styles.openModalButton}>
+          <Text style={styles.buttonText}>START DETAILERS</Text>
         </TouchableOpacity>
+
+        {/* Render DetailerModal and pass isVisible and onClose */}
+        <Detailers isVisible={isModalVisible} onClose={closeModal} />
       </View>
 
       <TouchableOpacity
@@ -257,6 +307,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 10,
     fontWeight: "bold",
+  },
+  openModalButton: {
+    backgroundColor: "red",
+    color: "white",
+    padding: 30,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

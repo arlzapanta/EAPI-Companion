@@ -8,7 +8,7 @@ import Home from "./src/screens/Home";
 import Login from "./src/screens/Login";
 import SyncSettingsScreen from "./src/screens/settings/SyncSettingsScreen";
 import AttendanceScreen from "./src/screens/settings/AttendanceScreen";
-import OnCallScreen from "./src/screens/on call/OnCallScreen";
+import OnCallScreen from "./src/screens/call/OnCallScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -26,7 +26,11 @@ const Layout = () => {
             <Stack.Screen name="Home" component={Home} />
             <Stack.Screen name="Sync" component={SyncSettingsScreen} />
             <Stack.Screen name="Attendance" component={AttendanceScreen} />
-            <Stack.Screen name="OnCall" component={OnCallScreen} />
+            <Stack.Screen
+              name="OnCall"
+              component={OnCallScreen}
+              options={{ headerShown: false }}
+            />
           </>
         ) : (
           <Stack.Screen name="Login" component={Login} />

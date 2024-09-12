@@ -131,6 +131,7 @@ const Attendance: React.FC = () => {
           const scheduleData = await getSChedulesAPI(userInfo);
           if (scheduleData) {
             const result = await saveSchedulesAPILocalDb(scheduleData);
+            // add fetch actual calls of users from API with date range
             {
               result == "Success"
                 ? Alert.alert("Success", "Successfully synced data from server")
