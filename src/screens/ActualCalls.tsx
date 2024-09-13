@@ -1,12 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
-import { useAuth, getStyleUtil } from "../index";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  TextInput,
+} from "react-native";
+import { useAuth, getStyleUtil, customToast } from "../index";
 import { getCallsTestLocalDb } from "../utils/localDbUtils";
-import { getPostCallNotesLocalDb } from "../utils/callComponentsUtil";
+import {
+  getPostCallNotesLocalDb,
+  savePostCallNotesLocalDb,
+} from "../utils/callComponentsUtil";
 import { getCurrentDatePH } from "../utils/dateUtils";
 import moment from "moment";
 import { Ionicons } from "@expo/vector-icons";
 import MapComponent from "../components/MapView";
+import Icon from "react-native-vector-icons/Ionicons";
 
 const ActualCalls = () => {
   const [loading, setLoading] = useState(false);
@@ -15,6 +26,9 @@ const ActualCalls = () => {
   const [selectedCall, setSelectedCall] = useState<any | null>(null);
   const [accordionExpanded, setAccordionExpanded] = useState(false);
   const [currentDate, getCurrentDate] = useState("");
+  const [feedback, setFeedback] = useState<string>("");
+  const [selectedMood, setSelectedMood] = useState<string>("");
+  const [scheduleIdValue, setScheduleIdValue] = useState<string>("");
 
   const styles = getStyleUtil({});
   const { authState } = useAuth();
@@ -46,8 +60,22 @@ const ActualCalls = () => {
   };
 
   const handleCallClick = async (call: any) => {
+    setScheduleIdValue(call.schedule_id);
     const postCallData = await getPostCallNotesLocalDb(call.schedule_id);
+    if (postCallData) {
+      setFeedback(postCallData.feedback || "");
+      setSelectedMood(postCallData.mood || "");
+    }
     setSelectedCall(call);
+  };
+
+  const savePostCallData = async () => {
+    await savePostCallNotesLocalDb({
+      mood: selectedMood,
+      feedback,
+      scheduleId: scheduleIdValue,
+    });
+    customToast("Post call updated");
   };
 
   const NoActualCallSelected = () => (
@@ -164,7 +192,50 @@ const ActualCalls = () => {
         <View style={styles1.column2}>
           <View style={styles1.innerCard}>
             {selectedCall ? (
-              <CallDetails call={selectedCall} />
+              <>
+                <CallDetails call={selectedCall} />
+                <View style={styles1.cardContainer}>
+                  <View style={styles1.headerRow}>
+                    <Text style={styles1.sectionTitle}>Edit Post Call</Text>
+                    <TouchableOpacity
+                      onPress={savePostCallData}
+                      style={styles1.buttonPostCallSave}>
+                      <Text style={styles1.buttonText}>Save</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <Text>Feedback</Text>
+                  <TextInput
+                    style={styles1.input}
+                    placeholder="Enter feedback"
+                    value={feedback}
+                    onChangeText={setFeedback}
+                    multiline
+                    numberOfLines={3}
+                  />
+                  <Text style={styles1.moodLabel}>Doctor's Mood:</Text>
+                  <View style={styles1.radioGroup}>
+                    {["cold", "warm", "hot"].map((mood) => (
+                      <TouchableOpacity
+                        key={mood}
+                        style={[
+                          styles1.radioButtonContainer,
+                          selectedMood === mood && styles1.radioButtonSelected,
+                        ]}
+                        onPress={() => setSelectedMood(mood)}>
+                        <Text
+                          style={[
+                            styles1.radioButtonText,
+                            selectedMood === mood &&
+                              styles1.radioButtonTextSelected,
+                          ]}>
+                          {mood.charAt(0).toUpperCase() + mood.slice(1)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </>
             ) : (
               <NoActualCallSelected />
             )}
@@ -205,6 +276,15 @@ const styles1 = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
+  },
+  input: {
+    height: 50,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    textAlignVertical: "top",
   },
   columnTitle: {
     fontSize: 24,
@@ -320,6 +400,79 @@ const styles1 = StyleSheet.create({
     fontWeight: "bold",
     color: "#046E37",
     textAlign: "center",
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  cardContainer: {
+    marginTop: 10,
+    marginBottom: 20,
+    padding: 15,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  moodLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 10,
+  },
+  radioGroup: {
+    flexDirection: "row",
+    marginBottom: 20,
+  },
+  radioButtonContainer: {
+    minWidth: 100,
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    marginHorizontal: 10,
+  },
+  radioButtonSelected: {
+    backgroundColor: "#046E37",
+    borderColor: "#046E37",
+  },
+  radioButtonText: {
+    color: "#333",
+  },
+  radioButtonTextSelected: {
+    color: "#fff",
+  },
+  buttonPostCallSave: {
+    backgroundColor: "#046E37",
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 4,
+  },
+  buttonContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
   },
 });
 

@@ -52,7 +52,7 @@ export const savePostCallNotesLocalDb = async ({
   }
 };
 
-export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<PostCallNotesParams | null> => {
+export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<any | null> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -68,18 +68,15 @@ export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<PostC
     );
   `);
 
-  const query = `SELECT mood, feedback, schedule_id FROM pre_call_notes_tbl WHERE schedule_id = ? LIMIT 1`;
-
   try {
-    const result = await db.getAllAsync(query, [scheduleId]); // Fetch a single row instead of all
 
-    if (result) {
-      // Return the result formatted according to the PostCallNotesParams interface
-      return {
-        mood: result.mood,
-        feedback: result.feedback,
-        scheduleId: result.schedule_id,
-      };
+    const query = await db.getFirstAsync(
+      `SELECT * FROM post_call_notes_tbl WHERE schedule_id = ?`,
+      [scheduleId]
+    );
+
+    if (query) {
+      return query;
     } else {
       return null;
     }
