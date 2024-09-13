@@ -383,9 +383,8 @@ const styles1 = StyleSheet.create({
   },
   containerNoCallData: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    padding: 20,
+    padding: 50,
     backgroundColor: "#e9ecef",
     borderRadius: 10,
     borderColor: "#046E37",

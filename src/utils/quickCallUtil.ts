@@ -19,7 +19,7 @@ export const getQuickCalls = async (): Promise<any> => {
     `);
   
     try {
-      const query = await db.getFirstAsync(`SELECT * FROM quick_call_tbl`);
+      const query = await db.getAllAsync(`SELECT * FROM quick_call_tbl`);
   
       if (query) {
         return query;
