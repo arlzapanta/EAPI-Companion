@@ -5,9 +5,10 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Dimensions,
 } from "react-native";
-import { getCurrentDatePH } from "../../utils/dateUtils";
 import moment from "moment";
+import { getCurrentDatePH } from "../../utils/dateUtils";
 import {
   addQuickCall,
   getQuickCalls,
@@ -16,6 +17,9 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import { Ionicons } from "@expo/vector-icons";
 import { getLocation } from "../../utils/currentLocation";
+import SignatureCapture from "../../components/SignatureCapture";
+
+const { width, height } = Dimensions.get("window");
 
 interface Call {
   id: number;
@@ -26,6 +30,7 @@ interface Call {
   signature: string;
   signature_location: string;
 }
+
 interface AddCall {
   location: string;
   doctor_id: string;
@@ -38,7 +43,7 @@ interface AddCall {
 const QuickCall = () => {
   const [currentDate, setCurrentDate] = useState("");
   const [callData, setCallData] = useState<Call[]>([]);
-  const [selectedCall, setSelectedCall] = useState<any | null>(null);
+  const [selectedCall, setSelectedCall] = useState<Call | null>(null);
 
   const fetchCallsData = async () => {
     try {
@@ -61,39 +66,9 @@ const QuickCall = () => {
     fetchCallsData();
   }, []);
 
-  const handleCallClick = (call: any) => {
+  const handleCallClick = (call: Call) => {
     setSelectedCall(call);
   };
-
-  const CallItem = ({ call }: { call: Call }) => (
-    <View style={styles.callItemContainer}>
-      <TouchableOpacity
-        onPress={() => handleCallClick(call)}
-        style={styles.callItem}>
-        <Text style={styles.callText}>{`Quick call Id: ${call.id}`}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={() => handleRemoveCall(call.id)}
-        style={styles.removeButtonInline}>
-        <Icon name="remove-circle" size={18} color="red" />
-      </TouchableOpacity>
-    </View>
-  );
-
-  const NoCallSelected = () => (
-    <View style={styles.containerNoCallData}>
-      <Ionicons
-        name="information-circle"
-        size={24}
-        color="#007BFF"
-        style={styles.iconNoSched}
-      />
-      <Text style={styles.messageNoCallData}>
-        Select a quick call to view details
-      </Text>
-    </View>
-  );
 
   const handleAddCall = async () => {
     try {
@@ -127,14 +102,41 @@ const QuickCall = () => {
     }
   };
 
-  const saveQuickCall = async (callId: number) => {
-    const loc = await getLocation();
-  };
+  const CallItem = ({ call }: { call: Call }) => (
+    <View style={styles.callItemContainer}>
+      <TouchableOpacity
+        onPress={() => handleCallClick(call)}
+        style={styles.callItem}>
+        <Text style={styles.callText}>{`Quick call Id: ${call.id}`}</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => handleRemoveCall(call.id)}
+        style={styles.removeButtonInline}>
+        <Icon name="remove-circle" size={18} color="red" />
+      </TouchableOpacity>
+    </View>
+  );
 
-  const CallDetails = ({ call }: { call: any }) => (
-    <>
-      <Text>{call.id}</Text>
-    </>
+  const NoCallSelected = () => (
+    <View style={styles.containerNoCallData}>
+      <Ionicons
+        name="information-circle"
+        size={24}
+        color="#007BFF"
+        style={styles.iconNoSched}
+      />
+      <Text style={styles.messageNoCallData}>
+        Select a quick call to view details
+      </Text>
+    </View>
+  );
+
+  const CallDetails = ({ call }: { call: Call }) => (
+    <View style={styles.callDetailsContainer}>
+      <Text>{`Call ID: ${call.id}`}</Text>
+      <Text style={styles.signatureLabel}>Signature Capture</Text>
+      <SignatureCapture />
+    </View>
   );
 
   return (
@@ -233,7 +235,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f1f1",
     borderRadius: 5,
   },
-
   callText: {
     fontSize: 16,
     color: "#495057",
@@ -281,6 +282,30 @@ const styles = StyleSheet.create({
   iconNoSched: {
     marginBottom: 10,
     color: "#046E37",
+  },
+  callDetailsContainer: {
+    flex: 1,
+    padding: 20,
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
+    margin: 10,
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  callDetailText: {
+    fontSize: 16,
+    color: "#343a40",
+    marginBottom: 10,
+  },
+  signatureLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#007bff",
   },
 });
 
