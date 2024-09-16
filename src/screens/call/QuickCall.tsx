@@ -7,6 +7,8 @@ import {
   ScrollView,
   Dimensions,
   Image,
+  TextInput,
+  Alert,
 } from "react-native";
 import moment from "moment";
 import { getCurrentDatePH } from "../../utils/dateUtils";
@@ -14,11 +16,14 @@ import {
   addQuickCall,
   getQuickCalls,
   removeCallFromLocalDb,
+  updateCallNotes,
+  updateCallPhoto,
 } from "../../utils/quickCallUtil";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Ionicons } from "@expo/vector-icons";
-import { getLocation } from "../../utils/currentLocation";
 import SignatureCapture from "../../components/SignatureCapture";
+import { useImagePicker } from "../../hook/useImagePicker";
+import { customToast } from "../../utils/customToast";
 
 const { width, height } = Dimensions.get("window");
 
@@ -30,6 +35,7 @@ interface Call {
   photo_location: string;
   signature: string;
   signature_location: string;
+  notes: string;
 }
 
 interface AddCall {
@@ -39,12 +45,14 @@ interface AddCall {
   photo_location: string;
   signature: string;
   signature_location: string;
+  notes: string;
 }
 
 const QuickCall = () => {
   const [currentDate, setCurrentDate] = useState("");
   const [callData, setCallData] = useState<Call[]>([]);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
+  const [selectedCallIdValue, setSelectedCallIdValue] = useState<number>(0);
 
   const fetchCallsData = async () => {
     try {
@@ -53,6 +61,12 @@ const QuickCall = () => {
       const data = await getQuickCalls();
       if (Array.isArray(data)) {
         setCallData(data);
+        if (selectedCallIdValue) {
+          const updatedCall = data.find(
+            (call) => call.id === selectedCallIdValue
+          );
+          setSelectedCall(updatedCall || null);
+        }
       } else {
         console.warn("Fetched data is not an array:", data);
         setCallData([]);
@@ -66,8 +80,29 @@ const QuickCall = () => {
     fetchCallsData();
   }, []);
 
+  const handlePhotoCaptured = async (
+    base64: string,
+    location: { latitude: number; longitude: number }
+  ) => {
+    try {
+      await updateCallPhoto(
+        selectedCallIdValue,
+        base64,
+        `${location.latitude},${location.longitude}`
+      );
+      await fetchCallsData();
+    } catch (error) {
+      console.log("handlePhotoCaptured error", error);
+    }
+  };
+
+  const { imageBase64, location, handleImagePicker } = useImagePicker({
+    onPhotoCaptured: handlePhotoCaptured,
+  });
+
   const handleCallClick = (call: Call) => {
     setSelectedCall(call);
+    setSelectedCallIdValue(call.id);
   };
 
   const handleAddCall = async () => {
@@ -79,8 +114,8 @@ const QuickCall = () => {
         photo_location: "",
         signature: "",
         signature_location: "",
+        notes: "",
       };
-
       const addedCall = await addQuickCall(newCall);
       if (addedCall === "Success") {
         fetchCallsData();
@@ -91,19 +126,40 @@ const QuickCall = () => {
   };
 
   const handleRemoveCall = async (callId: number) => {
-    try {
-      await removeCallFromLocalDb(callId);
-      setCallData((prevCallData) =>
-        prevCallData.filter((call) => call.id !== callId)
-      );
-      setSelectedCall(null);
-    } catch (error) {
-      console.log("Error removing call:", error);
-    }
+    Alert.alert(
+      "Confirm Removal",
+      "Are you sure you want to remove this call?",
+      [
+        {
+          text: "Cancel",
+          onPress: () => console.log("Removal cancelled"),
+          style: "cancel",
+        },
+        {
+          text: "OK",
+          onPress: async () => {
+            try {
+              await removeCallFromLocalDb(callId);
+              setCallData((prevCallData) =>
+                prevCallData.filter((call) => call.id !== callId)
+              );
+              setSelectedCall(null);
+            } catch (error) {
+              console.log("Error removing call:", error);
+            }
+          },
+        },
+      ],
+      { cancelable: false }
+    );
   };
 
   const handleSignatureUpdate = async () => {
-    await fetchCallsData();
+    try {
+      await fetchCallsData();
+    } catch (error) {
+      console.log("Error in handleSignatureUpdate:", error);
+    }
   };
 
   const CallItem = ({ call }: { call: Call }) => (
@@ -111,7 +167,9 @@ const QuickCall = () => {
       <TouchableOpacity
         onPress={() => handleCallClick(call)}
         style={styles.callItem}>
-        <Text style={styles.callText}>{`QuickID ${call.id}`}</Text>
+        <Text style={styles.callText}>
+          {!call.notes ? `QuickID ${call.id}` : call.notes}
+        </Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => handleRemoveCall(call.id)}
@@ -141,23 +199,71 @@ const QuickCall = () => {
   }: {
     call: Call;
     onSignatureUpdate: () => void;
-  }) => (
-    <View style={styles.callDetailsContainer}>
-      <Text>{`Call ID: ${call.id}`}</Text>
-      <Text style={styles.signatureLabel}>Signature Capture</Text>
-      {call.signature ? (
-        <Image
-          source={{ uri: `data:image/png;base64,${call.signature}` }}
-          style={styles.signImage}
-        />
-      ) : (
-        <SignatureCapture
-          callId={call.id}
-          onSignatureUpdate={onSignatureUpdate}
-        />
-      )}
-    </View>
-  );
+  }) => {
+    const [note, setNote] = useState<string>("");
+
+    useEffect(() => {
+      if (call) {
+        setNote(call.notes); // Set the initial value of note based on the selected call
+      }
+    }, [call]);
+
+    const handleUpdateNote = async () => {
+      try {
+        await updateCallNotes(call.id, note);
+        await fetchCallsData();
+        customToast("Quick call note has been updated!");
+      } catch (error) {
+        console.log("Error updating note:", error);
+      }
+    };
+
+    return (
+      <View style={styles.callDetailsContainer}>
+        <Text>{`Call ID: ${call.id}}`}</Text>
+        <View style={styles.noteContainer}>
+          <TextInput
+            style={styles.noteInput}
+            value={note}
+            onChangeText={setNote}
+            placeholder="Enter a note..."
+          />
+          <TouchableOpacity
+            style={styles.updateButton}
+            onPress={handleUpdateNote}>
+            <Text style={styles.updateButtonText}>Update</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.signatureLabel}>Signature Capture</Text>
+        {call.signature ? (
+          <Image
+            source={{ uri: `data:image/png;base64,${call.signature}` }}
+            style={styles.signImage}
+          />
+        ) : (
+          <SignatureCapture
+            callId={call.id}
+            onSignatureUpdate={onSignatureUpdate}
+          />
+        )}
+        {!call.photo ? (
+          <TouchableOpacity
+            style={styles.takePhotoButton}
+            onPress={handleImagePicker}>
+            <Text style={styles.buttonText}>Take a photo</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.imageContainer}>
+            <Text style={styles.signatureLabel}>Photo Capture</Text>
+            <Image
+              source={{ uri: `data:image/png;base64,${call.photo}` }}
+              style={styles.image}
+            />
+          </View>
+        )}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -238,18 +344,27 @@ const styles = StyleSheet.create({
     color: "#6c757d",
   },
   callItem: {
+    backgroundColor: "rgba(0,0,0,0.2)",
     paddingVertical: 12,
+    paddingHorizontal: 10,
   },
   signImage: {
     marginVertical: 15,
-    width: 200,
+    width: "100%",
     height: 200,
-    resizeMode: "cover",
+    resizeMode: "contain",
   },
   removeButtonInline: {
     backgroundColor: "transparent",
     padding: 2,
     marginVertical: 5,
+  },
+  takePhotoButton: {
+    padding: 10,
+    backgroundColor: "#007BFF",
+    borderRadius: 5,
+    width: 200,
+    alignItems: "center",
   },
   removeButtonText: {
     color: "red",
@@ -266,7 +381,9 @@ const styles = StyleSheet.create({
   },
   callText: {
     fontSize: 18,
-    color: "#495057",
+    color: "#fff",
+    fontWeight: "bold",
+    // color: "#495057",
   },
   containerNoCallData: {
     flex: 1,
@@ -299,6 +416,10 @@ const styles = StyleSheet.create({
     fontSize: 25,
     color: "#ffffff",
   },
+  buttonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+  },
   removeButton: {
     backgroundColor: "#dc3545",
     borderRadius: 5,
@@ -315,7 +436,6 @@ const styles = StyleSheet.create({
   callDetailsContainer: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#ffffff",
     borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -325,6 +445,9 @@ const styles = StyleSheet.create({
     margin: 10,
     justifyContent: "flex-start",
     alignItems: "center",
+    backgroundColor: "#e9ecef",
+    borderColor: "#046E37",
+    borderWidth: 1,
   },
   callDetailText: {
     fontSize: 16,
@@ -335,6 +458,48 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "#007bff",
+  },
+  imageContainer: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  image: {
+    width: 400,
+    height: 260,
+    marginTop: 10,
+    resizeMode: "contain",
+  },
+  locationText: {
+    marginTop: 10,
+    fontSize: 9,
+    color: "blue",
+  },
+  noteContainer: {
+    marginTop: 20,
+    flexDirection: "row",
+    width: "100%",
+    alignItems: "center",
+  },
+  noteInput: {
+    flex: 1,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  updateButton: {
+    backgroundColor: "#007BFF",
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  updateButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });
 

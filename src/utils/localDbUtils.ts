@@ -779,8 +779,9 @@ export const dropLocalTablesDb = async () => {
     useNewConnection: true,
   });
 
-  const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl'];
+  // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl'];
   // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
+  const tableNames = ['quick_call_tbl'];
   for (const tableName of tableNames) {
     const query = `DROP TABLE IF EXISTS ${tableName};`;
     await db.getAllAsync(query);

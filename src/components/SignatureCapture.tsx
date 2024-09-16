@@ -103,7 +103,7 @@ const SignatureCapture: React.FC<{
       <TouchableOpacity
         style={styles.openModalButton}
         onPress={() => setIsModalVisible(true)}>
-        <Text style={styles.buttonText}>Open Signature Modal</Text>
+        <Text style={styles.buttonText}>Open Signature Pad</Text>
       </TouchableOpacity>
 
       <Modal
@@ -181,6 +181,8 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   openModalButton: {
+    width: 200,
+    alignItems: "center",
     padding: 10,
     backgroundColor: "#007BFF",
     borderRadius: 5,
@@ -199,7 +201,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   canvas: {
-    borderColor: "black",
     borderWidth: 1,
     marginBottom: 10,
     backgroundColor: "#FFF",
@@ -208,7 +209,6 @@ const styles = StyleSheet.create({
     width: width - 40,
     height: height / 4,
     borderWidth: 1,
-    borderColor: "#000",
     backgroundColor: "#FFF",
   },
   clearButton: {

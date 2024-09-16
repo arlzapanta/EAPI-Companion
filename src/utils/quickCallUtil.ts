@@ -8,13 +8,14 @@ export const getQuickCalls = async (): Promise<any> => {
       PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS quick_call_tbl (
         id INTEGER PRIMARY KEY NOT NULL,
-        location TEXT NOT NULL,
-        doctor_id TEXT NOT NULL,
-        photo TEXT NOT NULL,
-        photo_location TEXT NOT NULL,
-        signature TEXT NOT NULL,
-        signature_location TEXT NOT NULL,
-        created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        location TEXT,
+        doctor_id TEXT,
+        photo TEXT,
+        photo_location TEXT,
+        signature TEXT,
+        signature_location TEXT,
+        notes TEXT,
+        created_date TEXT DEFAULT CURRENT_TIMESTAMP
       );
     `);
   
@@ -41,7 +42,8 @@ doctor_id: string,
 photo: string,
 photo_location: string,
 signature: string,
-signature_location: string
+signature_location: string,
+notes: string
 ) => {
 const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
@@ -51,12 +53,13 @@ await db.execAsync(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS quick_call_tbl (
     id INTEGER PRIMARY KEY NOT NULL,
-    location TEXT NOT NULL,
-    doctor_id TEXT NOT NULL,
-    photo TEXT NOT NULL,
-    photo_location TEXT NOT NULL,
-    signature TEXT NOT NULL,
-    signature_location TEXT NOT NULL,
+    location TEXT,
+    doctor_id TEXT,
+    photo TEXT,
+    photo_location TEXT,
+    signature TEXT,
+    signature_location TEXT,
+    notes TEXT,
     created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `);
@@ -69,7 +72,7 @@ try {
 
     if (!existingRow) {
     await db.runAsync(
-        `INSERT INTO quick_call_tbl (location, doctor_id, photo, photo_location, signature, signature_location) VALUES (?,?,?,?,?,?)`,
+        `INSERT INTO quick_call_tbl (location, doctor_id, photo, photo_location, signature, signature_location, notes) VALUES (?,?,?,?,?,?,?)`,
         [
         location,
         doctor_id,
@@ -77,11 +80,12 @@ try {
         photo_location,
         signature,
         signature_location,
+        notes,
         ]
     );
     } else {
     await db.runAsync(
-        `UPDATE quick_call_tbl SET location = ?, doctor_id = ?, photo = ?, photo_location = ?, signature = ?, signature_location = ? WHERE id = ?`,
+        `UPDATE quick_call_tbl SET location = ?, doctor_id = ?, photo = ?, photo_location = ?, signature = ?, signature_location = ?, notes = ?, WHERE id = ?`,
         [
         location,
         doctor_id,
@@ -89,6 +93,7 @@ try {
         photo_location,
         signature,
         signature_location,
+        notes,
         quickCallId,
         ]
     );
@@ -111,12 +116,13 @@ export const updateCallSignature = async (
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS quick_call_tbl (
       id INTEGER PRIMARY KEY NOT NULL,
-      location TEXT NOT NULL,
-      doctor_id TEXT NOT NULL,
-      photo TEXT NOT NULL,
-      photo_location TEXT NOT NULL,
-      signature TEXT NOT NULL,
-      signature_location TEXT NOT NULL,
+      location TEXT,
+      doctor_id TEXT,
+      photo TEXT,
+      photo_location TEXT,
+      signature TEXT,
+      signature_location TEXT,
+      notes TEXT,
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
@@ -137,6 +143,111 @@ export const updateCallSignature = async (
     }
   } catch (error) {
     console.error("Error updating call:", error);
+  }
+};
+
+export const updateCallPhoto = async (
+  quickCallId: number,
+  photo: string,
+  photo_location: string
+) => {
+
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS quick_call_tbl (
+      id INTEGER PRIMARY KEY NOT NULL,
+      location TEXT,
+      doctor_id TEXT,
+      photo TEXT,
+      photo_location TEXT,
+      signature TEXT,
+      signature_location TEXT,
+      notes TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  try {
+    const existingRow = await db.getFirstAsync(
+      `SELECT * FROM quick_call_tbl WHERE id = ?`,
+      [quickCallId]
+    );
+
+    if (!existingRow) {
+      console.error(`Call with ID ${quickCallId} not found.`);
+    } else {
+      await db.runAsync(
+        `UPDATE quick_call_tbl SET photo = ?, photo_location = ? WHERE id = ?`,
+        [photo, photo_location, quickCallId]
+      );
+    }
+  } catch (error) {
+    console.error("Error updating call:", error);
+  }
+};
+export const updateCallNotes = async (
+  quickCallId: number,
+  notes: string,
+) => {
+
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS quick_call_tbl (
+      id INTEGER PRIMARY KEY NOT NULL,
+      location TEXT,
+      doctor_id TEXT,
+      photo TEXT,
+      photo_location TEXT,
+      signature TEXT,
+      signature_location TEXT,
+      notes TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  try {
+    const existingRow = await db.getFirstAsync(
+      `SELECT * FROM quick_call_tbl WHERE id = ?`,
+      [quickCallId]
+    );
+
+    if (!existingRow) {
+      console.error(`Call with ID ${quickCallId} not found.`);
+    } else {
+      await db.runAsync(
+        `UPDATE quick_call_tbl SET notes = ? WHERE id = ?`,
+        [notes, quickCallId]
+      );
+    }
+  } catch (error) {
+    console.error("Error updating call:", error);
+  }
+};
+
+export const deleteCallNote = async (quickCallId: number) => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  try {
+    await db.runAsync(
+      `DELETE FROM quick_call_tbl WHERE id = ?`,
+      quickCallId
+    );
+
+    // console.log(`Successfully deleted all pre-call notes for scheduleId: ${scheduleId}`);
+  } catch (error) {
+    console.error("Error deleting pre-call notes:", error);
+  } finally {
+    await db.closeAsync();
   }
 };
 
@@ -165,6 +276,7 @@ export interface Call {
   photo_location: string;
   signature: string;
   signature_location: string;
+  notes: string;
 }
 
 export const addQuickCall = async (call: Call): Promise<string> => {
@@ -176,20 +288,21 @@ export const addQuickCall = async (call: Call): Promise<string> => {
       PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS quick_call_tbl (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        location TEXT NOT NULL,
-        doctor_id TEXT NOT NULL,
-        photo TEXT NOT NULL,
-        photo_location TEXT NOT NULL,
-        signature TEXT NOT NULL,
-        signature_location TEXT NOT NULL,
+        location TEXT,
+        doctor_id TEXT,
+        photo TEXT,
+        photo_location TEXT,
+        signature TEXT,
+        signature_location TEXT,
+        notes TEXT,
         created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
     // Insert data
     await db.runAsync(
-      `INSERT INTO quick_call_tbl (location, doctor_id, photo, photo_location, signature, signature_location) 
-      VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO quick_call_tbl (location, doctor_id, photo, photo_location, signature, signature_location, notes) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         call.location,
         call.doctor_id,
@@ -197,12 +310,13 @@ export const addQuickCall = async (call: Call): Promise<string> => {
         call.photo_location,
         call.signature,
         call.signature_location,
+        call.notes,
       ]
     );
 
     // Fetch all records for debugging (optional)
-    const testRecords = await db.getAllAsync("SELECT * FROM quick_call_tbl");
-    console.log("All quick_call_tbl records:", testRecords);
+    // const testRecords = await db.getAllAsync("SELECT * FROM quick_call_tbl");
+    // console.log("All quick_call_tbl records:", testRecords);
 
     // Properly close the database connection
     await db.closeAsync();
