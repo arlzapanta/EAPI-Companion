@@ -98,6 +98,49 @@ try {
 }
 };
 
+export const updateCallSignature = async (
+  quickCallId: number,
+  signature: string,
+  signature_location: string
+) => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS quick_call_tbl (
+      id INTEGER PRIMARY KEY NOT NULL,
+      location TEXT NOT NULL,
+      doctor_id TEXT NOT NULL,
+      photo TEXT NOT NULL,
+      photo_location TEXT NOT NULL,
+      signature TEXT NOT NULL,
+      signature_location TEXT NOT NULL,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  try {
+    const existingRow = await db.getFirstAsync(
+      `SELECT * FROM quick_call_tbl WHERE id = ?`,
+      [quickCallId]
+    );
+
+    if (!existingRow) {
+      console.error(`Call with ID ${quickCallId} not found.`);
+    } else {
+      await db.runAsync(
+        `UPDATE quick_call_tbl SET signature = ?, signature_location = ? WHERE id = ?`,
+        [signature, signature_location, quickCallId]
+      );
+    }
+  } catch (error) {
+    console.error("Error updating call:", error);
+  }
+};
+
+
 export const removeCallFromLocalDb = async (quickCallId: number) => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,

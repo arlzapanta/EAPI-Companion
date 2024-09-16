@@ -11,10 +11,15 @@ import {
 } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import Svg, { Path } from "react-native-svg";
+import { getLocation } from "../utils/currentLocation";
+import { updateCallSignature } from "../utils/quickCallUtil";
 
 const { width, height } = Dimensions.get("window");
 
-const SignatureCapture: React.FC = () => {
+const SignatureCapture: React.FC<{
+  callId: number;
+  onSignatureUpdate: () => void;
+}> = ({ callId, onSignatureUpdate }) => {
   const [signature, setSignature] = useState<string | null>(null);
   const [paths, setPaths] = useState<Array<Array<{ x: number; y: number }>>>(
     []
@@ -72,9 +77,21 @@ const SignatureCapture: React.FC = () => {
         const uri = await captureRef(viewRef.current, {
           format: "png",
           quality: 1.0,
+          result: "base64",
         });
-        setSignature(uri);
-        setIsSignatureModalVisible(true);
+        setSignature(`data:image/png;base64,${uri}`);
+        const loc = await getLocation();
+        const locationString = loc
+          ? `${loc.latitude}, ${loc.longitude}`
+          : "Unknown Location";
+        try {
+          await updateCallSignature(callId, uri, locationString);
+          console.log("Signature and location updated successfully!");
+          onSignatureUpdate();
+        } catch (error) {
+          console.error("Error updating signature:", error);
+        }
+        // setIsSignatureModalVisible(true);
       } catch (error) {
         console.error("Error capturing the view:", error);
       }
@@ -89,7 +106,6 @@ const SignatureCapture: React.FC = () => {
         <Text style={styles.buttonText}>Open Signature Modal</Text>
       </TouchableOpacity>
 
-      {/* Signature Drawing Modal */}
       <Modal
         visible={isModalVisible}
         animationType="slide"
@@ -222,6 +238,12 @@ const styles = StyleSheet.create({
   signatureModalContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 20,
+  },
+  fullImage: {
+    width: width,
+    height: height,
+    resizeMode: "cover",
+    position: "absolute",
   },
 });
 

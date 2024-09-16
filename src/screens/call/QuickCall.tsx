@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Image,
 } from "react-native";
 import moment from "moment";
 import { getCurrentDatePH } from "../../utils/dateUtils";
@@ -50,7 +51,6 @@ const QuickCall = () => {
       const getDate = await getCurrentDatePH();
       setCurrentDate(moment(getDate).format("MMMM DD, dddd"));
       const data = await getQuickCalls();
-
       if (Array.isArray(data)) {
         setCallData(data);
       } else {
@@ -102,12 +102,16 @@ const QuickCall = () => {
     }
   };
 
+  const handleSignatureUpdate = async () => {
+    await fetchCallsData();
+  };
+
   const CallItem = ({ call }: { call: Call }) => (
     <View style={styles.callItemContainer}>
       <TouchableOpacity
         onPress={() => handleCallClick(call)}
         style={styles.callItem}>
-        <Text style={styles.callText}>{`Quick call Id: ${call.id}`}</Text>
+        <Text style={styles.callText}>{`QuickID ${call.id}`}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         onPress={() => handleRemoveCall(call.id)}
@@ -131,11 +135,27 @@ const QuickCall = () => {
     </View>
   );
 
-  const CallDetails = ({ call }: { call: Call }) => (
+  const CallDetails = ({
+    call,
+    onSignatureUpdate,
+  }: {
+    call: Call;
+    onSignatureUpdate: () => void;
+  }) => (
     <View style={styles.callDetailsContainer}>
       <Text>{`Call ID: ${call.id}`}</Text>
       <Text style={styles.signatureLabel}>Signature Capture</Text>
-      <SignatureCapture />
+      {call.signature ? (
+        <Image
+          source={{ uri: `data:image/png;base64,${call.signature}` }}
+          style={styles.signImage}
+        />
+      ) : (
+        <SignatureCapture
+          callId={call.id}
+          onSignatureUpdate={onSignatureUpdate}
+        />
+      )}
     </View>
   );
 
@@ -162,7 +182,10 @@ const QuickCall = () => {
         <View style={styles.column2}>
           <View style={styles.innerCard}>
             {selectedCall ? (
-              <CallDetails call={selectedCall} />
+              <CallDetails
+                call={selectedCall}
+                onSignatureUpdate={handleSignatureUpdate}
+              />
             ) : (
               <NoCallSelected />
             )}
@@ -215,7 +238,13 @@ const styles = StyleSheet.create({
     color: "#6c757d",
   },
   callItem: {
-    paddingVertical: 4,
+    paddingVertical: 12,
+  },
+  signImage: {
+    marginVertical: 15,
+    width: 200,
+    height: 200,
+    resizeMode: "cover",
   },
   removeButtonInline: {
     backgroundColor: "transparent",
@@ -236,7 +265,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   callText: {
-    fontSize: 16,
+    fontSize: 18,
     color: "#495057",
   },
   containerNoCallData: {
