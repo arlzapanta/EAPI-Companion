@@ -1,6 +1,6 @@
 import { View, Text, Alert, StyleSheet, TouchableOpacity } from "react-native";
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../index";
+import { customToast, useAuth } from "../index";
 import { getStyleUtil } from "../index";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../type/navigation";
@@ -107,6 +107,8 @@ const Settings = () => {
       } finally {
         setLoading(false);
       }
+    } else {
+      customToast("Mid sync is available between 12pm and 1pm");
     }
   };
 
