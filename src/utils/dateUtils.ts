@@ -16,6 +16,19 @@ export const getCurrentDatePH = async (): Promise<string> => {
   }
 };
 
+export const isTimeBetween12and1PM = (): boolean => {
+  const currentTime = moment();
+  
+  const startTime = moment().hour(12).minute(0).second(0);
+  const endTime = moment().hour(13).minute(0).second(0);
+
+  const isBetween = currentTime.isBetween(startTime, endTime);
+
+  console.log(isBetween ? 'true' : 'false');
+  
+  return isBetween;
+};
+
 const TIME_KEY = 'current_time_ph';
 export const getCurrentTimePH = async (): Promise<string> => {
   const storedTime = await SecureStore.getItemAsync(TIME_KEY);
