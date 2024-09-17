@@ -24,6 +24,11 @@ import { Ionicons } from "@expo/vector-icons";
 import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
 import { customToast } from "../../utils/customToast";
+import { Picker } from "@react-native-picker/picker";
+import {
+  getDoctorsTodaySchedLocalDb,
+  saveCallsDoneFromSchedules,
+} from "../../utils/localDbUtils";
 
 const { width, height } = Dimensions.get("window");
 
@@ -48,11 +53,27 @@ interface AddCall {
   notes: string;
 }
 
+interface ScheduleAPIRecord {
+  id?: string;
+  address: string;
+  date: string;
+  doctor_id: string;
+  full_name: string;
+  municipality_city: string;
+  province: string;
+  schedule_id: string;
+}
+
 const QuickCall = () => {
   const [currentDate, setCurrentDate] = useState("");
   const [callData, setCallData] = useState<Call[]>([]);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [selectedCallIdValue, setSelectedCallIdValue] = useState<number>(0);
+  const [doctorScheduleList, setDoctorScheduleList] = useState<
+    ScheduleAPIRecord[]
+  >([]);
+  const [selectedDoctor, setSelectedDoctor] =
+    useState<ScheduleAPIRecord | null>(null);
 
   const fetchCallsData = async () => {
     try {
@@ -76,8 +97,18 @@ const QuickCall = () => {
     }
   };
 
+  const fetchDoctorSchedules = async () => {
+    try {
+      const schedules = await getDoctorsTodaySchedLocalDb();
+      setDoctorScheduleList(schedules);
+    } catch (error) {
+      console.error("Error fetching doctor schedules:", error);
+    }
+  };
+
   useEffect(() => {
     fetchCallsData();
+    fetchDoctorSchedules();
   }, []);
 
   const handlePhotoCaptured = async (
@@ -218,9 +249,35 @@ const QuickCall = () => {
       }
     };
 
+    const handleSaveQuickCall = async () => {
+      if (selectedDoctor) {
+        const callDetails = {
+          schedule_id: selectedDoctor.schedule_id,
+          call_start: "test",
+          call_end: "test",
+          signature: call.signature,
+          signature_attempts: "0",
+          signature_location: call.signature_location,
+          photo: call.photo,
+          photo_location: call.photo_location,
+        };
+
+        const result = await saveCallsDoneFromSchedules(
+          selectedDoctor.schedule_id,
+          callDetails
+        );
+        if (result == "Success") {
+          await removeCallFromLocalDb(call.id);
+          await fetchCallsData();
+        }
+      } else {
+        console.log("No doctor selected");
+      }
+    };
+
     return (
       <View style={styles.callDetailsContainer}>
-        <Text>{`Call ID: ${call.id}}`}</Text>
+        <Text>{`Call ID: ${call.id}`}</Text>
         <View style={styles.noteContainer}>
           <TextInput
             style={styles.noteInput}
@@ -261,6 +318,31 @@ const QuickCall = () => {
             />
           </View>
         )}
+
+        <View style={styles.dropdownContainer}>
+          <Text style={styles.signatureLabel}>Select doctor</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              style={styles.picker}
+              selectedValue={selectedDoctor}
+              onValueChange={(itemValue) => setSelectedDoctor(itemValue)}>
+              {doctorScheduleList
+                .filter((schedule) => schedule.full_name !== null) // Filter out null names
+                .map((schedule) => (
+                  <Picker.Item
+                    key={schedule.id}
+                    label={schedule.full_name || "Unknown Name"} // Provide a default value
+                    value={schedule}
+                  />
+                ))}
+            </Picker>
+          </View>
+          <TouchableOpacity
+            style={styles.saveButton}
+            onLongPress={handleSaveQuickCall}>
+            <Text style={styles.buttonText}>Save</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   };
@@ -500,6 +582,29 @@ const styles = StyleSheet.create({
     color: "#FFF",
     fontWeight: "bold",
     fontSize: 14,
+  },
+  dropdownContainer: {
+    width: 400,
+    padding: 20,
+  },
+  saveButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#007BFF",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
+  pickerContainer: {
+    marginVertical: 10,
+  },
+  picker: {
+    height: 50,
+    width: "100%",
+    padding: 20,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#ddd",
   },
 });
 

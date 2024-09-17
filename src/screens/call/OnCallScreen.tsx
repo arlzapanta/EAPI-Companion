@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Button,
   ScrollView,
+  Image,
 } from "react-native";
 import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -16,6 +17,9 @@ import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
 import { saveCallsDoneFromSchedules } from "../../utils/localDbUtils";
 import Detailers from "../../modals/DetailersOnCallModal";
 import { formatTimeHoursMinutes } from "../../utils/dateUtils";
+import SignatureCapture from "../../components/SignatureCapture";
+import { useImagePicker } from "../../hook/useImagePicker";
+import { getLocation } from "../../utils/currentLocation";
 
 type OnCallScreenRouteProp = RouteProp<RootStackParamList, "OnCall">;
 type OnCallScreenNavigationProp = NativeStackNavigationProp<
@@ -87,13 +91,13 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
 
       setCallsData(callDetails); // This sets the callDetails to your state
 
-      console.log(callDetails, "Call details data");
+      // console.log(callDetails, "Call details data");
 
       const result = await saveCallsDoneFromSchedules(
         scheduleIdValue,
         callDetails
-      ); // Pass callDetails directly here
-      console.log(result, "end call");
+      );
+      // console.log(result, "end call");
 
       if (result === "Success") {
         navigation.navigate("Home");
@@ -119,8 +123,38 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
     });
   };
 
+  const handlePhotoCaptured = async (
+    base64: string,
+    location: { latitude: number; longitude: number }
+  ) => {
+    try {
+      setPhotoValue(base64);
+      setPhotoLocation(JSON.stringify(location));
+    } catch (error) {
+      console.log("handlePhotoCaptured error", error);
+    }
+  };
+
+  const { imageBase64, location, handleImagePicker } = useImagePicker({
+    onPhotoCaptured: handlePhotoCaptured,
+  });
+
+  const handleSignatureUpdate = async (base64Signature: string) => {
+    setSignatureValue(base64Signature);
+    const loc = await getLocation();
+    setSignatureLocation(JSON.stringify(loc));
+    console.log("signatureValue", base64Signature.slice(0, 20));
+    console.log("signatureValue", signatureValue.slice(0, 20));
+    console.log("signatureValue", signatureLocation.slice(0, 20));
+  };
+
+  const handleSignatureClear = () => {
+    setSignatureAttempts((prevAttempts) => prevAttempts + 1);
+    console.log("Signature cleared. Total attempts:", signatureAttempts + 1);
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollViewContentContainer}>
       <Text style={styles.timerText}>{formatTime(timer)}</Text>
 
       <View style={styles.cardContainer}>
@@ -135,6 +169,46 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
             </Text>
           </View>
         ))}
+      </View>
+      <View style={styles.cardContainer}>
+        <TouchableOpacity onPress={openModal} style={styles.openModalButton}>
+          <Text style={styles.buttonText}>START DETAILERS</Text>
+        </TouchableOpacity>
+
+        {/* Render DetailerModal and pass isVisible and onClose */}
+        <Detailers isVisible={isModalVisible} onClose={closeModal} />
+      </View>
+
+      <View style={styles.cardContainer}>
+        <View style={styles.centerItems}>
+          <Text style={styles.signatureLabel}>Signature Capture</Text>
+          {signatureValue ? (
+            <Image
+              source={{ uri: `${signatureValue}` }}
+              style={styles.signImage}
+            />
+          ) : (
+            <SignatureCapture
+              callId={12340000}
+              onSignatureUpdate={handleSignatureUpdate}
+            />
+          )}
+          {!imageBase64 ? (
+            <TouchableOpacity
+              style={styles.takePhotoButton}
+              onPress={handleImagePicker}>
+              <Text style={styles.buttonText}>Take a photo</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.imageContainer}>
+              <Text style={styles.signatureLabel}>Photo Capture</Text>
+              <Image
+                source={{ uri: `data:image/png;base64,${imageBase64}` }}
+                style={styles.image}
+              />
+            </View>
+          )}
+        </View>
       </View>
 
       <View style={styles.cardContainer}>
@@ -170,15 +244,6 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         </View>
       </View>
 
-      <View style={styles.cardContainer}>
-        <TouchableOpacity onPress={openModal} style={styles.openModalButton}>
-          <Text style={styles.buttonText}>START DETAILERS</Text>
-        </TouchableOpacity>
-
-        {/* Render DetailerModal and pass isVisible and onClose */}
-        <Detailers isVisible={isModalVisible} onClose={closeModal} />
-      </View>
-
       <TouchableOpacity
         onLongPress={endCall}
         style={styles.floatingButtonContainer}>
@@ -192,10 +257,21 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  scrollViewContentContainer: {
+    flexGrow: 1,
+    justifyContent: "flex-start",
+    padding: 20,
+    backgroundColor: "#f5f5f5",
+    position: "relative",
+  },
   container: {
     flex: 1,
     padding: 20,
     backgroundColor: "#f5f5f5",
+  },
+  centerItems: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   timerText: {
     fontSize: 36,
@@ -285,9 +361,10 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   floatingButtonContainer: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
+    position: "static",
+    // position: "absolute",
+    // bottom: 20,
+    // right: 20,
     backgroundColor: "#ff4d4d",
     borderRadius: 30,
     padding: 15,
@@ -296,6 +373,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 3,
+    zIndex: 9999,
   },
   floatingButton: {
     flexDirection: "row",
@@ -316,6 +394,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+  },
+  takePhotoButton: {
+    padding: 10,
+    backgroundColor: "#007BFF",
+    borderRadius: 5,
+    width: 200,
+    alignItems: "center",
+  },
+  imageContainer: {
+    marginTop: 20,
+    alignItems: "center",
+  },
+  signatureLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#007bff",
+  },
+  image: {
+    width: 400,
+    height: 260,
+    marginTop: 10,
+    resizeMode: "contain",
+  },
+  signImage: {
+    marginVertical: 15,
+    width: "100%",
+    height: 200,
+    resizeMode: "contain",
   },
 });
 

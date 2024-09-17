@@ -292,7 +292,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
           />
         )}
       </View>
-      <Button
+      {/* <Button
         title="select images (for testing only)"
         color="#FFA500"
         onPress={pickImages}
@@ -301,7 +301,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
         title="Upload (for testing only)"
         color="#FFA500"
         onPress={handleUploadImages}
-      />
+      /> */}
     </ScrollView>
   );
 };

@@ -33,7 +33,7 @@ const Schedules = () => {
         const getDate = await getCurrentDatePH();
         const formattedDate = formatDate(getDate);
         getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
-        const data = await getSchedulesLocalDb();
+        const data = await getSchedulesTodayLocalDb();
         setScheduleData(data);
       } catch (error: any) {
         console.log("fetchScheduleData error", error);

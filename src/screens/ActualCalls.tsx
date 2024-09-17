@@ -8,7 +8,10 @@ import {
   TextInput,
 } from "react-native";
 import { useAuth, getStyleUtil, customToast } from "../index";
-import { getCallsTestLocalDb } from "../utils/localDbUtils";
+import {
+  getCallsTestLocalDb,
+  getCallsTodayLocalDb,
+} from "../utils/localDbUtils";
 import {
   getPostCallNotesLocalDb,
   savePostCallNotesLocalDb,
@@ -38,7 +41,7 @@ const ActualCalls = () => {
       try {
         const getDate = await getCurrentDatePH();
         getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
-        const data = await getCallsTestLocalDb();
+        const data = await getCallsTodayLocalDb();
         setCallsDate(data);
       } catch (error: any) {
         console.log("fetchActualCallsData error", error);
@@ -65,6 +68,9 @@ const ActualCalls = () => {
     if (postCallData) {
       setFeedback(postCallData.feedback || "");
       setSelectedMood(postCallData.mood || "");
+    } else {
+      setFeedback("");
+      setSelectedMood("");
     }
     setSelectedCall(call);
   };
@@ -113,15 +119,15 @@ const ActualCalls = () => {
         <Text style={styles1.detailLabel}>Schedules ID:</Text>
         <Text style={styles1.detailValue}>{call.schedule_id}</Text>
       </View>
-      <View style={styles1.detailRow}>
+      {/* <View style={styles1.detailRow}>
         <Text style={styles1.detailLabel}>Signature Attempts:</Text>
         <Text style={styles1.detailValue}>{call.signature_attempts}</Text>
-      </View>
+      </View> */}
       <View style={styles1.detailRow}>
         <Text style={styles1.detailLabel}>Photo:</Text>
         {call.photo && (
           <Image
-            source={{ uri: `data:image/jpeg;base64,${call.photo}` }} // Adjust to the correct format if needed
+            source={{ uri: `data:image/jpeg;base64,${call.photo}` }}
             style={styles1.photo}
           />
         )}
@@ -129,13 +135,17 @@ const ActualCalls = () => {
       <View style={styles1.detailRow}>
         <Text style={styles1.detailLabel}>Signature:</Text>
         {call.signature && (
-          <Image
-            source={{ uri: `data:image/jpeg;base64,${call.signature}` }} // Adjust to the correct format if needed
-            style={styles1.signature}
-          />
+          <>
+            <Image
+              source={{
+                uri: call.signature,
+              }}
+              style={styles1.signature}
+            />
+          </>
         )}
       </View>
-      <View style={styles1.mapContainer}>
+      {/* <View style={styles1.mapContainer}>
         {call.photo_location && (
           <MapComponent
             latitude={14.603977037849905}
@@ -144,7 +154,7 @@ const ActualCalls = () => {
             mapStyle={styles1.map}
           />
         )}
-      </View>
+      </View> */}
     </View>
   );
 
@@ -370,16 +380,17 @@ const styles1 = StyleSheet.create({
     flex: 1,
   },
   photo: {
-    width: 100,
-    height: 100,
-    marginTop: 10,
     borderRadius: 10,
+    width: 400,
+    height: 200,
+    marginTop: 10,
+    resizeMode: "contain",
   },
   signature: {
-    width: 100,
-    height: 100,
+    width: 500,
+    height: 150,
     marginTop: 10,
-    borderRadius: 10,
+    resizeMode: "contain",
   },
   containerNoCallData: {
     flex: 1,

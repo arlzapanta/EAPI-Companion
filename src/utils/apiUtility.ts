@@ -4,6 +4,8 @@ import {
   deleteCallsTodayLocalDb,
   getCallsTodayLocalDb,
 } from "../utils/localDbUtils";
+import { formatDateYMD, getCurrentDatePH } from "./dateUtils";
+import { getLocation } from "../utils/currentLocation";
 
 interface User {
   first_name: string;
@@ -23,6 +25,7 @@ interface ApiPayload {
 
 export const apiTimeIn = async (user: User) => {
   try {
+    const loc = await getLocation();
     const { first_name, last_name, sales_portal_id } = user;
 
     const userInfo = {
@@ -34,8 +37,8 @@ export const apiTimeIn = async (user: User) => {
     const response = await axios.post(
       `${API_URL_ENV}/timeIn`,
       {
-        salesPortalId: userInfo.sales_portal_id,
-        // add location and image here (required)
+        sales_portal_id: userInfo.sales_portal_id,
+        location: loc
       },
       {
         headers: {
@@ -62,6 +65,7 @@ export const apiTimeIn = async (user: User) => {
 
 export const apiTimeOut = async (user: User) => {
   try {
+    const loc = await getLocation();
     const { first_name, last_name, sales_portal_id } = user;
 
     const userInfo = {
@@ -73,7 +77,8 @@ export const apiTimeOut = async (user: User) => {
     const response = await axios.post(
       `${API_URL_ENV}/timeOut`,
       {
-        salesPortalId: userInfo.sales_portal_id,
+        sales_portal_id: userInfo.sales_portal_id,
+        location : loc
       },
       {
         headers: {
@@ -181,3 +186,35 @@ export const syncUser = async (user: User): Promise<any> => {
 };
 
 // get calls from server
+export const getCallsAPI = async (user: User): Promise<any> => {
+  const now = await getCurrentDatePH();
+  try {
+    const {sales_portal_id } = user;
+    const response = await axios.post(
+      `${API_URL_ENV}/checkSchedules`,
+        {
+          sales_portal_id,
+          date: formatDateYMD(now),
+        },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred:", error);
+    }
+    throw error;
+  }
+};

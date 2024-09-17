@@ -187,7 +187,8 @@ export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<
       province TEXT, 
       signature TEXT, 
       signature_location TEXT,
-      signature_attempts TEXT
+      signature_attempts TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
     );
   `);
 
@@ -213,8 +214,8 @@ export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<
   
   try {
     await Promise.all(insertPromises);
-      const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
-      console.log('All actual calls records test:', testRecords);
+      // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+      // console.log('All actual calls records test:', testRecords);
     return 'Success';
   } catch (error) {
     console.error('Error saving data:', error);
@@ -224,13 +225,13 @@ export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<
 
 interface ScheduleAPIRecord {
   id?: string; 
-  address : string | null;
-  date : string | null;
-  doctor_id : string | null;
-  full_name : string | null;
-  municipality_city : string | null;
-  province : string | null;
-  schedule_id : string | null;
+  address : string;
+  date : string;
+  doctor_id : string;
+  full_name : string;
+  municipality_city : string;
+  province : string;
+  schedule_id : string;
 }
 
 
@@ -412,6 +413,41 @@ export const getSchedulesTodayLocalDb = async (): Promise<ScheduleAPIRecord[]> =
   }
 };
 
+export const getDoctorsTodaySchedLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      schedule_id TEXT, 
+      address TEXT, 
+      date TEXT, 
+      doctor_id TEXT, 
+      full_name TEXT, 
+      municipality_city TEXT, 
+      province TEXT
+    );
+  `);
+
+  const currentDate = await getCurrentDatePH();
+  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) = ?`;
+
+  try {
+    const result = await db.getAllAsync(query, [currentDate]);
+    const existingRows = result as ScheduleAPIRecord[];
+
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching schedule records data:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
 export const getCallsTestLocalDb = async (): Promise<ScheduleRecord[]> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -433,7 +469,8 @@ export const getCallsTestLocalDb = async (): Promise<ScheduleRecord[]> => {
       province TEXT, 
       signature TEXT, 
       signature_location TEXT,
-      signature_attempts TEXT
+      signature_attempts TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
@@ -473,7 +510,8 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
       province TEXT, 
       signature TEXT, 
       signature_location TEXT,
-      signature_attempts TEXT
+      signature_attempts TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
     );
   `);
 
@@ -622,7 +660,8 @@ export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails
         photo_location TEXT,
         signature TEXT, 
         signature_location TEXT,
-        signature_attempts TEXT
+        signature_attempts TEXT,
+        created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
       );
     `);
 
@@ -644,6 +683,8 @@ export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails
       ]
     );
 
+    await deleteCallByScheduleIdLocalDb({ scheduleId });
+
     const testRecords = await db.getAllAsync('SELECT * FROM calls_tbl WHERE schedule_id = ?', [scheduleId]);
     console.log('CHECK NEW CALL IN CALLS_TBL', testRecords);
 
@@ -653,9 +694,6 @@ export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails
     return 'Failed to process calls done';
   }
 };
-
-
-
 
 export const insertDummyRecords = async (): Promise<void> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
@@ -779,9 +817,9 @@ export const dropLocalTablesDb = async () => {
     useNewConnection: true,
   });
 
-  // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl'];
+  const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','quick_call_tbl'];
   // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
-  const tableNames = ['quick_call_tbl'];
+  // const tableNames = ['quick_call_tbl'];
   for (const tableName of tableNames) {
     const query = `DROP TABLE IF EXISTS ${tableName};`;
     await db.getAllAsync(query);

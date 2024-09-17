@@ -16,16 +16,20 @@ import { updateCallSignature } from "../utils/quickCallUtil";
 
 const { width, height } = Dimensions.get("window");
 
-const SignatureCapture: React.FC<{
+interface SignatureCaptureProps {
   callId: number;
-  onSignatureUpdate: () => void;
-}> = ({ callId, onSignatureUpdate }) => {
+  onSignatureUpdate: (base64Signature: string) => void; // Corrected to accept base64 signature
+}
+
+const SignatureCapture: React.FC<SignatureCaptureProps> = ({
+  callId,
+  onSignatureUpdate,
+}) => {
   const [signature, setSignature] = useState<string | null>(null);
   const [paths, setPaths] = useState<Array<Array<{ x: number; y: number }>>>(
     []
   );
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [isSignatureModalVisible, setIsSignatureModalVisible] = useState(false);
   const viewRef = useRef<View>(null);
   const canvasWidth = width - 40;
   const canvasHeight = 300;
@@ -33,7 +37,7 @@ const SignatureCapture: React.FC<{
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt, gestureState) => {
+      onPanResponderGrant: () => {
         // Start a new path when the user touches the screen
         setPaths((prevPaths) => [...prevPaths, []]);
       },
@@ -79,19 +83,23 @@ const SignatureCapture: React.FC<{
           quality: 1.0,
           result: "base64",
         });
-        setSignature(`data:image/png;base64,${uri}`);
+        const base64Signature = `data:image/png;base64,${uri}`;
+        setSignature(base64Signature);
+
         const loc = await getLocation();
         const locationString = loc
           ? `${loc.latitude}, ${loc.longitude}`
           : "Unknown Location";
+
         try {
-          await updateCallSignature(callId, uri, locationString);
+          if (callId !== 12340000) {
+            await updateCallSignature(callId, uri, locationString);
+          }
           console.log("Signature and location updated successfully!");
-          onSignatureUpdate();
+          onSignatureUpdate(base64Signature); // Pass the base64 signature to the parent
         } catch (error) {
           console.error("Error updating signature:", error);
         }
-        // setIsSignatureModalVisible(true);
       } catch (error) {
         console.error("Error capturing the view:", error);
       }
@@ -123,7 +131,6 @@ const SignatureCapture: React.FC<{
               width={canvasWidth}
               height={canvasHeight}
               style={{ position: "absolute", top: 0, left: 0 }}>
-              {/* Draw each stroke as a separate Path */}
               {paths.map((path, index) => (
                 <Path
                   key={index}
@@ -136,7 +143,6 @@ const SignatureCapture: React.FC<{
             </Svg>
           </View>
 
-          {/* Clear and Capture buttons */}
           <TouchableOpacity style={styles.clearButton} onPress={clearSignature}>
             <Text style={styles.buttonText}>Clear Signature</Text>
           </TouchableOpacity>
@@ -146,7 +152,6 @@ const SignatureCapture: React.FC<{
             <Text style={styles.buttonText}>Capture Signature</Text>
           </TouchableOpacity>
 
-          {/* Close Modal Button */}
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => setIsModalVisible(false)}>
@@ -157,17 +162,17 @@ const SignatureCapture: React.FC<{
 
       {/* Captured Signature Preview Modal */}
       <Modal
-        visible={isSignatureModalVisible}
+        visible={signature !== null}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setIsSignatureModalVisible(false)}>
+        onRequestClose={() => setSignature(null)}>
         <View style={styles.signatureModalContainer}>
           {signature && (
             <Image source={{ uri: signature }} style={styles.signatureImage} />
           )}
           <TouchableOpacity
             style={styles.closeButton}
-            onPress={() => setIsSignatureModalVisible(false)}>
+            onPress={() => setSignature(null)}>
             <Text style={styles.buttonText}>Close Signature</Text>
           </TouchableOpacity>
         </View>
@@ -238,12 +243,6 @@ const styles = StyleSheet.create({
   signatureModalContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 20,
-  },
-  fullImage: {
-    width: width,
-    height: height,
-    resizeMode: "cover",
-    position: "absolute",
   },
 });
 

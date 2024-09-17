@@ -135,6 +135,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       );
 
+      // const jsonData = JSON.parse(getTokenResponse.data.replace("test", ""));
+      // const token = jsonData.token;
+
       const token = getTokenResponse.data.token;
       if (!token) {
         return { error: true, msg: "Failed to get token" };

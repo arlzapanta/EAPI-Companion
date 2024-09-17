@@ -17,14 +17,17 @@ import {
   saveUserSyncHistoryLocalDb,
   saveSchedulesAPILocalDb,
   getCallsTodayLocalDb,
+  saveActualCallsLocalDb,
 } from "../../utils/localDbUtils";
 import {
   apiTimeIn,
   apiTimeOut,
+  getCallsAPI,
   getSChedulesAPI,
   syncUser,
 } from "../../utils/apiUtility";
 import AttendanceTable from "../../tables/AttendanceTable";
+import { getQuickCalls } from "../../utils/quickCallUtil";
 
 const Attendance: React.FC = () => {
   const navigation = useNavigation<AttendanceScreenNavigationProp>();
@@ -121,7 +124,6 @@ const Attendance: React.FC = () => {
     setLoading(true);
     try {
       const timeInIsProceed = await apiTimeIn(userInfo);
-
       if (timeInIsProceed.isProceed) {
         const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
         if (checkIfTimedIn === 1) {
@@ -131,7 +133,6 @@ const Attendance: React.FC = () => {
           const scheduleData = await getSChedulesAPI(userInfo);
           if (scheduleData) {
             const result = await saveSchedulesAPILocalDb(scheduleData);
-            // add fetch actual calls of users from API with date range
             {
               result == "Success"
                 ? Alert.alert("Success", "Successfully synced data from server")
@@ -153,6 +154,11 @@ const Attendance: React.FC = () => {
   };
 
   const timeOut = async () => {
+    const checkQC = await getQuickCalls();
+    if (checkQC.length > 0) {
+      Alert.alert("Error", "Please check quick calls.");
+      return;
+    }
     if (!userInfo) {
       Alert.alert("Error", "User information is missing.");
       return;
