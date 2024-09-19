@@ -19,7 +19,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import DetailerModal from "../modals/DetailerModal";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
-import { formatTimeHoursMinutes } from "../utils/dateUtils";
+import { formatTimeHoursMinutes, getCurrentDatePH } from "../utils/dateUtils";
 import {
   savePreCallNotesLocalDb,
   savePostCallNotesLocalDb,
@@ -31,11 +31,15 @@ import { uploadImage } from "../utils/uploadImages";
 
 interface CallComponentsProps {
   scheduleId: string;
+  date: string;
 }
 
 type OnCallScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
+const CallComponents: React.FC<CallComponentsProps> = ({
+  scheduleId,
+  date,
+}) => {
   const navigation = useNavigation<OnCallScreenNavigationProp>();
   const [note, setNote] = useState<string>("");
   const [notes, setNotes] = useState<string[]>([]);
@@ -47,11 +51,13 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
   const [callEndTimeValue, setCallEndTimeValue] = useState<Date | null>(null);
   const [base64Image, setBase64Image] = useState<string[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [currentDate, setCurrentDate] = useState<string>();
 
   useEffect(() => {
     const fetchPreCallNotes = async () => {
       const fetchedNotes = await getPreCallNotesLocalDb(scheduleId);
       setNotes(fetchedNotes.map((note) => note.notesArray).flat());
+      setCurrentDate(await getCurrentDatePH());
     };
 
     fetchPreCallNotes();
@@ -208,11 +214,13 @@ const CallComponents: React.FC<CallComponentsProps> = ({ scheduleId }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.startCallContainer}>
-        <TouchableOpacity
-          style={styles.buttonStartCall}
-          onPress={executeStartCall}>
-          <Text style={styles.buttonTextSave}>START CALL</Text>
-        </TouchableOpacity>
+        {currentDate == date && (
+          <TouchableOpacity
+            style={styles.buttonStartCall}
+            onPress={executeStartCall}>
+            <Text style={styles.buttonTextSave}>START CALL</Text>
+          </TouchableOpacity>
+        )}
       </View>
       <View style={styles.cardContainer}>
         <View style={styles.headerContainer}>

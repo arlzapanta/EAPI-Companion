@@ -16,6 +16,18 @@ export const getCurrentDatePH = async (): Promise<string> => {
   }
 };
 
+export const getWeekdaysRange = async () => {
+  const currentMoment = moment(await getCurrentDatePH()).tz('Asia/Manila');
+  const monday = currentMoment.clone().startOf('week').add(1, 'days');
+  const weekdays: string[] = [];
+
+  for (let i = 0; i < 5; i++) {
+    weekdays.push(monday.clone().add(i, 'days').format('YYYY-MM-DD'));
+  }
+
+  return weekdays;
+};
+
 export const isTimeBetween12and1PM = (): boolean => {
   const currentTime = moment();
   

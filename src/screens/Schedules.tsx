@@ -10,6 +10,7 @@ import { useAuth, getStyleUtil } from "../index";
 import {
   getSchedulesTodayLocalDb,
   getSchedulesLocalDb,
+  getSchedulesWeekLocalDb,
 } from "../utils/localDbUtils";
 import CallComponents from "../components/CallComponents";
 import { getCurrentDatePH, formatDate } from "../utils/dateUtils";
@@ -19,9 +20,19 @@ import { Ionicons } from "@expo/vector-icons"; // Import Ionicons for the icon
 const Schedules = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [scheduleData, setScheduleData] = useState<any[]>([]);
-  const [selectedSchedule, setSelectedSchedule] = useState<any | null>(null);
-  const [accordionExpanded, setAccordionExpanded] = useState(false);
+
+  const [scheduleDataToday, setScheduleDataToday] = useState<any[]>([]);
+  const [scheduleWeekData, setScheduleWeekData] = useState<any[]>([]);
+
+  const [selectedScheduleToday, setSelectedScheduleToday] = useState<
+    any | null
+  >(null);
+  const [selectedScheduleWeek, setSelectedScheduleWeek] = useState<any | null>(
+    null
+  );
+
+  const [accordionTodayExpanded, setAccordionTodayExpanded] = useState(false);
+  const [accordionWeekExpanded, setAccordionWeekExpanded] = useState(false);
   const [currentDate, getCurrentDate] = useState("");
 
   const styles = getStyleUtil({});
@@ -34,7 +45,14 @@ const Schedules = () => {
         const formattedDate = formatDate(getDate);
         getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
         const data = await getSchedulesTodayLocalDb();
-        setScheduleData(data);
+        setScheduleDataToday(data);
+        console.log(data, "data today");
+
+        // week schedules
+        const weekData = await getSchedulesWeekLocalDb();
+        setScheduleWeekData(weekData);
+
+        console.log(weekData, "scheduleWeekData");
       } catch (error: any) {
         console.log("fetchScheduleData error", error);
       }
@@ -47,15 +65,30 @@ const Schedules = () => {
     }
   }, [authState]);
 
-  const toggleAccordion = () => {
-    setAccordionExpanded(!accordionExpanded);
-    if (!accordionExpanded) {
-      setSelectedSchedule(null);
+  const toggleAccordionToday = () => {
+    setAccordionTodayExpanded(!accordionTodayExpanded);
+    if (!accordionTodayExpanded) {
+      setSelectedScheduleToday(null);
+      setSelectedScheduleWeek(null);
     }
   };
 
-  const handleScheduleClick = (schedule: any) => {
-    setSelectedSchedule(schedule);
+  const toggleAccordionWeek = () => {
+    setAccordionWeekExpanded(!accordionWeekExpanded);
+    if (!accordionWeekExpanded) {
+      setSelectedScheduleWeek(null);
+      setSelectedScheduleToday(null);
+    }
+  };
+
+  const handleScheduleClickToday = (schedule: any) => {
+    setSelectedScheduleWeek(null);
+    setSelectedScheduleToday(schedule);
+  };
+
+  const handleScheduleClickWeek = (schedule: any) => {
+    setSelectedScheduleToday(null);
+    setSelectedScheduleWeek(schedule);
   };
 
   const NoScheduleSelected = () => {
@@ -82,25 +115,25 @@ const Schedules = () => {
             <Text style={styles1.columnTitle}>Schedules</Text>
             <Text style={styles1.columnSubTitle}>{currentDate}</Text>
             <TouchableOpacity
-              onPress={toggleAccordion}
+              onPress={toggleAccordionToday}
               style={styles1.accordionButton}>
               <Text style={styles1.accordionTitle}>
-                {accordionExpanded ? "Hide Today" : "View Today"}
+                {accordionTodayExpanded ? "Hide Today" : "View Today"}
               </Text>
               <Ionicons
-                name={accordionExpanded ? "chevron-up" : "chevron-down"}
+                name={accordionTodayExpanded ? "chevron-up" : "chevron-down"}
                 size={20}
                 color="#007BFF"
                 style={styles1.icon}
               />
             </TouchableOpacity>
 
-            {accordionExpanded && (
+            {accordionTodayExpanded && (
               <View style={styles1.accordionContent}>
-                {scheduleData.map((schedule) => (
+                {scheduleDataToday.map((schedule) => (
                   <TouchableOpacity
                     key={schedule.schedule_id}
-                    onPress={() => handleScheduleClick(schedule)}
+                    onPress={() => handleScheduleClickToday(schedule)}
                     style={styles1.scheduleItem}>
                     <Text style={styles1.scheduleText}>
                       {schedule.full_name}
@@ -114,27 +147,88 @@ const Schedules = () => {
                 ))}
               </View>
             )}
+
+            <TouchableOpacity
+              onPress={toggleAccordionWeek}
+              style={styles1.accordionButton}>
+              <Text style={styles1.accordionTitle}>
+                {accordionWeekExpanded ? "Hide This Week" : "View This Week"}
+              </Text>
+              <Ionicons
+                name={accordionWeekExpanded ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#007BFF"
+                style={styles1.icon}
+              />
+            </TouchableOpacity>
+
+            {accordionWeekExpanded && (
+              <View style={styles1.accordionContent}>
+                {scheduleWeekData.map((schedule) => (
+                  <TouchableOpacity
+                    key={schedule.schedule_id}
+                    onPress={() => handleScheduleClickWeek(schedule)}
+                    style={styles1.scheduleItem}>
+                    <Text style={styles1.scheduleText}>
+                      {`${moment(schedule.date).format("MMMM DD, dddd")}, `}
+                      {`\n${schedule.full_name}, ${
+                        schedule.municipality_city
+                          ? `${schedule.municipality_city}`
+                          : ""
+                      }`}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
         </View>
 
         <View style={styles1.column2}>
           <View style={styles1.innerCard}>
-            {/* Add start call here */}
-            {selectedSchedule ? (
+            {selectedScheduleToday || selectedScheduleWeek ? (
               <>
-                <Text style={styles1.columnTitle}>
-                  {String(selectedSchedule.full_name)}
-                </Text>
-                <Text style={styles1.columnSubTitle}>
-                  {moment(selectedSchedule.date).format("MMMM DD, dddd")}
-                </Text>
-                <Text style={styles1.columnSubTitle}>
-                  {selectedSchedule.municipality_city} {" - "}
-                  {selectedSchedule.province}
-                </Text>
-                <CallComponents
-                  scheduleId={String(selectedSchedule.schedule_id)}
-                />
+                {selectedScheduleToday ? (
+                  <>
+                    <Text style={styles1.columnTitle}>
+                      {String(selectedScheduleToday.full_name)}
+                    </Text>
+                    <Text style={styles1.columnSubTitle}>
+                      {moment(selectedScheduleToday.date).format(
+                        "MMMM DD, dddd"
+                      )}
+                    </Text>
+                    <Text style={styles1.columnSubTitle}>
+                      {selectedScheduleToday.municipality_city} {" - "}
+                      {selectedScheduleToday.province}
+                    </Text>
+                    <CallComponents
+                      scheduleId={String(selectedScheduleToday.schedule_id)}
+                      date={String(selectedScheduleToday.date)}
+                    />
+                  </>
+                ) : null}
+
+                {selectedScheduleWeek ? (
+                  <>
+                    <Text style={styles1.columnTitle}>
+                      {String(selectedScheduleWeek.full_name)}
+                    </Text>
+                    <Text style={styles1.columnSubTitle}>
+                      {moment(selectedScheduleWeek.date).format(
+                        "MMMM DD, dddd"
+                      )}
+                    </Text>
+                    <Text style={styles1.columnSubTitle}>
+                      {selectedScheduleWeek.municipality_city} {" - "}
+                      {selectedScheduleWeek.province}
+                    </Text>
+                    <CallComponents
+                      scheduleId={String(selectedScheduleWeek.schedule_id)}
+                      date={String(selectedScheduleWeek.date)}
+                    />
+                  </>
+                ) : null}
               </>
             ) : (
               <NoScheduleSelected />

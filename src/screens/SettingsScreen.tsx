@@ -93,11 +93,12 @@ const Settings = () => {
     setLoading(true);
     if (isValidMidSync) {
       try {
-        const res = await saveUserSyncHistoryLocalDb(userInfo, 3);
+        const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
         const syncLocalToAPI = await syncUser(userInfo);
         if (syncLocalToAPI !== "No records to sync") {
           Alert.alert("Success", "Successfully Sync data to server");
         } else {
+          Alert.alert("No records", "No records to sync");
           console.log(
             "SettingScreen > MidSync > syncUser > res : No records to sync"
           );

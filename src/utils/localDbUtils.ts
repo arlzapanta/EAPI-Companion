@@ -1,5 +1,5 @@
 import * as SQLite from "expo-sqlite";
-import { getCurrentDatePH, getRelevantDateRange } from "./dateUtils"; 
+import { getCurrentDatePH, getRelevantDateRange, getWeekdaysRange } from "./dateUtils"; 
 interface User {
   email: string;
   sales_portal_id: string;
@@ -402,6 +402,42 @@ export const getSchedulesTodayLocalDb = async (): Promise<ScheduleAPIRecord[]> =
 
   try {
     const result = await db.getAllAsync(query, [currentDate]);
+    const existingRows = result as ScheduleAPIRecord[];
+
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching schedule records data:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getSchedulesWeekLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      schedule_id TEXT, 
+      address TEXT, 
+      date TEXT, 
+      doctor_id TEXT, 
+      full_name TEXT, 
+      municipality_city TEXT, 
+      province TEXT
+    );
+  `);
+
+  const weekDates = await getWeekdaysRange();
+  const placeholders = weekDates.map(() => '?').join(', ');
+  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) IN (${placeholders})`;
+
+  try {
+    const result = await db.getAllAsync(query, weekDates);
     const existingRows = result as ScheduleAPIRecord[];
 
     return existingRows;

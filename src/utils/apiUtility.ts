@@ -218,3 +218,37 @@ export const getCallsAPI = async (user: User): Promise<any> => {
     throw error;
   }
 };
+
+// get calls from server (weekly)
+export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
+  const now = await getCurrentDatePH();
+  try {
+    const {sales_portal_id } = user;
+    const response = await axios.post(
+      `${API_URL_ENV}/checkSchedules`,
+        {
+          sales_portal_id,
+          date: formatDateYMD(now),
+        },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred:", error);
+    }
+    throw error;
+  }
+};
