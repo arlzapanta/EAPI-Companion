@@ -2,13 +2,14 @@ import React from "react";
 import { SafeAreaView, StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { AuthProvider, useAuth } from "./src/context/AuthContext";
-import { RootStackParamList } from "./src/type/navigation";
-import Home from "./src/screens/Home";
-import Login from "./src/screens/Login";
-import SyncSettingsScreen from "./src/screens/settings/SyncSettingsScreen";
-import AttendanceScreen from "./src/screens/settings/AttendanceScreen";
-import OnCallScreen from "./src/screens/call/OnCallScreen";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { RefreshFetchDataProvider } from "./context/RefreshFetchDataContext";
+import { RootStackParamList } from "./type/navigation";
+import Home from "./screens/Home";
+import Login from "./screens/Login";
+import SyncSettingsScreen from "./screens/settings/SyncSettingsScreen";
+import AttendanceScreen from "./screens/settings/AttendanceScreen";
+import OnCallScreen from "./screens/call/OnCallScreen";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -43,9 +44,11 @@ const Layout = () => {
 const App = () => {
   return (
     <AuthProvider>
-      <NavigationContainer>
-        <Layout />
-      </NavigationContainer>
+      <RefreshFetchDataProvider>
+        <NavigationContainer>
+          <Layout />
+        </NavigationContainer>
+      </RefreshFetchDataProvider>
     </AuthProvider>
   );
 };

@@ -1,10 +1,6 @@
 import { ViewStyle, TextStyle, ImageStyle,  } from 'react-native';
 import { lightTheme, darkTheme } from './themes'; 
 
-interface styleUtilProps {
-  theme?: 'dark' | 'light';
-}
-
 export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
   const currentTheme = theme === 'dark' ? darkTheme : lightTheme;
 

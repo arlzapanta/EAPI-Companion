@@ -1,16 +1,5 @@
 import * as SQLite from "expo-sqlite";
 
-export interface PostCallNotesParams {
-  mood: string;
-  feedback: string;
-  scheduleId: string;
-}
-
-export interface PreCallNotesParams {
-  notesArray: string[];
-  scheduleId: string;
-}
-
 export const savePostCallNotesLocalDb = async ({
   mood,
   feedback,

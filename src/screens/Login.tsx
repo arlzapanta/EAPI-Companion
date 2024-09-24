@@ -1,7 +1,8 @@
 // Login.tsx
 import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity, Text, Alert } from "react-native";
-import { useAuth, getStyleUtil } from "../index";
+import { useAuth } from "../context/AuthContext";
+import { getStyleUtil } from "../utils/styleUtil";
 
 const Login = () => {
   const [email, setEmail] = useState("");

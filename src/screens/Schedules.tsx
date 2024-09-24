@@ -6,16 +6,18 @@ import {
   TouchableOpacity,
   Animated,
 } from "react-native";
-import { useAuth, getStyleUtil } from "../index";
+import { useAuth } from "../context/AuthContext";
+import { getStyleUtil } from "../utils/styleUtil";
 import {
   getSchedulesTodayLocalDb,
   getSchedulesLocalDb,
   getSchedulesWeekLocalDb,
 } from "../utils/localDbUtils";
-import CallComponents from "../components/CallComponents";
+import CallComponents from "./call/CallComponents";
 import { getCurrentDatePH, formatDate } from "../utils/dateUtils";
 import moment from "moment";
-import { Ionicons } from "@expo/vector-icons"; // Import Ionicons for the icon
+import { Ionicons } from "@expo/vector-icons";
+import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 
 const Schedules = () => {
   const [loading, setLoading] = useState(false);
@@ -35,8 +37,11 @@ const Schedules = () => {
   const [accordionWeekExpanded, setAccordionWeekExpanded] = useState(false);
   const [currentDate, getCurrentDate] = useState("");
 
-  const styles = getStyleUtil({});
   const { authState } = useAuth();
+
+  const { refresh } = useRefreshFetchDataContext();
+
+  const styles = getStyleUtil({});
 
   const fetchScheduleData = async () => {
     if (authState.user) {
@@ -46,13 +51,10 @@ const Schedules = () => {
         getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
         const data = await getSchedulesTodayLocalDb();
         setScheduleDataToday(data);
-        console.log(data, "data today");
 
         // week schedules
         const weekData = await getSchedulesWeekLocalDb();
         setScheduleWeekData(weekData);
-
-        console.log(weekData, "scheduleWeekData");
       } catch (error: any) {
         console.log("fetchScheduleData error", error);
       }
@@ -90,6 +92,14 @@ const Schedules = () => {
     setSelectedScheduleToday(null);
     setSelectedScheduleWeek(schedule);
   };
+
+  useEffect(() => {
+    if (refresh) {
+      fetchScheduleData();
+      setSelectedScheduleToday(null);
+      setSelectedScheduleWeek(null);
+    }
+  }, [refresh]);
 
   const NoScheduleSelected = () => {
     return (
@@ -204,7 +214,7 @@ const Schedules = () => {
                     </Text>
                     <CallComponents
                       scheduleId={String(selectedScheduleToday.schedule_id)}
-                      date={String(selectedScheduleToday.date)}
+                      docName={String(selectedScheduleToday.full_name)}
                     />
                   </>
                 ) : null}
@@ -225,7 +235,7 @@ const Schedules = () => {
                     </Text>
                     <CallComponents
                       scheduleId={String(selectedScheduleWeek.schedule_id)}
-                      date={String(selectedScheduleWeek.date)}
+                      docName={String(selectedScheduleWeek.full_name)}
                     />
                   </>
                 ) : null}

@@ -1,18 +1,41 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Animated, ScrollView } from "react-native";
-import {
-  Dashboard,
-  SettingsScreen,
-  NavLinkComponent,
-  Schedules,
-  ActualCalls,
-  QuickCall,
-} from "../index";
-import { getStyleUtil } from "../index";
+import Dashboard from "./Dashboard";
+import SettingsScreen from "./SettingsScreen";
+import Schedules from "./Schedules";
+import ActualCalls from "./ActualCalls";
+import QuickCall from "./call/QuickCall";
+import DoctorScreen from "./DoctorScreen";
+import NavLinkComponent from "../components/NavLink";
+
+import { getStyleUtil } from "../utils/styleUtil";
+
+const defaultDoctor: DoctorRecord = {
+  doctors_id: "",
+  first_name: "",
+  last_name: "",
+  specialization: "",
+  classification: "",
+  birthday: "",
+  address_1: "",
+  address_2: "",
+  municipality_city: "",
+  province: "",
+  phone_mobile: "",
+  phone_office: "",
+  phone_secretary: "",
+  notes_names: "",
+  notes_values: "",
+};
 
 const Home = () => {
   const [selectedScreen, setSelectedScreen] = useState<
-    "dashboard" | "settings" | "schedules" | "actualcalls" | "quickcall"
+    | "dashboard"
+    | "settings"
+    | "schedules"
+    | "actualcalls"
+    | "quickcall"
+    | "doctors"
   >("dashboard");
   const [fadeAnim] = useState(new Animated.Value(1));
 
@@ -30,6 +53,8 @@ const Home = () => {
         return <ActualCalls />;
       case "quickcall":
         return <QuickCall />;
+      case "doctors":
+        return <DoctorScreen doc={defaultDoctor} />;
       default:
         return <Dashboard />;
     }
@@ -72,6 +97,12 @@ const Home = () => {
           iconName="calendar"
           onPress={() => setSelectedScreen("actualcalls")}
           active={selectedScreen === "actualcalls"}
+        />
+
+        <NavLinkComponent
+          iconName="medkit"
+          onPress={() => setSelectedScreen("doctors")}
+          active={selectedScreen === "doctors"}
         />
 
         <NavLinkComponent

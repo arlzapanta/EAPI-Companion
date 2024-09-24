@@ -1,13 +1,6 @@
 import React from "react";
 import MapView, { Marker, Region } from "react-native-maps";
-import { StyleSheet, View, ViewStyle } from "react-native";
-
-interface MapProps {
-  latitude: number;
-  longitude: number;
-  containerStyle?: ViewStyle;
-  mapStyle?: ViewStyle;
-}
+import { StyleSheet, View } from "react-native";
 
 const MapComponent: React.FC<MapProps> = ({
   latitude,

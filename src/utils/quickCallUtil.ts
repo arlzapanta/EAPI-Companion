@@ -268,17 +268,6 @@ export const removeCallFromLocalDb = async (quickCallId: number) => {
   }
 };
 
-
-export interface Call {
-  location: string;
-  doctor_id: string;
-  photo: string;
-  photo_location: string;
-  signature: string;
-  signature_location: string;
-  notes: string;
-}
-
 export const addQuickCall = async (call: Call): Promise<string> => {
   try {
     const db = await SQLite.openDatabaseAsync('cmms', { useNewConnection: true });

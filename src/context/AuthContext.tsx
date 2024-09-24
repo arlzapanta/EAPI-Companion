@@ -4,32 +4,6 @@ import { API_URL_ENV, TOKEN_USERNAME_ENV, TOKEN_PASSWORD_ENV } from "@env";
 import axios from "axios";
 import { View, Text } from "react-native";
 
-interface User {
-  created_at: string;
-  district_id: string;
-  division: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  sales_portal_id: string;
-  territory_id: string;
-  territory_name: string;
-  updated_at: string;
-  user_type: string;
-}
-
-interface AuthState {
-  token: string | null;
-  authenticated: boolean;
-  user?: User | null;
-}
-
-interface AuthProps {
-  authState: AuthState;
-  onLogin: (email: string, password: string) => Promise<any>;
-  onLogout: () => Promise<void>;
-}
-
 const AuthContext = createContext<AuthProps>({
   authState: { token: null, authenticated: false },
   onLogin: async () => {},

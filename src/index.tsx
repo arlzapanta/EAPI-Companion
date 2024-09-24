@@ -1,23 +1,7 @@
-import { useAuth } from "./context/AuthContext";
-import { getStyleUtil } from "./utils/styleUtil";
-import Dashboard from "./screens/Dashboard";
-import Schedules from "./screens/Schedules";
-import SettingsScreen from "./screens/SettingsScreen";
-import ActualCalls from "./screens/ActualCalls";
-import QuickCall from "./screens/call/QuickCall";
-import NavLinkComponent from "./components/NavLink";
-import { customToast } from "./utils/customToast";
+// import "react-native-gesture-handler";
+// import React from "react";
+import { AppRegistry } from "react-native";
+import App from "./App";
+import appConfig from "../app.json";
 
-export {
-  useAuth,
-  getStyleUtil,
-  customToast,
-  // screens
-  Dashboard,
-  SettingsScreen,
-  ActualCalls,
-  Schedules,
-  QuickCall,
-  // components
-  NavLinkComponent,
-};
+AppRegistry.registerComponent(appConfig.expo.name, () => App);

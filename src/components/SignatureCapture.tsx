@@ -15,12 +15,6 @@ import { getLocation } from "../utils/currentLocation";
 import { updateCallSignature } from "../utils/quickCallUtil";
 
 const { width, height } = Dimensions.get("window");
-
-interface SignatureCaptureProps {
-  callId: number;
-  onSignatureUpdate: (base64Signature: string) => void; // Corrected to accept base64 signature
-}
-
 const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   callId,
   onSignatureUpdate,

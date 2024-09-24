@@ -13,10 +13,9 @@ import {
 } from "react-native";
 import { createShimmerPlaceHolder } from "expo-shimmer-placeholder";
 import { LinearGradient } from "expo-linear-gradient";
-import { fetchAllDetailers } from "../utils/localDbUtils";
+import { fetchAllDetailers } from "../../utils/localDbUtils";
 
 const ShimmerPlaceHolder = createShimmerPlaceHolder(LinearGradient);
-
 interface DetailerModalProps {
   isVisible: boolean;
   onClose: () => void;

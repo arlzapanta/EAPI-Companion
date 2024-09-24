@@ -8,7 +8,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth, getStyleUtil } from "../../index";
+import { useAuth } from "../../context/AuthContext";
 import { AttendanceScreenNavigationProp } from "../../type/navigation";
 import Icon from "react-native-vector-icons/Ionicons";
 import {
@@ -23,10 +23,11 @@ import {
   apiTimeIn,
   apiTimeOut,
   getCallsAPI,
+  getDoctors,
   getSChedulesAPI,
   syncUser,
 } from "../../utils/apiUtility";
-import AttendanceTable from "../../tables/AttendanceTable";
+import AttendanceTable from "../tables/AttendanceTable";
 import { getQuickCalls } from "../../utils/quickCallUtil";
 
 const Attendance: React.FC = () => {
@@ -38,6 +39,13 @@ const Attendance: React.FC = () => {
     last_name: string;
     email: string;
     sales_portal_id: string;
+    territory_id: string;
+    territory_name: string;
+    district_id: string;
+    division: string;
+    user_type: string;
+    created_at: string;
+    updated_at: string;
   } | null>(null);
 
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
@@ -48,23 +56,23 @@ const Attendance: React.FC = () => {
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
-      const { first_name, last_name, email, sales_portal_id } = authState.user;
+      const { first_name, last_name, email, sales_portal_id, territory_id } =
+        authState.user;
       setUserInfo({
         first_name,
         last_name,
         email,
         sales_portal_id,
+        territory_id,
+        territory_name: "",
+        district_id: "",
+        division: "",
+        user_type: "",
+        created_at: "",
+        updated_at: "",
       });
     }
   }, [authState]);
-
-  interface AttendanceRecord {
-    id: number;
-    date: string;
-    email: string;
-    sales_portal_id: string;
-    type: string;
-  }
 
   const fetchAttendanceData = async () => {
     if (userInfo) {
@@ -133,6 +141,8 @@ const Attendance: React.FC = () => {
           const scheduleData = await getSChedulesAPI(userInfo);
           if (scheduleData) {
             const result = await saveSchedulesAPILocalDb(scheduleData);
+            console.log("savedoctorlistlocaldb");
+            await getDoctors(userInfo);
             {
               result == "Success"
                 ? Alert.alert("Success", "Successfully synced data from server")

@@ -8,11 +8,11 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { useAuth, getStyleUtil } from "../../index";
+import { useAuth } from "../../context/AuthContext";
 import { SyncScreenNavigationProp } from "../../type/navigation";
 import Icon from "react-native-vector-icons/Ionicons";
 import { getSyncHistoryRecordsLocalDb } from "../../utils/localDbUtils";
-import SyncTable from "../../tables/SyncHistoryTable";
+import SyncTable from "../tables/SyncHistoryTable";
 
 const SyncSettingsScreen: React.FC = () => {
   const navigation = useNavigation<SyncScreenNavigationProp>();
@@ -23,6 +23,13 @@ const SyncSettingsScreen: React.FC = () => {
     last_name: string;
     email: string;
     sales_portal_id: string;
+    territory_id: string;
+    territory_name: string;
+    district_id: string;
+    division: string;
+    user_type: string;
+    created_at: string;
+    updated_at: string;
   } | null>(null);
 
   const [syncData, setSyncData] = useState<any[]>([]);
@@ -35,6 +42,13 @@ const SyncSettingsScreen: React.FC = () => {
         last_name,
         email,
         sales_portal_id,
+        territory_id: "",
+        territory_name: "",
+        district_id: "",
+        division: "",
+        user_type: "",
+        created_at: "",
+        updated_at: "",
       });
     }
   }, [authState]);

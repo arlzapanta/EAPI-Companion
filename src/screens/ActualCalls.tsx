@@ -7,7 +7,10 @@ import {
   Image,
   TextInput,
 } from "react-native";
-import { useAuth, getStyleUtil, customToast } from "../index";
+import { useAuth } from "../context/AuthContext";
+import { getStyleUtil } from "../utils/styleUtil";
+import { customToast } from "../utils/customToast";
+
 import {
   getCallsTestLocalDb,
   getCallsTodayLocalDb,
@@ -42,6 +45,7 @@ const ActualCalls = () => {
         const getDate = await getCurrentDatePH();
         getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
         const data = await getCallsTodayLocalDb();
+        console.log(data);
         setCallsDate(data);
       } catch (error: any) {
         console.log("fetchActualCallsData error", error);
@@ -191,7 +195,7 @@ const ActualCalls = () => {
                     <Text
                       style={
                         styles1.callText
-                      }>{`Schedule Id : ${call.schedule_id}`}</Text>
+                      }>{`Schedule Id : ${call.full_name}`}</Text>
                   </TouchableOpacity>
                 ))}
               </View>

@@ -3,35 +3,21 @@ import { API_URL_ENV } from "@env";
 import {
   deleteCallsTodayLocalDb,
   getCallsTodayLocalDb,
+  saveDoctorListLocalDb,
 } from "../utils/localDbUtils";
 import { formatDateYMD, getCurrentDatePH } from "./dateUtils";
 import { getLocation } from "../utils/currentLocation";
 
-interface User {
-  first_name: string;
-  last_name: string;
-  sales_portal_id: string;
-}
-interface ApiPayload {
-  schedule_id: number;
-  call_start: string;
-  call_end: string;
-  signature: string;
-  signature_attempts: string;
-  signature_location: string;
-  photo: string;
-  photo_location: string;
-}
-
 export const apiTimeIn = async (user: User) => {
   try {
     const loc = await getLocation();
-    const { first_name, last_name, sales_portal_id } = user;
+    const { first_name, last_name, sales_portal_id, territory_id } = user;
 
     const userInfo = {
       first_name,
       last_name,
-      sales_portal_id
+      sales_portal_id,
+      territory_id
     };
 
     const response = await axios.post(
@@ -237,6 +223,38 @@ export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
       }
     );
 
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred:", error);
+    }
+    throw error;
+  }
+};
+
+export const getDoctors = async (user: User): Promise<any> => {
+  try {
+    const {territory_id } = user;
+    const response = await axios.post(
+      `${API_URL_ENV}/getDoctors`,
+        {
+          territory_id
+        },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    await saveDoctorListLocalDb(response.data);
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {

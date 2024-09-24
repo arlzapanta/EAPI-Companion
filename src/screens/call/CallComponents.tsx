@@ -11,7 +11,7 @@ import {
   GestureResponderEvent,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { RootStackParamList } from "../type/navigation";
+import { RootStackParamList } from "../../type/navigation";
 import { RouteProp } from "@react-navigation/native";
 type HomeScreenRouteProp = RouteProp<RootStackParamList, "Home">;
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -19,26 +19,24 @@ import Icon from "react-native-vector-icons/Ionicons";
 import DetailerModal from "../modals/DetailerModal";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
-import { formatTimeHoursMinutes, getCurrentDatePH } from "../utils/dateUtils";
+import {
+  formatTimeHoursMinutes,
+  getCurrentDatePH,
+} from "../../utils/dateUtils";
 import {
   savePreCallNotesLocalDb,
   savePostCallNotesLocalDb,
   getPreCallNotesLocalDb,
   getPostCallNotesLocalDb,
-} from "../utils/callComponentsUtil";
-import { customToast } from "../utils/customToast";
-import { uploadImage } from "../utils/uploadImages";
-
-interface CallComponentsProps {
-  scheduleId: string;
-  date: string;
-}
+} from "../../utils/callComponentsUtil";
+import { customToast } from "../../utils/customToast";
+import { uploadImage } from "../../utils/localDbUtils";
 
 type OnCallScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const CallComponents: React.FC<CallComponentsProps> = ({
   scheduleId,
-  date,
+  docName,
 }) => {
   const navigation = useNavigation<OnCallScreenNavigationProp>();
   const [note, setNote] = useState<string>("");
@@ -113,6 +111,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({
     navigation.navigate("OnCall", {
       scheduleIdValue: scheduleId,
       notesArray: notes,
+      docName,
     });
     startTimer();
   };
@@ -214,13 +213,18 @@ const CallComponents: React.FC<CallComponentsProps> = ({
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.startCallContainer}>
-        {currentDate == date && (
+        {/* {currentDate == date && (
           <TouchableOpacity
             style={styles.buttonStartCall}
             onPress={executeStartCall}>
             <Text style={styles.buttonTextSave}>START CALL</Text>
           </TouchableOpacity>
-        )}
+        )} */}
+        <TouchableOpacity
+          style={styles.buttonStartCall}
+          onPress={executeStartCall}>
+          <Text style={styles.buttonTextSave}>START CALL</Text>
+        </TouchableOpacity>
       </View>
       <View style={styles.cardContainer}>
         <View style={styles.headerContainer}>

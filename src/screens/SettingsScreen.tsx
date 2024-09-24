@@ -1,7 +1,8 @@
 import { View, Text, Alert, StyleSheet, TouchableOpacity } from "react-native";
 import React, { useState, useEffect } from "react";
-import { customToast, useAuth } from "../index";
-import { getStyleUtil } from "../index";
+import { customToast } from "../utils/customToast";
+import { useAuth } from "../context/AuthContext";
+import { getStyleUtil } from "../utils/styleUtil";
 import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../type/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -25,6 +26,13 @@ const Settings = () => {
     last_name: string;
     email: string;
     sales_portal_id: string;
+    territory_id: string;
+    territory_name: string;
+    district_id: string;
+    division: string;
+    user_type: string;
+    created_at: string;
+    updated_at: string;
   } | null>(null);
   // const styles = getStyleUtil({});
   const navigation = useNavigation<SettingsScreenNavigationProp>();
@@ -121,6 +129,13 @@ const Settings = () => {
         last_name,
         email,
         sales_portal_id,
+        territory_id: "",
+        territory_name: "",
+        district_id: "",
+        division: "",
+        user_type: "",
+        created_at: "",
+        updated_at: "",
       });
     }
   }, [authState]);

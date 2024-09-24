@@ -2,10 +2,6 @@ import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 
-interface UseImagePickerOptions {
-  onPhotoCaptured?: (base64: string, location: { latitude: number; longitude: number }) => void;
-}
-
 export const useImagePicker = ({ onPhotoCaptured }: UseImagePickerOptions = {}) => {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -39,7 +35,10 @@ export const useImagePicker = ({ onPhotoCaptured }: UseImagePickerOptions = {}) 
       setImageBase64(base64Image);
 
       // Get current location
-      const locationResult = await Location.getCurrentPositionAsync({});
+      const locationResult = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High, 
+        timeInterval: 10000
+      });
       const currentLocation = {
         latitude: locationResult.coords.latitude,
         longitude: locationResult.coords.longitude,

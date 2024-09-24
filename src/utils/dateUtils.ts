@@ -109,3 +109,18 @@ export const formatDateYMD = (dateString: string) => {
   const date = parseISO(dateString);
   return format(date, "yyyy-MM-dd");
 };
+
+export const getCurrentQuarterPH = async (): Promise<number> => {
+  const currentDatePH = await getCurrentDatePH();
+  const currentMonth = moment(currentDatePH).month() + 1;
+
+  if (currentMonth >= 1 && currentMonth <= 3) {
+    return 1; // Q1: January, February, March
+  } else if (currentMonth >= 4 && currentMonth <= 6) {
+    return 2; // Q2: April, May, June
+  } else if (currentMonth >= 7 && currentMonth <= 9) {
+    return 3; // Q3: July, August, September
+  } else {
+    return 4; // Q4: October, November, December
+  }
+};

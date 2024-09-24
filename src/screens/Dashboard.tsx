@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
-import { getStyleUtil } from "../index";
+import { getStyleUtil } from "../utils/styleUtil";
 import { PieChart, BarChart, LineChart } from "react-native-gifted-charts";
 import { createShimmerPlaceHolder } from "expo-shimmer-placeholder";
 import { LinearGradient } from "expo-linear-gradient";
@@ -71,11 +71,6 @@ const Dashboard = () => {
     { value: 54, dataPointText: "54" },
     { value: 85, dataPointText: "85" },
   ];
-
-  interface dailyCompletionData {
-    value: number;
-    color: string;
-  }
 
   const dailyData: dailyCompletionData[] = [
     { value: 70, color: "#046E37" },

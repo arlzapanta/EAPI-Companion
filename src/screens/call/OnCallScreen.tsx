@@ -15,25 +15,26 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { RootStackParamList } from "../../type/navigation";
 import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
 import { saveCallsDoneFromSchedules } from "../../utils/localDbUtils";
-import Detailers from "../../modals/DetailersOnCallModal";
+import Detailers from "../modals/DetailersOnCallModal";
 import { formatTimeHoursMinutes } from "../../utils/dateUtils";
 import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
 import { getLocation } from "../../utils/currentLocation";
+import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
 
 type OnCallScreenRouteProp = RouteProp<RootStackParamList, "OnCall">;
 type OnCallScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "OnCall"
 >;
-
 interface Props {
   route: OnCallScreenRouteProp;
   navigation: OnCallScreenNavigationProp;
 }
 
 const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { scheduleIdValue, notesArray } = route.params;
+  const { refreshSchedData } = useRefreshFetchDataContext();
+  const { scheduleIdValue, notesArray, docName } = route.params;
   const [timer, setTimer] = useState<number>(0);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [selectedMood, setSelectedMood] = useState<string>("");
@@ -87,20 +88,21 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         signature_location: signatureLocation,
         photo: photoValue,
         photo_location: photoLocation,
+        doctor_name: docName,
       };
 
       setCallsData(callDetails); // This sets the callDetails to your state
-
-      // console.log(callDetails, "Call details data");
 
       const result = await saveCallsDoneFromSchedules(
         scheduleIdValue,
         callDetails
       );
-      // console.log(result, "end call");
 
       if (result === "Success") {
         navigation.navigate("Home");
+        if (refreshSchedData) {
+          refreshSchedData();
+        }
       }
     } catch (error: any) {
       console.log("ERROR > endCall > OnCallScreen:", error);
@@ -156,7 +158,6 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContentContainer}>
       <Text style={styles.timerText}>{formatTime(timer)}</Text>
-
       <View style={styles.cardContainer}>
         <Text style={styles.sectionTitle}>Notes</Text>
         {notesArray.map((item, index) => (

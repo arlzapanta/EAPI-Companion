@@ -32,38 +32,6 @@ import {
 
 const { width, height } = Dimensions.get("window");
 
-interface Call {
-  id: number;
-  location: string;
-  doctor_id: string;
-  photo: string;
-  photo_location: string;
-  signature: string;
-  signature_location: string;
-  notes: string;
-}
-
-interface AddCall {
-  location: string;
-  doctor_id: string;
-  photo: string;
-  photo_location: string;
-  signature: string;
-  signature_location: string;
-  notes: string;
-}
-
-interface ScheduleAPIRecord {
-  id?: string;
-  address: string;
-  date: string;
-  doctor_id: string;
-  full_name: string;
-  municipality_city: string;
-  province: string;
-  schedule_id: string;
-}
-
 const QuickCall = () => {
   const [currentDate, setCurrentDate] = useState("");
   const [callData, setCallData] = useState<Call[]>([]);
@@ -138,7 +106,7 @@ const QuickCall = () => {
 
   const handleAddCall = async () => {
     try {
-      const newCall: AddCall = {
+      const newCall: Call = {
         location: "",
         doctor_id: "",
         photo: "",
@@ -146,6 +114,8 @@ const QuickCall = () => {
         signature: "",
         signature_location: "",
         notes: "",
+        id: 0,
+        full_name: "",
       };
       const addedCall = await addQuickCall(newCall);
       if (addedCall === "Success") {
@@ -260,6 +230,7 @@ const QuickCall = () => {
           signature_location: call.signature_location,
           photo: call.photo,
           photo_location: call.photo_location,
+          doctor_name: call.full_name,
         };
 
         const result = await saveCallsDoneFromSchedules(

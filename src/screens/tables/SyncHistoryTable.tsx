@@ -1,38 +1,22 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  Dimensions,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
-import { dropLocalTablesDb } from "../utils/localDbUtils";
+import { dropLocalTablesDb } from "../../utils/localDbUtils";
+import Icon from "react-native-vector-icons/Ionicons";
 
-interface AttendanceRecord {
-  id: number;
-  date: string;
-  email: string;
-  sales_portal_id: string;
-  type: string;
-}
-
-interface AttendanceTableProps {
-  data: AttendanceRecord[];
-}
-
-const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
+const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(true); // Added loading state
   const itemsPerPage = 8;
 
   useEffect(() => {
+    // Simulate loading delay
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1000);
+    }, 1000); // Adjust the time as needed
 
     return () => clearTimeout(timer);
   }, []);
@@ -72,12 +56,12 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
     <Provider>
       <View style={styles.container}>
         {loading ? (
-          <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#046E37" />
           </View>
         ) : (
           <>
-            <View style={styles.filterContainer}>
+            <View style={styles.rowContainer}>
               <Picker
                 selectedValue={selectedDate}
                 onValueChange={(itemValue) => setSelectedDate(itemValue)}
@@ -99,20 +83,32 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
               <Button
                 mode="contained"
                 onPress={clearDateSelection}
-                style={styles.resetButton}>
+                style={styles.clearButton}>
                 Reset
               </Button>
             </View>
             <Card style={styles.card}>
               <DataTable>
-                <DataTable.Header>
+                <DataTable.Header style={styles.tableHeader}>
                   <DataTable.Title>Type</DataTable.Title>
                   <DataTable.Title>Date</DataTable.Title>
                 </DataTable.Header>
                 {currentData.map((user) => (
-                  <DataTable.Row style={styles.dataTableRow} key={user.id}>
+                  <DataTable.Row style={styles.tableRow} key={user.id}>
                     <DataTable.Cell>
-                      {user.type === "in" ? "Time In" : "Time Out"}
+                      {user.type === 1 ? (
+                        <>
+                          <Text>Time in Sync</Text>
+                          <Icon name="arrow-down" size={20} color="green" />
+                        </>
+                      ) : user.type === 2 ? (
+                        <>
+                          <Text>Time Out Sync</Text>
+                          <Icon name="arrow-up" size={20} color="green" />
+                        </>
+                      ) : (
+                        <Text>Mid Sync</Text>
+                      )}
                     </DataTable.Cell>
                     <DataTable.Cell>{formatDate(user.date)}</DataTable.Cell>
                   </DataTable.Row>
@@ -128,7 +124,13 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
                   styles.paginationButton,
                   currentPage === 1 && styles.disabledButton,
                 ]}>
-                Previous
+                <Text
+                  style={[
+                    styles.paginationText,
+                    currentPage === 1 && styles.disabledText,
+                  ]}>
+                  Previous
+                </Text>
               </Button>
               <Text style={styles.paginationText}>
                 Page {currentPage} of {totalPages}
@@ -141,11 +143,18 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
                   styles.paginationButton,
                   currentPage === totalPages && styles.disabledButton,
                 ]}>
-                Next
+                <Text
+                  style={[
+                    styles.paginationText,
+                    currentPage === totalPages && styles.disabledText,
+                  ]}>
+                  Next
+                </Text>
               </Button>
             </View>
           </>
         )}
+        {loading && <View style={styles.overlay}></View>}
       </View>
     </Provider>
   );
@@ -153,14 +162,20 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
 
 const styles = StyleSheet.create({
   container: {
-    margin: 15,
     flex: 1,
+    margin: 15,
   },
-  filterContainer: {
+  rowContainer: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 15,
     justifyContent: "space-between",
+  },
+  pickerInitialLabel: {
+    color: "lightgray",
+  },
+  pickerLabel: {
+    color: "black",
   },
   picker: {
     width: Dimensions.get("window").width * 0.55,
@@ -170,27 +185,25 @@ const styles = StyleSheet.create({
     borderColor: "#ddd",
     borderWidth: 1,
   },
-  pickerInitialLabel: {
-    color: "lightgray",
-  },
-  pickerLabel: {
-    color: "black",
-  },
-  resetButton: {
+  clearButton: {
     backgroundColor: "#046E37",
     marginLeft: 10,
     width: Dimensions.get("window").width * 0.2,
     borderRadius: 5,
   },
   card: {
-    padding: 10,
-    borderRadius: 8,
-    elevation: 3,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  dataTableHeader: {
+  tableHeader: {
     backgroundColor: "#f9f9f9",
   },
-  dataTableRow: {
+  tableRow: {
     borderBottomWidth: 1,
     borderBottomColor: "lightgray",
   },
@@ -213,7 +226,16 @@ const styles = StyleSheet.create({
   disabledButton: {
     borderColor: "gray",
   },
-  loadingOverlay: {
+  disabledText: {
+    color: "gray",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    height: Dimensions.get("window").height * 0.5,
+  },
+  overlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.02)",
     justifyContent: "center",
@@ -222,4 +244,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AttendanceTable;
+export default SyncHistoryTable;
