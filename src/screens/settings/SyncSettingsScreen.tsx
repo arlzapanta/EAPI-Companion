@@ -36,16 +36,23 @@ const SyncSettingsScreen: React.FC = () => {
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
-      const { first_name, last_name, email, sales_portal_id } = authState.user;
+      const {
+        first_name,
+        last_name,
+        email,
+        sales_portal_id,
+        territory_id,
+        division,
+      } = authState.user;
       setUserInfo({
         first_name,
         last_name,
         email,
         sales_portal_id,
-        territory_id: "",
+        territory_id,
         territory_name: "",
         district_id: "",
-        division: "",
+        division,
         user_type: "",
         created_at: "",
         updated_at: "",

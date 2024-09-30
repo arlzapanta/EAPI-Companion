@@ -120,6 +120,54 @@ export const saveUserSyncHistoryLocalDb = async (user: User, type: number): Prom
   return result;
 };
 
+export const saveRescheduleHistoryLocalDb = async (rescheduleDetails : RescheduleDetails): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS reschedule_history_tbl (
+      id INTEGER PRIMARY KEY NOT NULL, 
+      sales_portal_id TEXT NOT NULL, 
+      schedule_id TEXT NOT NULL, 
+      type NUMBER NOT NULL,
+      status NUMBER,
+      date_from TEXT,
+      date_to TEXT,
+      doctors_id TEXT,
+      full_name TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  try {
+    await db.runAsync(
+      `INSERT INTO reschedule_history_tbl (schedule_id, sales_portal_id, type, status, date_from, date_to, doctors_id, full_name) VALUES (?,?,?,?,?,?,?,?)`,
+      [
+        rescheduleDetails.schedule_id,
+        rescheduleDetails.sales_portal_id,
+        rescheduleDetails.type,
+        rescheduleDetails.status,
+        rescheduleDetails.date_from,
+        rescheduleDetails.date_to,
+        rescheduleDetails.doctors_id,
+        rescheduleDetails.full_name,
+      ]
+    );
+
+    // const testRecords = await db.getAllAsync('SELECT * FROM user_sync_history_tbl');
+    // console.log('All records:', testRecords);
+
+    db.closeSync();
+
+    return 'Success';
+  } catch (error) {
+    console.error('Error saving data:', error);
+    return 'Failed to save data';
+  }
+};
+
 export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<string> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -252,7 +300,9 @@ export const saveDoctorListLocalDb = async (doctors: DoctorRecord[]): Promise<st
       phone_office TEXT,
       phone_secretary TEXT,
       notes_names TEXT,
-      notes_values TEXT
+      notes_values TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      update_date TEXT
     );
   `);
 
@@ -329,7 +379,9 @@ export const getDoctorRecordsLocalDb = async () => {
       phone_office TEXT,
       phone_secretary TEXT,
       notes_names TEXT,
-      notes_values TEXT
+      notes_values TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      update_date TEXT
     );
   `);
 
@@ -337,8 +389,52 @@ export const getDoctorRecordsLocalDb = async () => {
 
   try {
     const existingRows = await db.getAllAsync(query);
-    // console.log('existingRows getUserAttendanceRecordsLocalDb', existingRows);
+    // console.log('existingRows getDoctorRecordsLocalDb', existingRows);
     return existingRows; 
+  } catch (error) {
+    console.error('Error fetching attendance data:', error);
+    return []; 
+  } finally {
+    await db.closeAsync(); 
+  }
+};
+
+export const getUpdatedDoctorRecordsLocalDb = async (): Promise<UpdateDoctorsNotes[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS doctors_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      doctors_id TEXT,
+      first_name TEXT,
+      last_name TEXT,
+      specialization TEXT,
+      classification TEXT,
+      birthday TEXT,
+      address_1 TEXT,
+      address_2 TEXT,
+      municipality_city TEXT,
+      province TEXT,
+      phone_mobile TEXT,
+      phone_office TEXT,
+      phone_secretary TEXT,
+      notes_names TEXT,
+      notes_values TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      update_date TEXT
+    );
+  `);
+
+  const query = `SELECT doctors_id, notes_names, notes_values FROM doctors_tbl WHERE DATE(update_date) = DATE('now')`;
+
+  try {
+    const result = await db.getAllAsync(query);
+    const existingRows = result as UpdateDoctorsNotes[];
+    return existingRows;
+    // console.log('updated doctors', existingRows);
   } catch (error) {
     console.error('Error fetching attendance data:', error);
     return []; 
@@ -404,6 +500,43 @@ export const getSyncHistoryRecordsLocalDb = async (user: User) => {
     return existingRows; 
   } catch (error) {
     console.error('Error fetching sync history data:', error);
+    return []; 
+  } finally {
+    await db.closeAsync(); 
+  }
+};
+
+export const getRescheduleHistoryRecordsLocalDb = async (user: User) => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS reschedule_history_tbl (
+      id INTEGER PRIMARY KEY NOT NULL, 
+      sales_portal_id TEXT NOT NULL, 
+      schedule_id TEXT NOT NULL, 
+      type NUMBER NOT NULL,
+      status NUMBER,
+      date_from TEXT,
+      date_to TEXT,
+      doctors_id TEXT,
+      full_name TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const dateRange = await getRelevantDateRange();
+  const placeholders = dateRange.map(() => '?').join(', ');
+  const query = `SELECT * FROM reschedule_history_tbl WHERE DATE(date) IN (${placeholders}) AND sales_portal_id = ?`;
+
+  try {
+    const existingRows = await db.getAllAsync(query, [...dateRange, user.sales_portal_id]);
+    // console.log('existingRows getSyncHistoryRecordsLocalDb', existingRows);
+    return existingRows; 
+  } catch (error) {
+    console.error('Error fetching reschedule data:', error);
     return []; 
   } finally {
     await db.closeAsync(); 
@@ -716,6 +849,35 @@ export const deleteCallsTodayLocalDb = async (): Promise<void> => {
   }
 };
 
+export const deleteDoctorsTodayLocalDb = async (): Promise<void> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  const tableExistsQuery = `
+    SELECT name FROM sqlite_master WHERE type='table' AND name='doctors_tbl';
+  `;
+
+  try {
+    const tableResult = await db.getAllAsync(tableExistsQuery);
+    if (tableResult.length === 0) {
+      console.log('Table doctors_tbl does not exist.');
+      return; 
+    }
+
+    const currentDate = await getCurrentDatePH();
+    const deleteQuery = `DELETE FROM doctors_tbl WHERE DATE(date) = ?`;
+
+    const result = await db.getAllAsync(deleteQuery, [currentDate]);
+    console.log('Records [doctors_tbl] deleted successfully.', result);
+
+  } catch (error) {
+    console.error('Error deleting records for today:', error);
+  } finally {
+    await db.closeAsync();
+  }
+};
+
 export const fetchDetailerImages = async (category: string): Promise<string[]> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
@@ -818,8 +980,8 @@ export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails
 
     await deleteCallByScheduleIdLocalDb({ scheduleId });
 
-    const testRecords = await db.getAllAsync('SELECT * FROM calls_tbl WHERE schedule_id = ?', [scheduleId]);
-    console.log('CHECK NEW CALL IN CALLS_TBL', testRecords);
+    // const testRecords = await db.getAllAsync('SELECT * FROM calls_tbl WHERE schedule_id = ?', [scheduleId]);
+    // console.log('CHECK NEW CALL IN CALLS_TBL', testRecords);
 
     return 'Success';
   } catch (error) {
@@ -833,29 +995,112 @@ export const updateDoctorNotes = async (doctorsNotes: UpdateDoctorsNotes ) : Pro
     useNewConnection: true,
   });
 
-  console.log(doctorsNotes,'docnotes');
-
   try{
   const existingRow = await db.getFirstAsync(
-    `SELECT * FROM doctors_tbl WHERE id = ?`,
+    `SELECT * FROM doctors_tbl WHERE doctors_id = ?`,
     [doctorsNotes.doctors_id],
   );
 
   if (existingRow) {
     await db.runAsync(
-      `INSERT INTO doctors_tbl (doctors_id, notes_names, notes_values) VALUES (?,?,?)`,
-      [doctorsNotes.doctors_id, doctorsNotes.notes_names, doctorsNotes.notes_values]
-    );
+        `UPDATE doctors_tbl SET notes_names = ?, notes_values = ?, update_date = CURRENT_TIMESTAMP WHERE doctors_id = ?`,
+        [doctorsNotes.notes_names, doctorsNotes.notes_values, doctorsNotes.doctors_id]
+      );
   }
-  // const testRecords = await db.getAllAsync('SELECT * FROM doctors_tbl');
-  // console.log('CHECK NEW doctors_tbl', testRecords);
-
+  // const test = await db.getFirstAsync(
+  //   `SELECT * FROM doctors_tbl WHERE doctors_id = ?`,
+  //   [doctorsNotes.doctors_id],
+  // );
+  // console.log(test, 'askdjaslkdj');
     return 'Success';
   } catch (error) {
     console.error('Error in updateDoctorNotes:', error);
     return 'Failed to process updateDoctorNotes';
+  } finally {
+    db.closeSync();
   }
 }
+
+export const deleteDoctorNotes = async (doctorsNotes: UpdateDoctorsNotes): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  try {
+    const existingRow = await db.getFirstAsync(
+      `SELECT * FROM doctors_tbl WHERE doctors_id = ?`,
+      [doctorsNotes.doctors_id],
+    );
+  
+    if (existingRow) {
+      const existingRow = await db.getFirstAsync(
+        `SELECT * FROM doctors_tbl WHERE doctors_id = ?`,
+        [doctorsNotes.doctors_id],
+      );
+    
+      if (existingRow) {
+        await db.runAsync(
+            `UPDATE doctors_tbl SET notes_names = ?, notes_values = ?, update_date = CURRENT_TIMESTAMP WHERE doctors_id = ?`,
+            [doctorsNotes.notes_names, doctorsNotes.notes_values, doctorsNotes.doctors_id]
+          );
+      }
+
+      return "Success";
+    } else {
+      console.log('No existing row found for doctors_id:', doctorsNotes.doctors_id);
+      return "Failed";
+    }
+  } catch (error) {
+    console.error('Error deleting records for today:', error);
+    return "Failed";
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+
+export const addDoctorNotes = async (doctorsNotes: UpdateDoctorsNotes): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  try {
+    const existingRow: ExistingDoctorNotesRow | null = await db.getFirstAsync<ExistingDoctorNotesRow>(
+      `SELECT * FROM doctors_tbl WHERE doctors_id = ?`,
+      [doctorsNotes.doctors_id]
+    );
+
+    if (existingRow) {
+      let existingNames: string[] = existingRow.notes_names ? existingRow.notes_names.split(',') : [];
+      let existingValues: string[] = existingRow.notes_values ? existingRow.notes_values.split(',') : [];
+
+      if (!existingNames.includes(doctorsNotes.notes_names) && !existingValues.includes(doctorsNotes.notes_values)) {
+        existingNames.push(doctorsNotes.notes_names);
+        existingValues.push(doctorsNotes.notes_values);
+      }
+
+      const updatedNames: string = existingNames.join(',');
+      const updatedValues: string = existingValues.join(',');
+
+      await db.runAsync(
+        `UPDATE doctors_tbl SET notes_names = ?, notes_values = ?, update_date = CURRENT_TIMESTAMP WHERE doctors_id = ?`,
+        [updatedNames, updatedValues, doctorsNotes.doctors_id]
+      );
+    } else {
+      await db.runAsync(
+        `UPDATE doctors_tbl SET notes_names = ?, notes_values = ? WHERE doctors_id = ?`,
+        [ doctorsNotes.notes_names, doctorsNotes.notes_values, doctorsNotes.doctors_id]
+      );
+    }
+    return "Success";
+  } catch (error) {
+    console.error('Error adding doctor notes:', error);
+    return "Failed";
+  } finally {
+    await db.closeAsync();
+  }
+};
+
 
 export const uploadImage = async ({ base64Images, category }: UploadImageProps) => {
   if (base64Images.length > 0) {
@@ -1012,7 +1257,7 @@ export const dropLocalTablesDb = async () => {
     useNewConnection: true,
   });
 
-  const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','quick_call_tbl'];
+  const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','quick_call_tbl','doctors_tbl','pre_call_notes_tbl','post_call_notes_tbl'];
   // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
   // const tableNames = ['quick_call_tbl'];
   for (const tableName of tableNames) {

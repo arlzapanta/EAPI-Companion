@@ -11,7 +11,7 @@ import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
 import { dropLocalTablesDb } from "../../utils/localDbUtils";
 
-const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
+const RescheduleTable: React.FC<RescheduleTableProps> = ({ data }) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
@@ -93,15 +93,19 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
             <Card style={styles.card}>
               <DataTable>
                 <DataTable.Header>
+                  <DataTable.Title>Schedule / Doctor</DataTable.Title>
+                  <DataTable.Title>Date To</DataTable.Title>
                   <DataTable.Title>Type</DataTable.Title>
-                  <DataTable.Title>Date</DataTable.Title>
+                  <DataTable.Title>Date Created</DataTable.Title>
                 </DataTable.Header>
-                {currentData.map((user) => (
-                  <DataTable.Row style={styles.dataTableRow} key={user.id}>
+                {currentData.map((data) => (
+                  <DataTable.Row style={styles.dataTableRow} key={data.id}>
                     <DataTable.Cell>
-                      {user.type === "in" ? "Time In" : "Time Out"}
+                      {`${data.date_from} / ${data.full_name}`}
                     </DataTable.Cell>
-                    <DataTable.Cell>{formatDate(user.date)}</DataTable.Cell>
+                    <DataTable.Cell>{formatDate(data.date_to)}</DataTable.Cell>
+                    <DataTable.Cell>{data.type}</DataTable.Cell>
+                    <DataTable.Cell>{formatDate(data.date)}</DataTable.Cell>
                   </DataTable.Row>
                 ))}
               </DataTable>
@@ -150,7 +154,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   picker: {
-    width: Dimensions.get("window").width * 0.55,
+    width: Dimensions.get("window").width * 0.25,
     height: 40,
     backgroundColor: "#f9f9f9",
     borderRadius: 4,
@@ -166,7 +170,7 @@ const styles = StyleSheet.create({
   resetButton: {
     backgroundColor: "#046E37",
     marginLeft: 10,
-    width: Dimensions.get("window").width * 0.2,
+    width: Dimensions.get("window").width * 0.1,
     borderRadius: 5,
   },
   card: {
@@ -209,4 +213,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AttendanceTable;
+export default RescheduleTable;

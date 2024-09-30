@@ -11,7 +11,7 @@ import {
   insertDummyRecords,
   saveUserSyncHistoryLocalDb,
 } from "../utils/localDbUtils";
-import { syncUser } from "../utils/apiUtility";
+import { doctorRecordsSync, syncUser } from "../utils/apiUtility";
 import { getCurrentTimePH, isTimeBetween12and1PM } from "../utils/dateUtils";
 
 type SettingsScreenNavigationProp =
@@ -68,6 +68,10 @@ const Settings = () => {
     navigation.navigate("Sync");
   };
 
+  const handleRequestreschedOnPress = () => {
+    navigation.navigate("Reschedule");
+  };
+
   const handleAttendanceOnPress = () => {
     navigation.navigate("Attendance");
   };
@@ -112,7 +116,7 @@ const Settings = () => {
           );
         }
       } catch (error) {
-        Alert.alert("Error", "Failed to time in.");
+        Alert.alert("Error", "Failed to Mid Sync.");
       } finally {
         setLoading(false);
       }
@@ -123,16 +127,23 @@ const Settings = () => {
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
-      const { first_name, last_name, email, sales_portal_id } = authState.user;
+      const {
+        first_name,
+        last_name,
+        email,
+        sales_portal_id,
+        territory_id,
+        division,
+      } = authState.user;
       setUserInfo({
         first_name,
         last_name,
         email,
         sales_portal_id,
-        territory_id: "",
+        territory_id,
         territory_name: "",
         district_id: "",
-        division: "",
+        division,
         user_type: "",
         created_at: "",
         updated_at: "",
@@ -168,6 +179,12 @@ const Settings = () => {
             onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
             style={styles.button}>
             <Text style={styles.buttonText}>Mid Sync</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleRequestreschedOnPress}>
+            <Text style={styles.buttonText}>Request Reschedule</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>

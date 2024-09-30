@@ -19,11 +19,13 @@ declare global {
       phone_secretary: string;
       notes_names: string;
       notes_values: string;
+      update_date: string;
     }
 
     export interface CallComponentsProps {
       scheduleId: string;
       docName: string;
+      canStartCall: boolean;
     }
 
     export interface MapProps {
@@ -148,6 +150,13 @@ declare global {
       notes_names: string;
       notes_values: string;
     }
+    export interface apiDoctorRecords {
+      doctors_id: number;
+      territory_id: number;
+      division: number;
+      notes_names: string;
+      notes_values: string;
+    }
 
     export interface AttendanceRecord {
       id: number;
@@ -167,6 +176,9 @@ declare global {
     
     export interface AttendanceTableProps {
       data: AttendanceRecord[];
+    }
+    export interface RescheduleTableProps {
+      data: RescheduleRecord[];
     }
 
     export interface SyncHistoryRecord {
@@ -238,6 +250,17 @@ declare global {
       signature_attempts: string | null;
       
     }
+    export interface RescheduleDetails {
+      id?: string; // id is optional
+      schedule_id: string; // New column
+      date_to: string | null;
+      date_from: string | null;
+      doctors_id: string | null;
+      full_name: string | null;
+      status: number | null;
+      type: string | null;
+      sales_portal_id: string | null;
+    }
     
     export interface SchedToCall {
       schedule_id: string| null;
@@ -260,6 +283,13 @@ declare global {
     base64Images: string[];
     category: string;
   }
+
+  type ExistingDoctorNotesRow = {
+    doctors_id: number;
+    notes_names: string | null;
+    notes_values: string | null;
+  };
+  
   }
   
   export {};

@@ -2,7 +2,9 @@ import axios from "axios";
 import { API_URL_ENV } from "@env";
 import {
   deleteCallsTodayLocalDb,
+  deleteDoctorsTodayLocalDb,
   getCallsTodayLocalDb,
+  getUpdatedDoctorRecordsLocalDb,
   saveDoctorListLocalDb,
 } from "../utils/localDbUtils";
 import { formatDateYMD, getCurrentDatePH } from "./dateUtils";
@@ -118,7 +120,6 @@ export const syncUser = async (user: User): Promise<any> => {
       }
     );
 
-    // delete today's calls which is already sync to the server
     if(response.data.isProceed){
       await deleteCallsTodayLocalDb();
     }
@@ -138,6 +139,52 @@ export const syncUser = async (user: User): Promise<any> => {
     throw error;
   }
 };
+
+export const doctorRecordsSync = async (user: User): Promise<any> => {
+  try {
+    const localDoctorsUpdated = await getUpdatedDoctorRecordsLocalDb();
+    const docRecordsToSync: apiDoctorRecords[] = localDoctorsUpdated.map(record => ({
+      doctors_id: Number(record.doctors_id), 
+      notes_names: record.notes_names,
+      notes_values: record.notes_values,
+      territory_id: Number(user.territory_id), 
+      division: Number(user.division), 
+    }));
+
+    const responseDoc = await axios.post(
+      `${API_URL_ENV}/updateDoctorsNotes`,
+      docRecordsToSync,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (docRecordsToSync.length === 0) {
+      console.log('No doctor records to sync.');
+      return 'No doctor records to sync';
+    }
+
+    if(responseDoc.data.isProceed){
+      await deleteDoctorsTodayLocalDb();
+    }
+
+    return docRecordsToSync;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred:", error);
+    }
+    throw error;
+  }
+}
 
 // get schedules 
   export const getSChedulesAPI = async (user: User): Promise<any> => {
@@ -241,11 +288,12 @@ export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
 
 export const getDoctors = async (user: User): Promise<any> => {
   try {
-    const {territory_id } = user;
+    const {territory_id, division } = user;
     const response = await axios.post(
       `${API_URL_ENV}/getDoctors`,
         {
-          territory_id
+          territory_id,
+          division
         },
       {
         headers: {

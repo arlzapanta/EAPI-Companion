@@ -10,5 +10,5 @@
   "include": [
     "src/**/*",
     "types/**/*"
-  ]
+, "App.tsx"  ]
 }

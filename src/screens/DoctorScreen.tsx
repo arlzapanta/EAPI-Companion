@@ -12,9 +12,15 @@ import { getCurrentDatePH } from "../utils/dateUtils";
 import { useAuth } from "../context/AuthContext";
 import { Ionicons } from "@expo/vector-icons";
 import {
+  addDoctorNotes,
+  deleteDoctorNotes,
   getDoctorRecordsLocalDb,
+  getUpdatedDoctorRecordsLocalDb,
   updateDoctorNotes,
 } from "../utils/localDbUtils";
+
+import { showConfirmAlert } from "../utils/commonUtil";
+import { customToast } from "../utils/customToast";
 
 const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const { authState } = useAuth();
@@ -40,8 +46,14 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
-      const { first_name, last_name, email, sales_portal_id, territory_id } =
-        authState.user;
+      const {
+        first_name,
+        last_name,
+        email,
+        sales_portal_id,
+        territory_id,
+        division,
+      } = authState.user;
       setUserInfo({
         first_name,
         last_name,
@@ -50,7 +62,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
         territory_id,
         territory_name: "",
         district_id: "",
-        division: "",
+        division,
         user_type: "",
         created_at: "",
         updated_at: "",
@@ -75,6 +87,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
       }));
 
       setDoctorList(mappedDoctors);
+      const updatedDoctors = await getUpdatedDoctorRecordsLocalDb();
     } catch (error) {
       console.log("fetchDoctorData error", error);
     }
@@ -107,30 +120,70 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
 
     const [tagName, setTagName] = useState<string>("");
     const [tag, setTag] = useState<string>("");
-    const [editingIndex, setEditingIndex] = useState<number | null>(null); // To track the index being edited
+    const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editName, setEditName] = useState<string>("");
     const [editValue, setEditValue] = useState<string>("");
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
       if (tagName && tag) {
+        const updatedNames = [...notesNamesArray, tagName].join(",");
+        const updatedValues = [...notesValuesArray, tag].join(",");
         setNotesNamesArray((prev) => [...prev, tagName]);
         setNotesValuesArray((prev) => [...prev, tag]);
+
+        const doctorsNotes = {
+          doctors_id: doc.doctors_id,
+          notes_names: tagName,
+          notes_values: tag,
+        };
+
+        const updateRecord = await addDoctorNotes(doctorsNotes);
+        if (updateRecord) {
+          customToast("Doctor notes updated!");
+          setNotesNamesArray(updatedNames.split(","));
+          setNotesValuesArray(updatedValues.split(","));
+          setSelectedDoctor((prev) => ({
+            ...doc,
+            notes_names: updatedNames,
+            notes_values: updatedValues,
+          }));
+          fetchDoctorData();
+        }
 
         setTagName("");
         setTag("");
       }
 
-      console.log("Updated notes_names: ", [...notesNamesArray, tagName]);
-      console.log("Updated notes_values: ", [...notesValuesArray, tag]);
+      // console.log("Updated notes_names: ", [...notesNamesArray, tagName]);
+      // console.log("Updated notes_values: ", [...notesValuesArray, tag]);
     };
 
-    const handleDelete = (index: number) => {
-      const updatedNames = notesNamesArray.filter((_, i) => i !== index);
-      const updatedValues = notesValuesArray.filter((_, i) => i !== index);
-      setNotesNamesArray(updatedNames);
-      setNotesValuesArray(updatedValues);
-      console.log("After deletion - notes_names: ", updatedNames);
-      console.log("After deletion - notes_values: ", updatedValues);
+    const handleDelete = async (index: number) => {
+      const updatedNames = notesNamesArray
+        .filter((_, i) => i !== index)
+        .join(",");
+      const updatedValues = notesValuesArray
+        .filter((_, i) => i !== index)
+        .join(",");
+
+      const doctorsNotes = {
+        doctors_id: doc.doctors_id,
+        notes_names: updatedNames,
+        notes_values: updatedValues,
+      };
+
+      const removeNotes = await deleteDoctorNotes(doctorsNotes);
+      if (removeNotes) {
+        customToast("Doctor notes updated!");
+        setNotesNamesArray(updatedNames.split(","));
+        setNotesValuesArray(updatedValues.split(","));
+        setSelectedDoctor((prev) => ({
+          ...doc,
+          notes_names: updatedNames,
+          notes_values: updatedValues,
+        }));
+        fetchDoctorData();
+      }
     };
 
     const handleSaveEdit = async (index: number) => {
@@ -138,27 +191,24 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
       const updatedValues = [...notesValuesArray];
       updatedNames[index] = editName;
       updatedValues[index] = editValue;
-      setNotesNamesArray(updatedNames);
-      setNotesValuesArray(updatedValues);
-      setEditingIndex(null);
-
-      // fix this
-
-      const noteNames: string = notesNamesArray.join(",");
-      const noteValues: string = notesValuesArray.join(",");
 
       const doctorsNotes = {
         doctors_id: doc.doctors_id,
-        notes_names: noteNames,
-        notes_values: noteValues,
+        notes_names: updatedNames.join(","),
+        notes_values: updatedValues.join(","),
       };
-
-      // console.log("After edit - notes_names: ", updatedNames);
-      // console.log("After edit - notes_values: ", updatedValues);
 
       const updateRecord = await updateDoctorNotes(doctorsNotes);
       if (updateRecord) {
-        console.log("updateRecord Doctors notes success");
+        customToast("Doctor notes updated!");
+        setNotesNamesArray(updatedNames);
+        setNotesValuesArray(updatedValues);
+        setSelectedDoctor((prev) => ({
+          ...doc,
+          notes_names: doctorsNotes.notes_names,
+          notes_values: doctorsNotes.notes_values,
+        }));
+        fetchDoctorData();
       }
     };
 
@@ -227,7 +277,10 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
               </>
             )}
 
-            <TouchableOpacity onPress={() => handleDelete(index)}>
+            <TouchableOpacity
+              onPress={() =>
+                showConfirmAlert(() => handleDelete(index), "delete this item")
+              }>
               <Ionicons name="trash-outline" size={24} color="red" />
             </TouchableOpacity>
           </View>
@@ -279,7 +332,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
               {doctorList.length > 0 ? (
                 doctorList.map((doc) => (
                   <TouchableOpacity
-                    key={`${doc.doctors_id}${doc.first_name}${doc.last_name}`}
+                    key={`${doc.doctors_id}`}
                     onPress={() => handleCallClick(doc)}
                     style={styles.callItem}>
                     <Text

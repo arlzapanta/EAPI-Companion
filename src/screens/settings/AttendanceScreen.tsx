@@ -18,10 +18,12 @@ import {
   saveSchedulesAPILocalDb,
   getCallsTodayLocalDb,
   saveActualCallsLocalDb,
+  saveDoctorListLocalDb,
 } from "../../utils/localDbUtils";
 import {
   apiTimeIn,
   apiTimeOut,
+  doctorRecordsSync,
   getCallsAPI,
   getDoctors,
   getSChedulesAPI,
@@ -56,8 +58,14 @@ const Attendance: React.FC = () => {
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
-      const { first_name, last_name, email, sales_portal_id, territory_id } =
-        authState.user;
+      const {
+        first_name,
+        last_name,
+        email,
+        sales_portal_id,
+        territory_id,
+        division,
+      } = authState.user;
       setUserInfo({
         first_name,
         last_name,
@@ -66,7 +74,7 @@ const Attendance: React.FC = () => {
         territory_id,
         territory_name: "",
         district_id: "",
-        division: "",
+        division,
         user_type: "",
         created_at: "",
         updated_at: "",
@@ -141,8 +149,8 @@ const Attendance: React.FC = () => {
           const scheduleData = await getSChedulesAPI(userInfo);
           if (scheduleData) {
             const result = await saveSchedulesAPILocalDb(scheduleData);
-            console.log("savedoctorlistlocaldb");
-            await getDoctors(userInfo);
+            const docRec = await getDoctors(userInfo);
+            await saveDoctorListLocalDb(docRec);
             {
               result == "Success"
                 ? Alert.alert("Success", "Successfully synced data from server")
@@ -155,6 +163,9 @@ const Attendance: React.FC = () => {
             );
           }
         }
+      } else if (!timeInIsProceed.isProceed) {
+        console.log("timeInIsProceed", timeInIsProceed);
+        console.log(timeInIsProceed);
       }
     } catch (error) {
       Alert.alert("Error", "Failed to time in.");
@@ -181,6 +192,7 @@ const Attendance: React.FC = () => {
       if (checkIfTimedOut === 1) {
         Alert.alert("Failed", "Already timed out today");
       } else {
+        await doctorRecordsSync(userInfo);
         await fetchAttendanceData();
         const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
         console.log(

@@ -37,6 +37,7 @@ type OnCallScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 const CallComponents: React.FC<CallComponentsProps> = ({
   scheduleId,
   docName,
+  canStartCall,
 }) => {
   const navigation = useNavigation<OnCallScreenNavigationProp>();
   const [note, setNote] = useState<string>("");
@@ -213,18 +214,18 @@ const CallComponents: React.FC<CallComponentsProps> = ({
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.startCallContainer}>
-        {/* {currentDate == date && (
+        {canStartCall && (
           <TouchableOpacity
             style={styles.buttonStartCall}
             onPress={executeStartCall}>
             <Text style={styles.buttonTextSave}>START CALL</Text>
           </TouchableOpacity>
-        )} */}
-        <TouchableOpacity
+        )}
+        {/* <TouchableOpacity
           style={styles.buttonStartCall}
           onPress={executeStartCall}>
           <Text style={styles.buttonTextSave}>START CALL</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <View style={styles.cardContainer}>
         <View style={styles.headerContainer}>

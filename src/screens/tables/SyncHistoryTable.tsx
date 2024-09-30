@@ -41,7 +41,6 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
   );
 
   const clearDateSelection = () => {
-    dropLocalTablesDb();
     setSelectedDate("");
     setCurrentPage(1);
   };

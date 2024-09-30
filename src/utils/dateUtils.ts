@@ -124,3 +124,38 @@ export const getCurrentQuarterPH = async (): Promise<number> => {
     return 4; // Q4: October, November, December
   }
 };
+
+export const isWithinCurrentMonthAndAvailable = (dateStr: string) => {
+  const today = new Date();
+  const currentMonth = today.getMonth();
+  const currentYear = today.getFullYear();
+  
+  const date = new Date(dateStr);
+  
+  return (
+    date.getFullYear() === currentYear &&
+    date.getMonth() === currentMonth &&  
+    date >= today                        
+  );
+};
+
+export const isWithinWeekOrAdvance = (dateStr: string): string | null => {
+  const today = new Date();
+  const date = new Date(dateStr);
+
+  if (date <= today) {
+      return null; 
+  }
+
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay()); 
+  
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + (6 - today.getDay())); 
+
+  if (date >= startOfWeek && date <= endOfWeek) {
+      return "Makeup";
+  } else {
+      return "Advance";
+  }
+};

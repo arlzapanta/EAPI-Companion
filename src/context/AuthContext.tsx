@@ -149,7 +149,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error: true, msg: "Invalid credentials" };
       }
     } catch (error: any) {
-      console.log("Error during login:", error.message);
+      console.log("Error during login:", error.message, error);
       return {
         error: true,
         msg: "Invalid credentials",

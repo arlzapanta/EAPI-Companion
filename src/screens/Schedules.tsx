@@ -215,6 +215,7 @@ const Schedules = () => {
                     <CallComponents
                       scheduleId={String(selectedScheduleToday.schedule_id)}
                       docName={String(selectedScheduleToday.full_name)}
+                      canStartCall={true}
                     />
                   </>
                 ) : null}
@@ -236,6 +237,7 @@ const Schedules = () => {
                     <CallComponents
                       scheduleId={String(selectedScheduleWeek.schedule_id)}
                       docName={String(selectedScheduleWeek.full_name)}
+                      canStartCall={false}
                     />
                   </>
                 ) : null}
