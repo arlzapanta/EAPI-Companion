@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 12.1.0",
+    "version": ">= 12.5.0",
     "appVersionSource": "remote"
   },
   "build": {
@@ -12,14 +12,7 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.production.com",
-        "API_URL_ENV" :"http://192.168.1.69/callsmonitoring/api",
-        "API_URL_ENV_PROD" :"http://203.82.36.194:9989/api",
-        "TOKEN_USERNAME_ENV" :"test",
-        "TOKEN_PASSWORD_ENV" :"test@123"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {

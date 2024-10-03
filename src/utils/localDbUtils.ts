@@ -33,10 +33,10 @@ export const saveUserAttendanceLocalDb = async (user: User, type: string): Promi
         `INSERT INTO user_attendance_tbl (email, type, sales_portal_id) VALUES (?,?,?)`,
         [user.email, type, user.sales_portal_id]
       );
-      result = 0; // Successfully recorded
+      result = 0;
     } else {
       console.log('User already timed in today');
-      result = 1; // Already recorded
+      result = 1;
     }
   } else if (type === 'out') {
     const existingRow = await db.getFirstAsync(
@@ -120,7 +120,7 @@ export const saveUserSyncHistoryLocalDb = async (user: User, type: number): Prom
   return result;
 };
 
-export const saveRescheduleHistoryLocalDb = async (rescheduleDetails : RescheduleDetails): Promise<string> => {
+export const saveRescheduleHistoryLocalDb = async (rescheduleDetails : RescheduleDetails[]): Promise<string> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
@@ -129,9 +129,10 @@ export const saveRescheduleHistoryLocalDb = async (rescheduleDetails : Reschedul
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS reschedule_history_tbl (
       id INTEGER PRIMARY KEY NOT NULL, 
-      sales_portal_id TEXT NOT NULL, 
-      schedule_id TEXT NOT NULL, 
-      type NUMBER NOT NULL,
+      sales_portal_id TEXT, 
+      request_id TEXT, 
+      schedule_id TEXT, 
+      type NUMBER,
       status NUMBER,
       date_from TEXT,
       date_to TEXT,
@@ -141,29 +142,30 @@ export const saveRescheduleHistoryLocalDb = async (rescheduleDetails : Reschedul
     );
   `);
 
+  const insertPromises = rescheduleDetails.map((reschedules: RescheduleDetails) => {
+    return db.execAsync(`
+      INSERT INTO reschedule_history_tbl (schedule_id, sales_portal_id, request_id, type, status, date_from, date_to, doctors_id, full_name)
+      VALUES (
+        ${reschedules.schedule_id !== undefined && reschedules.schedule_id !== null ? `'${reschedules.schedule_id}'` : 'NULL'},
+        ${reschedules.sales_portal_id !== undefined && reschedules.sales_portal_id !== null ? `'${reschedules.sales_portal_id}'` : 'NULL'},
+        ${reschedules.request_id !== undefined && reschedules.request_id !== null ? `'${reschedules.request_id}'` : 'NULL'},
+        ${reschedules.type !== undefined && reschedules.type !== null ? `'${reschedules.type}'` : 'NULL'},
+        ${reschedules.status !== undefined && reschedules.status !== null ? `'${reschedules.status}'` : 'NULL'},
+        ${reschedules.date_from !== undefined && reschedules.date_from !== null ? `'${reschedules.date_from}'` : 'NULL'},
+        ${reschedules.date_to !== undefined && reschedules.date_to !== null ? `'${reschedules.date_to}'` : 'NULL'},
+        ${reschedules.doctors_id !== undefined && reschedules.doctors_id !== null ? `'${reschedules.doctors_id}'` : 'NULL'},
+        ${reschedules.full_name !== undefined && reschedules.full_name !== null ? `'${reschedules.full_name}'` : 'NULL'}
+      );
+    `);
+  });
+
   try {
-    await db.runAsync(
-      `INSERT INTO reschedule_history_tbl (schedule_id, sales_portal_id, type, status, date_from, date_to, doctors_id, full_name) VALUES (?,?,?,?,?,?,?,?)`,
-      [
-        rescheduleDetails.schedule_id,
-        rescheduleDetails.sales_portal_id,
-        rescheduleDetails.type,
-        rescheduleDetails.status,
-        rescheduleDetails.date_from,
-        rescheduleDetails.date_to,
-        rescheduleDetails.doctors_id,
-        rescheduleDetails.full_name,
-      ]
-    );
-
-    // const testRecords = await db.getAllAsync('SELECT * FROM user_sync_history_tbl');
-    // console.log('All records:', testRecords);
-
-    db.closeSync();
-
+    await Promise.all(insertPromises);
+      // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+      // console.log('All actual calls records test:', testRecords);
     return 'Success';
   } catch (error) {
-    console.error('Error saving data:', error);
+    console.error('Error saving data: saveRescheduleHistoryLocalDb', error);
     return 'Failed to save data';
   }
 };
@@ -222,7 +224,7 @@ export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<
       // console.log('All actual calls records test:', testRecords);
     return 'Success';
   } catch (error) {
-    console.error('Error saving data:', error);
+    console.error('Error saving data: asdasdasd', error);
     return 'Failed to save data';
   }
 };
@@ -240,7 +242,7 @@ export const saveSchedulesAPILocalDb = async (schedules: ScheduleAPIRecord[]): P
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       address TEXT, 
       date TEXT, 
-      doctor_id TEXT, 
+      doctors_id TEXT, 
       full_name TEXT, 
       municipality_city TEXT, 
       province TEXT,
@@ -250,11 +252,11 @@ export const saveSchedulesAPILocalDb = async (schedules: ScheduleAPIRecord[]): P
 
   const insertPromises = schedules.map((schedule: ScheduleAPIRecord) => {
     return db.execAsync(`
-      INSERT INTO schedule_API_tbl (schedule_id, address, doctor_id, date, municipality_city, province, full_name)
+      INSERT INTO schedule_API_tbl (schedule_id, address, doctors_id, date, municipality_city, province, full_name)
       VALUES (
         ${schedule.id !== undefined && schedule.id !== null ? `'${schedule.id}'` : 'NULL'},
         ${schedule.address !== undefined && schedule.address !== null ? `'${schedule.address}'` : 'NULL'},
-        ${schedule.doctor_id !== undefined && schedule.doctor_id !== null ? `'${schedule.doctor_id}'` : 'NULL'},
+        ${schedule.doctors_id !== undefined && schedule.doctors_id !== null ? `'${schedule.doctors_id}'` : 'NULL'},
         ${schedule.date !== undefined && schedule.date !== null ? `'${schedule.date}'` : 'NULL'},
         ${schedule.municipality_city !== undefined && schedule.municipality_city !== null ? `'${schedule.municipality_city}'` : 'NULL'},
         ${schedule.province !== undefined && schedule.province !== null ? `'${schedule.province}'` : 'NULL'},
@@ -269,11 +271,10 @@ export const saveSchedulesAPILocalDb = async (schedules: ScheduleAPIRecord[]): P
       // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
     return 'Success';
   } catch (error) {
-    console.error('Error saving data:', error);
+    console.error('Error saving data: asdasdasdasdasd', error);
     return 'Failed to save data';
   }
 };
-
 
 export const saveDoctorListLocalDb = async (doctors: DoctorRecord[]): Promise<string> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
@@ -356,6 +357,69 @@ export const saveDoctorListLocalDb = async (doctors: DoctorRecord[]): Promise<st
   }
 };
 
+export const saveRescheduleListLocalDb = async (request: RescheduleRecord[]): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    DROP TABLE IF EXISTS reschedule_req_tbl;
+    
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE reschedule_req_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      request_id TEXT,
+      schedule_id TEXT,
+      sales_portal_id TEXT,
+      doctors_id TEXT,
+      date_from TEXT,
+      date_to TEXT,
+      status TEXT,
+      type TEXT,
+      created_at TEXT,
+      full_name TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const insertPromises = request.map((request: RescheduleRecord) => {
+    return db.execAsync(`
+      INSERT INTO reschedule_req_tbl (
+      request_id,
+      schedule_id,
+      sales_portal_id,
+      doctors_id,
+      date_from,
+      date_to,
+      status,
+      type,
+      created_at,
+      full_name
+      )
+      VALUES (
+        ${request.request_id !== undefined && request.request_id !== null ? `'${request.request_id}'` : 'NULL'},
+        ${request.schedule_id !== undefined && request.schedule_id !== null ? `'${request.schedule_id}'` : 'NULL'},
+        ${request.sales_portal_id !== undefined && request.sales_portal_id !== null ? `'${request.sales_portal_id}'` : 'NULL'},
+        ${request.doctors_id !== undefined && request.doctors_id !== null ? `'${request.doctors_id}'` : 'NULL'},
+        ${request.date_from !== undefined && request.date_from !== null ? `'${request.date_from}'` : 'NULL'},
+        ${request.date_to !== undefined && request.date_to !== null ? `'${request.date_to}'` : 'NULL'},
+        ${request.status !== undefined && request.status !== null ? `'${request.status}'` : 'NULL'},
+        ${request.type !== undefined && request.type !== null ? `'${request.type}'` : 'NULL'},
+        ${request.created_at !== undefined && request.created_at !== null ? `'${request.created_at}'` : 'NULL'},
+        ${request.full_name !== undefined && request.full_name !== null ? `'${request.full_name}'` : 'NULL'}
+      );
+    `);
+  });
+
+  try {
+    await Promise.all(insertPromises);
+    return 'Success';
+  } catch (error) {
+    console.error('Error saving data:44444444444444', error);
+    return 'Failed to save data';
+  }
+};
+
 export const getDoctorRecordsLocalDb = async () => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -399,6 +463,47 @@ export const getDoctorRecordsLocalDb = async () => {
   }
 };
 
+
+export const getRescheduleListLocalDb = async (): Promise<RescheduleRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      request_id TEXT,
+      schedule_id TEXT,
+      sales_portal_id TEXT,
+      doctors_id TEXT,
+      date_from TEXT,
+      date_to TEXT,
+      status TEXT,
+      type TEXT,
+      created_at TEXT,
+      full_name TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const query = `SELECT * FROM reschedule_req_tbl`;
+
+  try {
+    const result = await db.getAllAsync(query);
+    const existingRows = result as RescheduleRecord[];
+    // console.log('existingRows getRescheduleListLocalDb', existingRows);
+    // const testRecords = await db.getAllAsync('SELECT * FROM reschedule_req_tbl');
+    // console.log(testRecords,'reschedule_req_tbl');
+    return existingRows; 
+  } catch (error) {
+    console.error('Error fetching reschedule request data:', error);
+    return []; 
+  } finally {
+    await db.closeAsync(); 
+  }
+};
+
 export const getUpdatedDoctorRecordsLocalDb = async (): Promise<UpdateDoctorsNotes[]> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -433,6 +538,44 @@ export const getUpdatedDoctorRecordsLocalDb = async (): Promise<UpdateDoctorsNot
   try {
     const result = await db.getAllAsync(query);
     const existingRows = result as UpdateDoctorsNotes[];
+    return existingRows;
+    // console.log('updated doctors', existingRows);
+  } catch (error) {
+    console.error('Error fetching attendance data:', error);
+    return []; 
+  } finally {
+    await db.closeAsync(); 
+  }
+};
+
+export const getRescheduleRequestRecordsLocalDb = async (): Promise<RescheduleRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    request_id TEXT,
+    schedule_id TEXT,
+    sales_portal_id TEXT,
+    doctors_id TEXT,
+    date_from TEXT,
+    date_to TEXT,
+    status TEXT,
+    type TEXT,
+    created_at TEXT,
+    full_name TEXT,
+    date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const query = `SELECT * FROM reschedule_req_tbl`;
+
+  try {
+    const result = await db.getAllAsync(query);
+    const existingRows = result as RescheduleRecord[];
     return existingRows;
     // console.log('updated doctors', existingRows);
   } catch (error) {
@@ -516,6 +659,7 @@ export const getRescheduleHistoryRecordsLocalDb = async (user: User) => {
     CREATE TABLE IF NOT EXISTS reschedule_history_tbl (
       id INTEGER PRIMARY KEY NOT NULL, 
       sales_portal_id TEXT NOT NULL, 
+      request_id TEXT NOT NULL, 
       schedule_id TEXT NOT NULL, 
       type NUMBER NOT NULL,
       status NUMBER,
@@ -543,6 +687,42 @@ export const getRescheduleHistoryRecordsLocalDb = async (user: User) => {
   }
 };
 
+export const getStatusRescheduleHistoryRecords = async (request_id: string) => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS reschedule_history_tbl (
+      id INTEGER PRIMARY KEY NOT NULL, 
+      sales_portal_id TEXT NOT NULL, 
+      request_id TEXT NOT NULL, 
+      schedule_id TEXT NOT NULL, 
+      type NUMBER NOT NULL,
+      status NUMBER,
+      date_from TEXT,
+      date_to TEXT,
+      doctors_id TEXT,
+      full_name TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const query = `SELECT * FROM reschedule_history_tbl WHERE request_id = ?`;
+
+  try {
+    const existingRows = await db.runAsync(query, [request_id]);
+    // console.log('existingRows getSyncHistoryRecordsLocalDb', existingRows);
+    return existingRows; 
+  } catch (error) {
+    console.error('Error fetching reschedule data:', error);
+    return []; 
+  } finally {
+    await db.closeAsync(); 
+  }
+};
+
 export const getSchedulesLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -555,7 +735,7 @@ export const getSchedulesLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
       schedule_id TEXT, 
       address TEXT, 
       date TEXT, 
-      doctor_id TEXT, 
+      doctors_id TEXT, 
       full_name TEXT, 
       municipality_city TEXT, 
       province TEXT
@@ -588,7 +768,7 @@ export const getSchedulesTodayLocalDb = async (): Promise<ScheduleAPIRecord[]> =
       schedule_id TEXT, 
       address TEXT, 
       date TEXT, 
-      doctor_id TEXT, 
+      doctors_id TEXT, 
       full_name TEXT, 
       municipality_city TEXT, 
       province TEXT
@@ -623,7 +803,7 @@ export const getSchedulesWeekLocalDb = async (): Promise<ScheduleAPIRecord[]> =>
       schedule_id TEXT, 
       address TEXT, 
       date TEXT, 
-      doctor_id TEXT, 
+      doctors_id TEXT, 
       full_name TEXT, 
       municipality_city TEXT, 
       province TEXT
@@ -659,7 +839,7 @@ export const getDoctorsTodaySchedLocalDb = async (): Promise<ScheduleAPIRecord[]
       schedule_id TEXT, 
       address TEXT, 
       date TEXT, 
-      doctor_id TEXT, 
+      doctors_id TEXT, 
       full_name TEXT, 
       municipality_city TEXT, 
       province TEXT
@@ -694,7 +874,7 @@ export const getDoctorsWeekSchedLocalDb = async (): Promise<ScheduleAPIRecord[]>
       schedule_id TEXT, 
       address TEXT, 
       date TEXT, 
-      doctor_id TEXT, 
+      doctors_id TEXT, 
       full_name TEXT, 
       municipality_city TEXT, 
       province TEXT
@@ -878,6 +1058,32 @@ export const deleteDoctorsTodayLocalDb = async (): Promise<void> => {
   }
 };
 
+export const deleteRescheduleRequestLocalDb = async (): Promise<void> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  const tableExistsQuery = `
+    SELECT name FROM sqlite_master WHERE type='table' AND name='reschedule_req_tbl';
+  `;
+
+  try {
+    const tableResult = await db.getAllAsync(tableExistsQuery);
+    if (tableResult.length === 0) {
+      console.log('Table doctors_tbl does not exist.');
+      return; 
+    }
+
+    const deleteQuery = `DELETE FROM reschedule_req_tbl`;
+    const result = await db.getAllAsync(deleteQuery);
+
+  } catch (error) {
+    console.error('Error deleting records for today:', error);
+  } finally {
+    await db.closeAsync();
+  }
+};
+
 export const fetchDetailerImages = async (category: string): Promise<string[]> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
@@ -987,6 +1193,136 @@ export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails
   } catch (error) {
     console.error('Error in saveCallsDoneFromSchedules:', error);
     return 'Failed to process calls done';
+  }
+};
+
+export const insertRescheduleRequest =  async (request: RescheduleRecord): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync('cmms', { useNewConnection: true });
+
+  try {
+
+    const existingRow = await db.getFirstAsync(`SELECT id FROM reschedule_req_tbl WHERE doctors_id = ? AND date_from = ?`,[request.doctors_id, request.date_from]);
+
+    if(!existingRow){
+      await db.execAsync(`
+        PRAGMA journal_mode = WAL;
+        CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
+        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+        request_id TEXT,
+        schedule_id TEXT,
+        sales_portal_id TEXT,
+        doctors_id TEXT,
+        date_from TEXT,
+        date_to TEXT,
+        status TEXT,
+        type TEXT,
+        created_at TEXT,
+        full_name TEXT,
+        date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+  
+      await db.runAsync(
+        `INSERT INTO reschedule_req_tbl (
+          request_id, schedule_id, sales_portal_id,
+          doctors_id, date_from, date_to,
+          status, type, full_name, created_at 
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ? , CURRENT_TIMESTAMP)`,
+        [
+          request.request_id,
+          request.schedule_id,
+          request.sales_portal_id,
+          request.doctors_id,
+          request.date_from,
+          request.date_to,
+          request.status,
+          request.type,
+          request.full_name,
+        ]
+      );
+  
+      return 'Success';
+    }else{
+      // const testRecords = await db.getAllAsync('SELECT * FROM reschedule_req_tbl');
+      // console.log('CHECK NEW CALL IN reschedule_req_tbl', testRecords);
+      return 'Existing';
+    }
+
+  } catch (error) {
+    console.error('Error in insertRescheduleRequest:', error);
+    return 'Failed to process calls done';
+  } finally {
+    db.closeSync();
+  }
+};
+
+export const deleteRescheduleReqLocalDb = async (id : string ) => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  try {
+    await db.runAsync(
+      `DELETE FROM reschedule_req_tbl WHERE id = ?`,
+      id
+    );
+
+    // const test = await db.getAllAsync(`SELECT * FROM reschedule_req_tbl`);
+    // console.log(test);
+
+  } catch (error) {
+    console.error('Error deleting records for today:', error);
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const cancelRescheduleReqLocalDb = async (id: string) => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  try {
+    await db.runAsync(
+      `UPDATE reschedule_req_tbl SET status = ? WHERE id = ?`,
+      "4", 
+      id
+    );
+    // const test = await db.getAllAsync(`SELECT * FROM reschedule_req_tbl`);
+    // console.log(test);
+  } catch (error) {
+    console.error('Error updating status:', error);
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const undoCancelRescheduleReqLocalDb = async (id: string, request_id: string) : Promise<string> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  try {
+    const existingRow : any = await db.getFirstAsync(
+      `SELECT status FROM reschedule_history_tbl WHERE request_id = ?`,
+      [request_id],
+    );
+
+    await db.runAsync(
+      `UPDATE reschedule_req_tbl SET status = ? WHERE id = ?`,
+      existingRow.status, 
+      id
+    );
+    
+    // const test = await db.getAllAsync(`SELECT * FROM reschedule_req_tbl`);
+    // console.log(test);
+
+    return existingRow.status;
+  } catch (error) {
+    console.error('Error updating status123123123:', error);
+    return "Failed";
+  } finally {
+    await db.closeAsync();
   }
 };
 
@@ -1257,7 +1593,7 @@ export const dropLocalTablesDb = async () => {
     useNewConnection: true,
   });
 
-  const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','quick_call_tbl','doctors_tbl','pre_call_notes_tbl','post_call_notes_tbl'];
+  const tableNames = ['reschedule_history_tbl','reschedule_req_tbl','user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','quick_call_tbl','doctors_tbl','pre_call_notes_tbl','post_call_notes_tbl'];
   // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
   // const tableNames = ['quick_call_tbl'];
   for (const tableName of tableNames) {

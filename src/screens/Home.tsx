@@ -26,6 +26,7 @@ const defaultDoctor: DoctorRecord = {
   phone_secretary: "",
   notes_names: "",
   notes_values: "",
+  update_date: "",
 };
 
 const Home = () => {

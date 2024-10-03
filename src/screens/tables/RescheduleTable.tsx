@@ -9,9 +9,21 @@ import {
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
-import { dropLocalTablesDb } from "../../utils/localDbUtils";
+import {
+  deleteRescheduleReqLocalDb,
+  dropLocalTablesDb,
+} from "../../utils/localDbUtils";
+import { getStatusText, showConfirmAlert } from "../../utils/commonUtil";
+import { Ionicons } from "@expo/vector-icons";
+import { customToast } from "../../utils/customToast";
 
-const RescheduleTable: React.FC<RescheduleTableProps> = ({ data }) => {
+const RescheduleTable: React.FC<
+  RescheduleTableProps & {
+    onDelete: (id: string) => void;
+    onCancel: (id: string) => void;
+    onCancelUndo: (id: string, request_id: string) => void;
+  }
+> = ({ data, onDelete, onCancel, onCancelUndo }) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
@@ -29,13 +41,17 @@ const RescheduleTable: React.FC<RescheduleTableProps> = ({ data }) => {
     const date = parseISO(dateString);
     return format(date, "MMM d, yyyy EEEE");
   };
+  const formatShortDate = (dateString: string) => {
+    const date = parseISO(dateString);
+    return format(date, "M/dd/yy");
+  };
 
   const uniqueDates = Array.from(
-    new Set(data.map((item) => formatDate(item.date)))
+    new Set(data.map((item) => formatDate(item.date_from)))
   );
 
   const filteredData = data.filter(
-    (user) => !selectedDate || formatDate(user.date) === selectedDate
+    (user) => !selectedDate || formatDate(user.date_from) === selectedDate
   );
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -53,6 +69,24 @@ const RescheduleTable: React.FC<RescheduleTableProps> = ({ data }) => {
     if (page > 0 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const handleDelete = (id: string) => {
+    showConfirmAlert(() => {
+      onDelete(id);
+    }, "delete this request");
+  };
+
+  const handleCancel = (id: string) => {
+    showConfirmAlert(() => {
+      onCancel(id);
+    }, "cancel this request");
+  };
+
+  const handleCancelUndo = (id: string, request_id: string) => {
+    showConfirmAlert(() => {
+      onCancelUndo(id, request_id);
+    }, "Undo cancel request");
   };
 
   return (
@@ -93,19 +127,98 @@ const RescheduleTable: React.FC<RescheduleTableProps> = ({ data }) => {
             <Card style={styles.card}>
               <DataTable>
                 <DataTable.Header>
-                  <DataTable.Title>Schedule / Doctor</DataTable.Title>
-                  <DataTable.Title>Date To</DataTable.Title>
-                  <DataTable.Title>Type</DataTable.Title>
-                  <DataTable.Title>Date Created</DataTable.Title>
+                  <DataTable.Title style={{ flex: 1.5 }}>
+                    Doctor Name
+                  </DataTable.Title>
+                  <DataTable.Title style={{ flex: 1 }}>
+                    Scheduled
+                  </DataTable.Title>
+                  <DataTable.Title style={{ flex: 1 }}>
+                    Reschedule to
+                  </DataTable.Title>
+                  <DataTable.Title style={{ flex: 1 }}>Type</DataTable.Title>
+                  <DataTable.Title style={{ flex: 1 }}>Status</DataTable.Title>
+                  <DataTable.Title style={{ flex: 1 }}>
+                    Date Created
+                  </DataTable.Title>
+                  <DataTable.Title style={{ flex: 0.5 }}>
+                    Action
+                  </DataTable.Title>
                 </DataTable.Header>
-                {currentData.map((data) => (
-                  <DataTable.Row style={styles.dataTableRow} key={data.id}>
-                    <DataTable.Cell>
-                      {`${data.date_from} / ${data.full_name}`}
+                {currentData.map((data, index) => (
+                  <DataTable.Row
+                    style={styles.dataTableRow}
+                    key={data.request_id ? data.request_id : `row-${index}`}>
+                    <DataTable.Cell style={{ flex: 1.5 }}>
+                      {data.full_name}
                     </DataTable.Cell>
-                    <DataTable.Cell>{formatDate(data.date_to)}</DataTable.Cell>
-                    <DataTable.Cell>{data.type}</DataTable.Cell>
-                    <DataTable.Cell>{formatDate(data.date)}</DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1 }}>
+                      {formatShortDate(data.date_from)}
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1 }}>
+                      {formatShortDate(data.date_to)}
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1 }}>
+                      {data.type}
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1 }}>
+                      {getStatusText(data.status)}
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 1 }}>
+                      {formatShortDate(data.created_at)}
+                    </DataTable.Cell>
+                    <DataTable.Cell style={{ flex: 0.5 }}>
+                      {new Date(data.created_at).toDateString() ===
+                      new Date().toDateString() ? (
+                        <TouchableOpacity onPress={() => handleDelete(data.id)}>
+                          <Ionicons
+                            name="trash-outline"
+                            size={24}
+                            color="red"
+                          />
+                        </TouchableOpacity>
+                      ) : (
+                        <>
+                          {data.status == "0" || data.status == "1" ? (
+                            <TouchableOpacity
+                              onPress={() => handleCancel(data.id)}>
+                              <Ionicons name="close" size={24} color="red" />
+                            </TouchableOpacity>
+                          ) : (
+                            <>
+                              {data.status == "3" && (
+                                <Ionicons
+                                  name="cloud-done"
+                                  size={24}
+                                  color="lightgray"
+                                />
+                              )}
+
+                              {data.status == "2" && (
+                                <Ionicons
+                                  name="cloud-done"
+                                  size={24}
+                                  color="lightgray"
+                                />
+                              )}
+
+                              {data.status == "4" && (
+                                <TouchableOpacity
+                                  onPress={() =>
+                                    handleCancelUndo(data.id, data.request_id)
+                                  }>
+                                  <Ionicons
+                                    name="refresh"
+                                    size={24}
+                                    color="red"
+                                  />
+                                </TouchableOpacity>
+                              )}
+                            </>
+                          )}
+                        </>
+                      )}
+                    </DataTable.Cell>
                   </DataTable.Row>
                 ))}
               </DataTable>
@@ -166,6 +279,9 @@ const styles = StyleSheet.create({
   },
   pickerLabel: {
     color: "black",
+  },
+  deleteButton: {
+    backgroundColor: "red",
   },
   resetButton: {
     backgroundColor: "#046E37",

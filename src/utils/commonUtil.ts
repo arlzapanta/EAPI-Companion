@@ -17,3 +17,20 @@ export const showConfirmAlert = (action: () => void, actionName: string) => {
       { cancelable: false }
     );
   };
+
+  export const getStatusText = (status: string) => {
+    switch (status) {
+      case "0":
+        return "Pending";
+      case "1":
+        return "Approved";
+      case "2":
+        return "Declined";
+      case "3":
+        return "Cancelled";
+      case "4":
+        return "Cancel Req";
+      default:
+        return "Unknown";
+    }
+  };

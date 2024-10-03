@@ -5,24 +5,24 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { RescheduleScreenNavigationProp } from "navigation";
 import { useAuth } from "../context/AuthContext";
 import {
+  cancelRescheduleReqLocalDb,
+  deleteRescheduleReqLocalDb,
   getDoctorsWeekSchedLocalDb,
-  getRescheduleHistoryRecordsLocalDb,
-  saveRescheduleHistoryLocalDb,
+  getRescheduleListLocalDb,
+  insertRescheduleRequest,
+  undoCancelRescheduleReqLocalDb,
 } from "../utils/localDbUtils";
 import { Picker } from "@react-native-picker/picker";
-import {
-  isWithinCurrentMonthAndAvailable,
-  isWithinWeekOrAdvance,
-} from "../utils/dateUtils";
+import { generateFutureDates, isWithinWeekOrAdvance } from "../utils/dateUtils";
 import { customToast } from "../utils/customToast";
 import RescheduleTable from "../screens/tables/RescheduleTable";
+import { getStatusText, showConfirmAlert } from "../utils/commonUtil";
 
 const RescheduleScreen: React.FC = () => {
   const navigation = useNavigation<RescheduleScreenNavigationProp>();
@@ -44,8 +44,6 @@ const RescheduleScreen: React.FC = () => {
 
   const [rescheduleData, setRescheduleData] = useState<any[]>([]); //for table
   const [selectedDateTo, setSelectedDateTo] = useState<string>("");
-  const dateToDates = ["2024-09-25", "2024-09-26", "2024-09-27"];
-
   const [doctorScheduleList, setDoctorScheduleList] = useState<
     ScheduleAPIRecord[]
   >([]);
@@ -84,8 +82,7 @@ const RescheduleScreen: React.FC = () => {
   const fetchRescheduleData = useCallback(async () => {
     if (userInfo) {
       try {
-        const data = await getRescheduleHistoryRecordsLocalDb(userInfo);
-        setRescheduleData(data);
+        await getRescheduleListLocalDb();
       } catch (error: any) {
         console.log("fetchRescheduleData error", error);
       }
@@ -100,26 +97,37 @@ const RescheduleScreen: React.FC = () => {
     if (!userInfo) {
       return;
     }
-    if (selectedDateTo == "") {
+    if (selectedDateTo == selectedDoctor.date) {
       customToast("Please select valid date");
       return;
     }
     if (selectedDoctor) {
       const type = isWithinWeekOrAdvance(selectedDateTo);
-      const status = type == "Makeup" ? 3 : 2;
       const reschedDetails = {
+        id: "",
+        request_id: "",
+        created_at: "",
         schedule_id: selectedDoctor.schedule_id,
         date_to: selectedDateTo,
         date_from: selectedDoctor.date,
-        doctors_id: selectedDoctor.doctor_id,
+        doctors_id: selectedDoctor.doctors_id,
         full_name: selectedDoctor.full_name,
-        status,
+        status: "0",
         type,
         sales_portal_id: userInfo.sales_portal_id,
       };
-      const result = await saveRescheduleHistoryLocalDb(reschedDetails);
-      if (result == "Success") {
-        await fetchRescheduleData();
+
+      const result1 = await insertRescheduleRequest(reschedDetails);
+      if (result1 == "Success") {
+        await fetchDoctorSchedules();
+        setSelectedDateTo("selectdate");
+        setSelectedDoctor(null);
+      } else if (result1 == "Existing") {
+        setSelectedDateTo("selectdate");
+        setSelectedDoctor(null);
+        customToast(
+          "Existing request, kindly delete it first if it needs to be changed"
+        );
       }
     } else {
       console.log("No doctor selected");
@@ -130,19 +138,60 @@ const RescheduleScreen: React.FC = () => {
     try {
       const schedules = await getDoctorsWeekSchedLocalDb();
       setDoctorScheduleList(schedules);
-      console.log(schedules.map((schedule) => schedule.date));
-      // logic for date to here
-      const filteredDates = schedules
-        .map((schedule) => schedule.date)
-        .filter(isWithinCurrentMonthAndAvailable);
-
-      console.log(
-        filteredDates.map((test) => test),
-        "filteredDates"
-      );
-      setAvailableDates(filteredDates);
+      const localFromAPIdata = await getRescheduleListLocalDb();
+      setRescheduleData(localFromAPIdata);
+      rescheduleData.map((rescheduleItem) => {
+        const doctor = doctorScheduleList.find(
+          (doctorItem) => doctorItem.doctors_id === rescheduleItem.doctors_id
+        );
+        return {
+          ...rescheduleItem,
+          full_name: doctor ? doctor.full_name : "Unknown",
+        };
+      });
     } catch (error) {
       console.error("Error fetching doctor schedules:", error);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteRescheduleReqLocalDb(id);
+      setRescheduleData((prevData) =>
+        prevData.filter((item) => item.id !== id)
+      );
+      customToast("Request removed!");
+    } catch (error) {
+      console.error(`Failed to delete item with request_id: ${id}`, error);
+    }
+  };
+
+  const handleCancel = async (id: string) => {
+    try {
+      await cancelRescheduleReqLocalDb(id);
+      setRescheduleData((prevData) =>
+        prevData.map((item) =>
+          item.id === id ? { ...item, status: "4" } : item
+        )
+      );
+      customToast("Request cancelled!");
+    } catch (error) {
+      console.error(`Failed to delete item with request_id: ${id}`, error);
+    }
+  };
+
+  const handleCancelUndo = async (id: string, request_id: string) => {
+    try {
+      const newStatus = await undoCancelRescheduleReqLocalDb(id, request_id);
+      const formatStatus = newStatus.toString();
+      setRescheduleData((prevData) =>
+        prevData.map((item) =>
+          item.id === id ? { ...item, status: formatStatus } : item
+        )
+      );
+      customToast("Cancellation request undone!");
+    } catch (error) {
+      console.error(`Failed to delete item with request_id: ${id}`, error);
     }
   };
 
@@ -166,10 +215,26 @@ const RescheduleScreen: React.FC = () => {
               <Picker
                 style={styles.picker}
                 selectedValue={selectedDoctor}
-                onValueChange={(itemValue) => setSelectedDoctor(itemValue)}>
+                onValueChange={(itemValue: ScheduleAPIRecord | null) => {
+                  setSelectedDateTo("selectedate");
+                  if (itemValue !== selectedDoctor) {
+                    setSelectedDoctor(itemValue);
+                    if (itemValue && itemValue.date) {
+                      setSelectedDateTo(itemValue.date);
+                      const futureDates = generateFutureDates(itemValue.date);
+                      setAvailableDates(futureDates);
+                    }
+                  } else {
+                    if (itemValue && itemValue.date) {
+                      setSelectedDateTo(itemValue.date);
+                      const futureDates = generateFutureDates(itemValue.date);
+                      setAvailableDates(futureDates);
+                    }
+                  }
+                }}>
                 <Picker.Item
-                  label="Select Doctor"
-                  value=""
+                  label="Select schedule"
+                  value="selectschedule"
                   style={styles.pickerInitialLabel}
                 />
                 {doctorScheduleList
@@ -177,10 +242,7 @@ const RescheduleScreen: React.FC = () => {
                   .map((schedule) => (
                     <Picker.Item
                       key={schedule.id}
-                      label={
-                        `${schedule.full_name} - ${schedule.date}` ||
-                        "Unknown Name"
-                      }
+                      label={`${schedule.full_name} - ${schedule.date}`}
                       value={schedule}
                     />
                   ))}
@@ -190,11 +252,12 @@ const RescheduleScreen: React.FC = () => {
               <Picker
                 selectedValue={selectedDateTo}
                 onValueChange={(itemValue) => setSelectedDateTo(itemValue)}
-                style={styles.picker}>
+                style={styles.picker}
+                enabled={!!selectedDoctor}>
                 {availableDates.length > 0 && (
                   <Picker.Item
                     label="Select Date"
-                    value=""
+                    value="selectdate"
                     style={styles.pickerInitialLabel}
                   />
                 )}
@@ -219,15 +282,21 @@ const RescheduleScreen: React.FC = () => {
 
               <TouchableOpacity
                 style={styles.saveButton}
-                onLongPress={handleSaveReschedule}>
-                <Text style={styles.buttonText}>Request</Text>
+                disabled={!selectedDateTo}
+                onPress={handleSaveReschedule}>
+                <Text style={styles.buttonText}>Add Request</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.historyContainer}>
-            <Text style={styles.title}>History</Text>
-            <RescheduleTable data={rescheduleData} />
+            <Text style={styles.title}>Request List</Text>
+            <RescheduleTable
+              data={rescheduleData}
+              onDelete={handleDelete}
+              onCancel={handleCancel}
+              onCancelUndo={handleCancelUndo}
+            />
           </View>
         </View>
       </ScrollView>
@@ -261,7 +330,7 @@ const styles = StyleSheet.create({
     color: "#007bff",
   },
   dropdownContainer: {
-    width: "100%", // Set to 100% to utilize full width
+    width: "100%",
     padding: 20,
   },
   picker: {
@@ -290,14 +359,14 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     marginStart: 20,
     marginEnd: 20,
-    flexDirection: "row", // Set flex direction to row for side-by-side layout
+    flexDirection: "row",
   },
   content: {
     flex: 1,
-    flexDirection: "row", // Use row for horizontal layout
+    flexDirection: "row",
   },
   requestContainer: {
-    flex: 1, // Take up half of the screen
+    flex: 1,
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 40,
@@ -306,10 +375,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
-    marginRight: 10, // Add space between the two sections
+    marginRight: 10,
   },
   historyContainer: {
-    flex: 1, // Take up the other half of the screen
+    flex: 2,
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 40,

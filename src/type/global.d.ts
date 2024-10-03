@@ -22,6 +22,20 @@ declare global {
       update_date: string;
     }
 
+    export interface RescheduleRecord {
+      id:string;
+      request_id: string;
+      schedule_id: string;
+      sales_portal_id: string;
+      doctors_id: string;
+      date_from: string;
+      date_to: string;
+      status: string;
+      type: string | null;
+      full_name : string;
+      created_at: string;
+    }
+
     export interface CallComponentsProps {
       scheduleId: string;
       docName: string;
@@ -115,7 +129,7 @@ declare global {
     export interface Call {
       id: number;
       location: string;
-      doctor_id: string;
+      doctors_id: string;
       photo: string;
       photo_location: string;
       signature: string;
@@ -126,7 +140,7 @@ declare global {
     
     export interface AddCall {
       location: string;
-      doctor_id: string;
+      doctors_id: string;
       photo: string;
       photo_location: string;
       signature: string;
@@ -138,7 +152,7 @@ declare global {
       id?: string;
       address: string;
       date: string;
-      doctor_id: string;
+      doctors_id: string;
       full_name: string;
       municipality_city: string;
       province: string;
@@ -156,6 +170,15 @@ declare global {
       division: number;
       notes_names: string;
       notes_values: string;
+    }
+    export interface apiRescheduleReqRecords {
+      schedule_id: string;
+      sales_portal_id: string;
+      doctors_id: string;
+      date_from: string;
+      date_to: string;
+      status: string;
+      type: string | null;
     }
 
     export interface AttendanceRecord {
@@ -251,8 +274,9 @@ declare global {
       
     }
     export interface RescheduleDetails {
-      id?: string; // id is optional
-      schedule_id: string; // New column
+      id?: string;
+      schedule_id: string;
+      request_id: string;
       date_to: string | null;
       date_from: string | null;
       doctors_id: string | null;

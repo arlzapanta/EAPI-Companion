@@ -9,7 +9,7 @@ export const getQuickCalls = async (): Promise<any> => {
       CREATE TABLE IF NOT EXISTS quick_call_tbl (
         id INTEGER PRIMARY KEY NOT NULL,
         location TEXT,
-        doctor_id TEXT,
+        doctors_id TEXT,
         photo TEXT,
         photo_location TEXT,
         signature TEXT,
@@ -38,7 +38,7 @@ export const getQuickCalls = async (): Promise<any> => {
 export const upsertCall = async (
 quickCallId: number,
 location: string,
-doctor_id: string,
+doctors_id: string,
 photo: string,
 photo_location: string,
 signature: string,
@@ -54,7 +54,7 @@ await db.execAsync(`
     CREATE TABLE IF NOT EXISTS quick_call_tbl (
     id INTEGER PRIMARY KEY NOT NULL,
     location TEXT,
-    doctor_id TEXT,
+    doctors_id TEXT,
     photo TEXT,
     photo_location TEXT,
     signature TEXT,
@@ -72,10 +72,10 @@ try {
 
     if (!existingRow) {
     await db.runAsync(
-        `INSERT INTO quick_call_tbl (location, doctor_id, photo, photo_location, signature, signature_location, notes) VALUES (?,?,?,?,?,?,?)`,
+        `INSERT INTO quick_call_tbl (location, doctors_id, photo, photo_location, signature, signature_location, notes) VALUES (?,?,?,?,?,?,?)`,
         [
         location,
-        doctor_id,
+        doctors_id,
         photo,
         photo_location,
         signature,
@@ -85,10 +85,10 @@ try {
     );
     } else {
     await db.runAsync(
-        `UPDATE quick_call_tbl SET location = ?, doctor_id = ?, photo = ?, photo_location = ?, signature = ?, signature_location = ?, notes = ?, WHERE id = ?`,
+        `UPDATE quick_call_tbl SET location = ?, doctors_id = ?, photo = ?, photo_location = ?, signature = ?, signature_location = ?, notes = ?, WHERE id = ?`,
         [
         location,
-        doctor_id,
+        doctors_id,
         photo,
         photo_location,
         signature,
@@ -117,7 +117,7 @@ export const updateCallSignature = async (
     CREATE TABLE IF NOT EXISTS quick_call_tbl (
       id INTEGER PRIMARY KEY NOT NULL,
       location TEXT,
-      doctor_id TEXT,
+      doctors_id TEXT,
       photo TEXT,
       photo_location TEXT,
       signature TEXT,
@@ -161,7 +161,7 @@ export const updateCallPhoto = async (
     CREATE TABLE IF NOT EXISTS quick_call_tbl (
       id INTEGER PRIMARY KEY NOT NULL,
       location TEXT,
-      doctor_id TEXT,
+      doctors_id TEXT,
       photo TEXT,
       photo_location TEXT,
       signature TEXT,
@@ -203,7 +203,7 @@ export const updateCallNotes = async (
     CREATE TABLE IF NOT EXISTS quick_call_tbl (
       id INTEGER PRIMARY KEY NOT NULL,
       location TEXT,
-      doctor_id TEXT,
+      doctors_id TEXT,
       photo TEXT,
       photo_location TEXT,
       signature TEXT,
@@ -278,7 +278,7 @@ export const addQuickCall = async (call: Call): Promise<string> => {
       CREATE TABLE IF NOT EXISTS quick_call_tbl (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         location TEXT,
-        doctor_id TEXT,
+        doctors_id TEXT,
         photo TEXT,
         photo_location TEXT,
         signature TEXT,
@@ -290,11 +290,11 @@ export const addQuickCall = async (call: Call): Promise<string> => {
 
     // Insert data
     await db.runAsync(
-      `INSERT INTO quick_call_tbl (location, doctor_id, photo, photo_location, signature, signature_location, notes) 
+      `INSERT INTO quick_call_tbl (location, doctors_id, photo, photo_location, signature, signature_location, notes) 
       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
         call.location,
-        call.doctor_id,
+        call.doctors_id,
         call.photo,
         call.photo_location,
         call.signature,

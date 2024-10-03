@@ -108,7 +108,7 @@ const QuickCall = () => {
     try {
       const newCall: Call = {
         location: "",
-        doctor_id: "",
+        doctors_id: "",
         photo: "",
         photo_location: "",
         signature: "",

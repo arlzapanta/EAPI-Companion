@@ -125,19 +125,49 @@ export const getCurrentQuarterPH = async (): Promise<number> => {
   }
 };
 
-export const isWithinCurrentMonthAndAvailable = (dateStr: string) => {
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-  
-  const date = new Date(dateStr);
-  
-  return (
-    date.getFullYear() === currentYear &&
-    date.getMonth() === currentMonth &&  
-    date >= today                        
-  );
+export const isWithinSameMonth = (selectedDate: string, dateToCheck: string): boolean => {
+  const selected = new Date(selectedDate); 
+  const toCheck = new Date(dateToCheck);   
+
+  const isSameMonth = selected.getFullYear() === toCheck.getFullYear() &&
+                      selected.getMonth() === toCheck.getMonth();
+
+  return isSameMonth;
 };
+
+export const isAfterDate = (selectedDate: string, dateToCheck: string): boolean => {
+  const selected = new Date(selectedDate);  
+  const toCheck = new Date(dateToCheck);    
+
+  return toCheck > selected; 
+};
+
+export const isNotWeekend = (date: string): boolean => {
+  const dayOfWeek = new Date(date).getDay(); 
+  return dayOfWeek !== 0 && dayOfWeek !== 6; 
+};
+
+export const generateFutureDates = (selectedDate: string): string[] => {
+  const selected = new Date(selectedDate);
+  const year = selected.getFullYear();
+  const month = selected.getMonth();
+
+  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+  const futureDates: string[] = [];
+  const startDay = selected.getDate() + 3;
+
+  for (let day = startDay; day <= lastDayOfMonth+1; day++) {
+    const dateToCheck = new Date(year, month, day);
+    const dateString = dateToCheck.toISOString().split('T')[0];
+
+    if (isAfterDate(selectedDate, dateString) && isNotWeekend(dateString)) {
+      futureDates.push(dateString);
+    }
+  }
+
+  return futureDates;
+};
+
 
 export const isWithinWeekOrAdvance = (dateStr: string): string | null => {
   const today = new Date();

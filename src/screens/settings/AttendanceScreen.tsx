@@ -16,9 +16,6 @@ import {
   getUserAttendanceRecordsLocalDb,
   saveUserSyncHistoryLocalDb,
   saveSchedulesAPILocalDb,
-  getCallsTodayLocalDb,
-  saveActualCallsLocalDb,
-  saveDoctorListLocalDb,
 } from "../../utils/localDbUtils";
 import {
   apiTimeIn,
@@ -26,7 +23,9 @@ import {
   doctorRecordsSync,
   getCallsAPI,
   getDoctors,
+  getReschedulesData,
   getSChedulesAPI,
+  requestRecordSync,
   syncUser,
 } from "../../utils/apiUtility";
 import AttendanceTable from "../tables/AttendanceTable";
@@ -149,8 +148,8 @@ const Attendance: React.FC = () => {
           const scheduleData = await getSChedulesAPI(userInfo);
           if (scheduleData) {
             const result = await saveSchedulesAPILocalDb(scheduleData);
-            const docRec = await getDoctors(userInfo);
-            await saveDoctorListLocalDb(docRec);
+            await getDoctors(userInfo);
+            await getReschedulesData(userInfo);
             {
               result == "Success"
                 ? Alert.alert("Success", "Successfully synced data from server")
@@ -175,6 +174,7 @@ const Attendance: React.FC = () => {
   };
 
   const timeOut = async () => {
+    // add logic here if post call are all filled up already
     const checkQC = await getQuickCalls();
     if (checkQC.length > 0) {
       Alert.alert("Error", "Please check quick calls.");
@@ -193,8 +193,18 @@ const Attendance: React.FC = () => {
         Alert.alert("Failed", "Already timed out today");
       } else {
         await doctorRecordsSync(userInfo);
+        const reqRecordSync = await requestRecordSync(userInfo);
+        console.log(reqRecordSync, "reqRecordSync");
         await fetchAttendanceData();
         const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
+        {
+          res == "Success"
+            ? Alert.alert(
+                "Success time out!",
+                "Successfully synced data from server"
+              )
+            : Alert.alert("Failed", "Error syncing");
+        }
         console.log(
           "AttendanceScreen > timeOut > saveUserSyncHistoryLocalDb > res : ",
           res

@@ -4,8 +4,11 @@ import {
   deleteCallsTodayLocalDb,
   deleteDoctorsTodayLocalDb,
   getCallsTodayLocalDb,
+  getRescheduleRequestRecordsLocalDb,
   getUpdatedDoctorRecordsLocalDb,
   saveDoctorListLocalDb,
+  saveRescheduleHistoryLocalDb,
+  saveRescheduleListLocalDb,
 } from "../utils/localDbUtils";
 import { formatDateYMD, getCurrentDatePH } from "./dateUtils";
 import { getLocation } from "../utils/currentLocation";
@@ -186,6 +189,54 @@ export const doctorRecordsSync = async (user: User): Promise<any> => {
   }
 }
 
+export const requestRecordSync = async (user: User): Promise<any> => {
+  try {
+    const localRescheduleReq = await getRescheduleRequestRecordsLocalDb();
+    const rescheduleRecordsToSync: apiRescheduleReqRecords[] = localRescheduleReq.map(record => ({
+      schedule_id: record.schedule_id,
+      sales_portal_id: record.sales_portal_id,
+      doctors_id: record.doctors_id,
+      date_from: record.date_from,
+      date_to: record.date_to,
+      status: record.status,
+      type: record.type
+    }));
+
+    const responseResreq = await axios.post(
+      `${API_URL_ENV}/rescheduleRequest`,
+      rescheduleRecordsToSync,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (rescheduleRecordsToSync.length === 0) {
+      console.log('No Request resched records to sync.');
+      return 'No request resched records to sync';
+    }
+
+    if(responseResreq.data.isProceed){
+      await deleteDoctorsTodayLocalDb();
+    }
+
+    return rescheduleRecordsToSync;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred:", error);
+    }
+    throw error;
+  }
+}
+
 // get schedules 
   export const getSChedulesAPI = async (user: User): Promise<any> => {
   try {
@@ -303,6 +354,39 @@ export const getDoctors = async (user: User): Promise<any> => {
     );
 
     await saveDoctorListLocalDb(response.data);
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred:", error);
+    }
+    throw error;
+  }
+};
+
+export const getReschedulesData = async (user: User): Promise<any> => {
+  try {
+    const {sales_portal_id } = user;
+    const response = await axios.post(
+      `${API_URL_ENV}/getRescheduleRequestsSPI`,
+        {
+          sales_portal_id
+        },
+      { 
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    await saveRescheduleListLocalDb(response.data);
+    await saveRescheduleHistoryLocalDb(response.data);
+
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
