@@ -2,34 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { API_URL_ENV, TOKEN_USERNAME_ENV, TOKEN_PASSWORD_ENV } from "@env";
 import axios from "axios";
-import { View } from "react-native";
-import { Text } from "react-native-elements";
-
-interface User {
-  created_at: string;
-  district_id: string;
-  division: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  sales_portal_id: string;
-  territory_id: string;
-  territory_name: string;
-  updated_at: string;
-  user_type: string;
-}
-
-interface AuthState {
-  token: string | null;
-  authenticated: boolean;
-  user?: User | null;
-}
-
-interface AuthProps {
-  authState: AuthState;
-  onLogin: (email: string, password: string) => Promise<any>;
-  onLogout: () => Promise<void>;
-}
+import { View, Text } from "react-native";
 
 const AuthContext = createContext<AuthProps>({
   authState: { token: null, authenticated: false },
@@ -38,10 +11,9 @@ const AuthContext = createContext<AuthProps>({
 });
 
 const TOKEN_KEY = "my-jwt";
+const USER_INFO_KEY = "user-info";
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>({
@@ -49,55 +21,78 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     authenticated: false,
     user: null,
   });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = await SecureStore.getItemAsync(TOKEN_KEY);
-        if (token) {
-          axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-          const response = await axios.get(`${API_URL_ENV}/user/validate`, {
-            headers: {
-              "Content-Type": "application/json",
-            },
-          });
+    const loadToken = async () => {
+      const token = await SecureStore.getItemAsync(TOKEN_KEY);
+      const storedUser = await SecureStore.getItemAsync(USER_INFO_KEY);
+      const user = storedUser ? JSON.parse(storedUser) : null;
 
-          if (response.data.isValid) {
-            setAuthState({
-              token,
-              authenticated: true,
-              user: response.data.user,
-            });
-          } else {
-            await SecureStore.deleteItemAsync(TOKEN_KEY);
-            setAuthState({
-              token: null,
-              authenticated: false,
-              user: null,
-            });
-          }
-        } else {
-          setAuthState({
-            token: null,
-            authenticated: false,
-            user: null,
-          });
-        }
-      } catch (error) {
-        console.error("Error checking authentication:", error);
+      if (token) {
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
         setAuthState({
-          token: null,
-          authenticated: false,
-          user: null,
+          token,
+          authenticated: true,
+          user,
         });
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
-
-    checkAuth();
+    loadToken();
   }, []);
+
+  const refreshToken = async () => {
+    try {
+      const response = await axios.post(`${API_URL_ENV}/login`, {
+        username: TOKEN_USERNAME_ENV,
+        password: TOKEN_PASSWORD_ENV,
+      });
+      const newToken = response.data.token;
+      if (newToken) {
+        await SecureStore.setItemAsync(TOKEN_KEY, newToken);
+        axios.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+        const storedUser = await SecureStore.getItemAsync(USER_INFO_KEY);
+        const user = storedUser ? JSON.parse(storedUser) : null;
+        setAuthState({
+          token: newToken,
+          authenticated: true,
+          user,
+        });
+
+        return newToken;
+      } else {
+        throw new Error("Failed to refresh token");
+      }
+    } catch (error) {
+      console.log("Token refresh error:", error);
+      await logout();
+    }
+  };
+
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response?.status === 401) {
+          try {
+            const newToken = await refreshToken();
+            error.config.headers["Authorization"] = `Bearer ${newToken}`;
+            return axios(error.config);
+          } catch (refreshError) {
+            console.log("Token refresh failed:", refreshError);
+            return Promise.reject(error);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
+  }, [authState.token]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -113,6 +108,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           },
         }
       );
+
+      // const jsonData = JSON.parse(getTokenResponse.data.replace("test", ""));
+      // const token = jsonData.token;
 
       const token = getTokenResponse.data.token;
       if (!token) {
@@ -137,11 +135,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (checkCredentialsResponse.data.isProceed) {
         const user: User = checkCredentialsResponse.data.user;
+        await SecureStore.setItemAsync(USER_INFO_KEY, JSON.stringify(user));
 
         setAuthState({
           token,
           authenticated: true,
-          user: user,
+          user,
         });
 
         return true;
@@ -150,25 +149,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error: true, msg: "Invalid credentials" };
       }
     } catch (error: any) {
-      console.log("isAxiosError : ", axios.isAxiosError(error));
-      console.log(
-        "Error during login:",
-        axios.isAxiosError(error)
-          ? error.response?.data?.error || "Invalid credentials"
-          : error.message
-      );
+      console.log("Error during login:", error.message, error);
       return {
         error: true,
-        msg: axios.isAxiosError(error)
-          ? error.response?.data?.error || "Invalid credentials"
-          : error.message,
+        msg: "Invalid credentials",
       };
     }
   };
 
   const logout = async () => {
     await SecureStore.deleteItemAsync(TOKEN_KEY);
-    axios.defaults.headers.common["Authorization"] = "";
+    await SecureStore.deleteItemAsync(USER_INFO_KEY);
+    delete axios.defaults.headers.common["Authorization"];
     setAuthState({
       token: null,
       authenticated: false,

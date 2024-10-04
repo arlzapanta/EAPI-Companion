@@ -1,21 +1,56 @@
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezone from "dayjs/plugin/timezone";
+import moment from 'moment-timezone';
+
 import * as SecureStore from "expo-secure-store";
+import { format, parseISO } from 'date-fns';
 
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
-const DATE_KEY = 'current_date_ph';
+const DATE_KEY ='current_date_ph';
 export const getCurrentDatePH = async (): Promise<string> => {
   const storedDate = await SecureStore.getItemAsync(DATE_KEY);
-  const currentDate = dayjs().tz("Asia/Manila").format("YYYY-MM-DD");
+  const currentDate = moment().tz('Asia/Manila').format('YYYY-MM-DD');
 
   if (storedDate && storedDate === currentDate) {
     return storedDate;
   } else {
     await SecureStore.setItemAsync(DATE_KEY, currentDate);
     return currentDate;
+  }
+};
+
+export const getWeekdaysRange = async () => {
+  const currentMoment = moment(await getCurrentDatePH()).tz('Asia/Manila');
+  const monday = currentMoment.clone().startOf('week').add(1, 'days');
+  const weekdays: string[] = [];
+
+  for (let i = 0; i < 5; i++) {
+    weekdays.push(monday.clone().add(i, 'days').format('YYYY-MM-DD'));
+  }
+
+  return weekdays;
+};
+
+export const isTimeBetween12and1PM = (): boolean => {
+  const currentTime = moment();
+  
+  const startTime = moment().hour(12).minute(0).second(0);
+  const endTime = moment().hour(13).minute(0).second(0);
+
+  const isBetween = currentTime.isBetween(startTime, endTime);
+
+  console.log(isBetween ? 'true' : 'false');
+  
+  return isBetween;
+};
+
+const TIME_KEY = 'current_time_ph';
+export const getCurrentTimePH = async (): Promise<string> => {
+  const storedTime = await SecureStore.getItemAsync(TIME_KEY);
+  const currentTime = moment().format('HH:mm:ss');
+
+  if (storedTime && storedTime === currentTime) {
+    return storedTime;
+  } else {
+    await SecureStore.setItemAsync(TIME_KEY, currentTime);
+    return currentTime;
   }
 };
 
@@ -29,6 +64,15 @@ function getDatesInRange(startDate: Date, endDate: Date): string[] {
   }
 
   return dates;
+}
+
+export function formatTimeHoursMinutes(date: Date): string {
+  const formattedTime = date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+  return formattedTime;
 }
 
 export async function getRelevantDateRange(): Promise<string[]> {
@@ -55,3 +99,97 @@ export async function getRelevantDateRange(): Promise<string[]> {
 
   return dates;
 }
+
+export const formatDate = (dateString: string) => {
+  const date = parseISO(dateString);
+  return format(date, "MMM d, yyyy EEEE");
+};
+
+export const formatDatev1 = (dateString: string) => {
+  return moment(new Date(dateString)).format("MMMM DD, yyyy");
+};
+
+export const formatDateYMD = (dateString: string) => {
+  const date = parseISO(dateString);
+  return format(date, "yyyy-MM-dd");
+};
+
+export const getCurrentQuarterPH = async (): Promise<number> => {
+  const currentDatePH = await getCurrentDatePH();
+  const currentMonth = moment(currentDatePH).month() + 1;
+
+  if (currentMonth >= 1 && currentMonth <= 3) {
+    return 1; // Q1: January, February, March
+  } else if (currentMonth >= 4 && currentMonth <= 6) {
+    return 2; // Q2: April, May, June
+  } else if (currentMonth >= 7 && currentMonth <= 9) {
+    return 3; // Q3: July, August, September
+  } else {
+    return 4; // Q4: October, November, December
+  }
+};
+
+export const isWithinSameMonth = (selectedDate: string, dateToCheck: string): boolean => {
+  const selected = new Date(selectedDate); 
+  const toCheck = new Date(dateToCheck);   
+
+  const isSameMonth = selected.getFullYear() === toCheck.getFullYear() &&
+                      selected.getMonth() === toCheck.getMonth();
+
+  return isSameMonth;
+};
+
+export const isAfterDate = (selectedDate: string, dateToCheck: string): boolean => {
+  const selected = new Date(selectedDate);  
+  const toCheck = new Date(dateToCheck);    
+
+  return toCheck > selected; 
+};
+
+export const isNotWeekend = (date: string): boolean => {
+  const dayOfWeek = new Date(date).getDay(); 
+  return dayOfWeek !== 0 && dayOfWeek !== 6; 
+};
+
+export const generateFutureDates = (selectedDate: string): string[] => {
+  const selected = new Date(selectedDate);
+  const year = selected.getFullYear();
+  const month = selected.getMonth();
+
+  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+  const futureDates: string[] = [];
+  const startDay = selected.getDate() + 3;
+
+  for (let day = startDay; day <= lastDayOfMonth+1; day++) {
+    const dateToCheck = new Date(year, month, day);
+    const dateString = dateToCheck.toISOString().split('T')[0];
+
+    if (isAfterDate(selectedDate, dateString) && isNotWeekend(dateString)) {
+      futureDates.push(dateString);
+    }
+  }
+
+  return futureDates;
+};
+
+
+export const isWithinWeekOrAdvance = (dateStr: string): string | null => {
+  const today = new Date();
+  const date = new Date(dateStr);
+
+  if (date <= today) {
+      return null; 
+  }
+
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() - today.getDay()); 
+  
+  const endOfWeek = new Date(today);
+  endOfWeek.setDate(today.getDate() + (6 - today.getDay())); 
+
+  if (date >= startOfWeek && date <= endOfWeek) {
+      return "Makeup";
+  } else {
+      return "Advance";
+  }
+};

@@ -1,7 +1,9 @@
 // Login.tsx
 import React, { useState } from "react";
 import { View, TextInput, TouchableOpacity, Text, Alert } from "react-native";
-import { useAuth, getStyleUtil } from "../index";
+import { useAuth } from "../context/AuthContext";
+import { getStyleUtil } from "../utils/styleUtil";
+import { API_URL_ENV, TOKEN_PASSWORD_ENV, TOKEN_USERNAME_ENV } from "@env";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -25,12 +27,13 @@ const Login = () => {
     try {
       const result = await onLogin!(email, password);
       if (result && result.error) {
-        Alert.alert("Login Error", result.msg);
+        Alert.alert("Login Error", result.msg, result.error);
       }
-    } catch (error) {
+    } catch (error: any) {
+      const result = await onLogin!(email, password);
       Alert.alert(
         "Login Error",
-        "An error occurred during login. Please try again."
+        `${TOKEN_USERNAME_ENV} ${TOKEN_PASSWORD_ENV} ${API_URL_ENV} ${result} An error occurred during login. Please try again.`
       );
       console.error(error);
     }

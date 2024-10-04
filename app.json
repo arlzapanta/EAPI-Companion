@@ -8,17 +8,23 @@
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/test-logo.png",
-      "resizeMode": "center",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "ios": {
       "supportsTablet": true
     },
     "android": {
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000"
-      }
+      },
+      "permissions": [
+        "ACCESS_NETWORK_STATE",
+        "INTERNET"
+      ],
+      "package": "com.akainzapantadev.EAPICompanion"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,7 +36,13 @@
         {
           "initialOrientation": "landscape"
         }
-      ]
-    ]
+      ],
+      [ "expo-build-properties", { "android": { "usesCleartextTraffic": true } } ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "9ee2a6a9-c3cf-4412-8deb-d2407b509a8e"
+      }
+    }
   }
 }

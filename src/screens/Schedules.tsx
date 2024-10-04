@@ -1,153 +1,355 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, Button, FlatList } from "react-native";
-import { useAuth, getStyleUtil } from "../index";
-import Icon from "react-native-vector-icons/Ionicons";
-import axios from "axios";
-import { API_URL_ENV } from "@env";
-import { saveUserAttendanceLocalDb } from "../utils/localDbUtils";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
+import { useAuth } from "../context/AuthContext";
+import { getStyleUtil } from "../utils/styleUtil";
+import {
+  getSchedulesTodayLocalDb,
+  getSchedulesLocalDb,
+  getSchedulesWeekLocalDb,
+} from "../utils/localDbUtils";
+import CallComponents from "./call/CallComponents";
+import { getCurrentDatePH, formatDate } from "../utils/dateUtils";
+import moment from "moment";
+import { Ionicons } from "@expo/vector-icons";
+import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 
 const Schedules = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [schedules, setSchedules] = useState<any[]>([]);
-  const [userInfo, setUserInfo] = useState<{
-    first_name: string;
-    last_name: string;
-    email: string;
-    sales_portal_id: string;
-  } | null>(null);
 
-  const styles = getStyleUtil({});
+  const [scheduleDataToday, setScheduleDataToday] = useState<any[]>([]);
+  const [scheduleWeekData, setScheduleWeekData] = useState<any[]>([]);
+
+  const [selectedScheduleToday, setSelectedScheduleToday] = useState<
+    any | null
+  >(null);
+  const [selectedScheduleWeek, setSelectedScheduleWeek] = useState<any | null>(
+    null
+  );
+
+  const [accordionTodayExpanded, setAccordionTodayExpanded] = useState(false);
+  const [accordionWeekExpanded, setAccordionWeekExpanded] = useState(false);
+  const [currentDate, getCurrentDate] = useState("");
+
   const { authState } = useAuth();
 
-  const getCurrentWeekDates = () => {
-    const timezoneOffset = 8 * 60;
+  const { refresh } = useRefreshFetchDataContext();
 
-    const today = new Date();
-    const localTime = today.getTime();
-    const utcOffset = today.getTimezoneOffset();
+  const styles = getStyleUtil({});
 
-    const phTime = new Date(localTime + (timezoneOffset - utcOffset) * 60000);
+  const fetchScheduleData = async () => {
+    if (authState.user) {
+      try {
+        const getDate = await getCurrentDatePH();
+        const formattedDate = formatDate(getDate);
+        getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
+        const data = await getSchedulesTodayLocalDb();
+        setScheduleDataToday(data);
 
-    const dayOfWeek = phTime.getDay();
-    const startOfWeek = new Date(phTime);
-    const endOfWeek = new Date(phTime);
-
-    startOfWeek.setDate(phTime.getDate() - dayOfWeek + 1);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    endOfWeek.setDate(phTime.getDate() - dayOfWeek + 5);
-    endOfWeek.setHours(23, 59, 59, 999);
-
-    const formatDate = (date: Date) =>
-      `${date.getFullYear()}-${("0" + (date.getMonth() + 1)).slice(-2)}-${(
-        "0" + date.getDate()
-      ).slice(-2)}`;
-
-    return {
-      startDate: formatDate(startOfWeek),
-      endDate: formatDate(endOfWeek),
-    };
-  };
-
-  const fetchSchedules = async () => {
-    const { startDate, endDate } = getCurrentWeekDates();
-
-    if (!userInfo) {
-      setError("User information is missing.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await axios.post(
-        `${API_URL_ENV}/getSchedules`,
-        // { salesPortalId: userInfo.sales_portal_id },
-        { sales_portal_id: "829" },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      console.log(response.data, "response");
-
-      setSchedules(response.data);
-      console.log(response.data);
-    } catch (error: any) {
-      if (axios.isAxiosError(error)) {
-        const { response, request, message } = error;
-        console.error("Error message:", message);
-        console.error("Error response data:", response?.data);
-        console.error("Error response status:", response?.status);
-        console.error("Error response headers:", response?.headers);
-        console.error("Error request:", request);
-      } else {
-        console.error("An unexpected error occurred:", error);
+        // week schedules
+        const weekData = await getSchedulesWeekLocalDb();
+        setScheduleWeekData(weekData);
+      } catch (error: any) {
+        console.log("fetchScheduleData error", error);
       }
-
-      setError("Error fetching schedules. Please try again later.");
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
-      const { first_name, last_name, email, sales_portal_id } = authState.user;
-      setUserInfo({
-        first_name,
-        last_name,
-        email,
-        sales_portal_id,
-      });
+      fetchScheduleData();
     }
   }, [authState]);
 
-  const renderItem = ({ item }: { item: any }) => (
-    <View>
-      <Text>{item.field1}</Text>
-      <Text>{item.field2}</Text>
-      <Text>{item.field3}</Text>
-    </View>
-  );
-  return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <View style={styles.centerItems}>
-          <Text style={styles.title_settings}>Sync Settings</Text>
-          <Text style={styles.text}>Manage your sync settings</Text>
+  const toggleAccordionToday = () => {
+    setAccordionTodayExpanded(!accordionTodayExpanded);
+    if (!accordionTodayExpanded) {
+      setSelectedScheduleToday(null);
+      setSelectedScheduleWeek(null);
+    }
+  };
 
-          {/* fetch schedules test */}
-          <Button
-            title="Fetch Schedules"
-            onPress={fetchSchedules}
-            disabled={loading}
-          />
-          {loading && <Text>Loading...</Text>}
-          {error && <Text style={{ color: "red" }}>{error}</Text>}
-          {schedules.length > 0 ? (
-            <FlatList
-              data={schedules}
-              renderItem={renderItem}
-              keyExtractor={(item, index) => index.toString()}
-              ListHeaderComponent={() => (
-                <View>
-                  <Text>Field 1</Text>
-                  <Text>Field 2</Text>
-                  <Text>Field 3</Text>
-                </View>
-              )}
-            />
-          ) : (
-            !loading && <Text>No schedules available.</Text>
-          )}
+  const toggleAccordionWeek = () => {
+    setAccordionWeekExpanded(!accordionWeekExpanded);
+    if (!accordionWeekExpanded) {
+      setSelectedScheduleWeek(null);
+      setSelectedScheduleToday(null);
+    }
+  };
+
+  const handleScheduleClickToday = (schedule: any) => {
+    setSelectedScheduleWeek(null);
+    setSelectedScheduleToday(schedule);
+  };
+
+  const handleScheduleClickWeek = (schedule: any) => {
+    setSelectedScheduleToday(null);
+    setSelectedScheduleWeek(schedule);
+  };
+
+  useEffect(() => {
+    if (refresh) {
+      fetchScheduleData();
+      setSelectedScheduleToday(null);
+      setSelectedScheduleWeek(null);
+    }
+  }, [refresh]);
+
+  const NoScheduleSelected = () => {
+    return (
+      <View style={styles1.containerNoSched}>
+        <Ionicons
+          name="information-circle"
+          size={24}
+          color="#007BFF"
+          style={styles1.iconNoSched}
+        />
+        <Text style={styles1.messageNoSched}>
+          Select a schedule to view details
+        </Text>
+      </View>
+    );
+  };
+
+  return (
+    <View style={styles1.container}>
+      <View style={styles1.row}>
+        <View style={styles1.column1}>
+          <View style={styles1.innerCard}>
+            <Text style={styles1.columnTitle}>Schedules</Text>
+            <Text style={styles1.columnSubTitle}>{currentDate}</Text>
+            <TouchableOpacity
+              onPress={toggleAccordionToday}
+              style={styles1.accordionButton}>
+              <Text style={styles1.accordionTitle}>
+                {accordionTodayExpanded ? "Hide Today" : "View Today"}
+              </Text>
+              <Ionicons
+                name={accordionTodayExpanded ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#007BFF"
+                style={styles1.icon}
+              />
+            </TouchableOpacity>
+
+            {accordionTodayExpanded && (
+              <View style={styles1.accordionContent}>
+                {scheduleDataToday.map((schedule) => (
+                  <TouchableOpacity
+                    key={schedule.schedule_id}
+                    onPress={() => handleScheduleClickToday(schedule)}
+                    style={styles1.scheduleItem}>
+                    <Text style={styles1.scheduleText}>
+                      {schedule.full_name}
+                      {`${
+                        schedule.municipality_city
+                          ? ` - ${schedule.municipality_city} - ${schedule.province}`
+                          : ""
+                      }`}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
+            <TouchableOpacity
+              onPress={toggleAccordionWeek}
+              style={styles1.accordionButton}>
+              <Text style={styles1.accordionTitle}>
+                {accordionWeekExpanded ? "Hide This Week" : "View This Week"}
+              </Text>
+              <Ionicons
+                name={accordionWeekExpanded ? "chevron-up" : "chevron-down"}
+                size={20}
+                color="#007BFF"
+                style={styles1.icon}
+              />
+            </TouchableOpacity>
+
+            {accordionWeekExpanded && (
+              <View style={styles1.accordionContent}>
+                {scheduleWeekData.map((schedule) => (
+                  <TouchableOpacity
+                    key={schedule.schedule_id}
+                    onPress={() => handleScheduleClickWeek(schedule)}
+                    style={styles1.scheduleItem}>
+                    <Text style={styles1.scheduleText}>
+                      {`${moment(schedule.date).format("MMMM DD, dddd")}, `}
+                      {`\n${schedule.full_name}, ${
+                        schedule.municipality_city
+                          ? `${schedule.municipality_city}`
+                          : ""
+                      }`}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View style={styles1.column2}>
+          <View style={styles1.innerCard}>
+            {selectedScheduleToday || selectedScheduleWeek ? (
+              <>
+                {selectedScheduleToday ? (
+                  <>
+                    <Text style={styles1.columnTitle}>
+                      {String(selectedScheduleToday.full_name)}
+                    </Text>
+                    <Text style={styles1.columnSubTitle}>
+                      {moment(selectedScheduleToday.date).format(
+                        "MMMM DD, dddd"
+                      )}
+                    </Text>
+                    <Text style={styles1.columnSubTitle}>
+                      {selectedScheduleToday.municipality_city} {" - "}
+                      {selectedScheduleToday.province}
+                    </Text>
+                    <CallComponents
+                      scheduleId={String(selectedScheduleToday.schedule_id)}
+                      docName={String(selectedScheduleToday.full_name)}
+                      canStartCall={true}
+                    />
+                  </>
+                ) : null}
+
+                {selectedScheduleWeek ? (
+                  <>
+                    <Text style={styles1.columnTitle}>
+                      {String(selectedScheduleWeek.full_name)}
+                    </Text>
+                    <Text style={styles1.columnSubTitle}>
+                      {moment(selectedScheduleWeek.date).format(
+                        "MMMM DD, dddd"
+                      )}
+                    </Text>
+                    <Text style={styles1.columnSubTitle}>
+                      {selectedScheduleWeek.municipality_city} {" - "}
+                      {selectedScheduleWeek.province}
+                    </Text>
+                    <CallComponents
+                      scheduleId={String(selectedScheduleWeek.schedule_id)}
+                      docName={String(selectedScheduleWeek.full_name)}
+                      canStartCall={false}
+                    />
+                  </>
+                ) : null}
+              </>
+            ) : (
+              <NoScheduleSelected />
+            )}
+          </View>
         </View>
       </View>
     </View>
   );
 };
+
+const styles1 = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F0F0F0",
+  },
+  row: {
+    flexDirection: "row",
+    flex: 1,
+    marginVertical: 10,
+    marginStart: 20,
+    marginEnd: 20,
+  },
+  column1: {
+    width: "30%",
+    marginEnd: 10,
+    elevation: 5,
+  },
+  column2: {
+    width: "70%",
+    elevation: 5,
+  },
+  innerCard: {
+    height: "100%",
+    paddingHorizontal: 30,
+    paddingVertical: 40,
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    elevation: 2, // For Android shadow
+    shadowColor: "#000", // For iOS shadow
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+  },
+  columnTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#343a40",
+    marginBottom: 8,
+  },
+  columnSubTitle: {
+    fontSize: 16,
+    color: "#6c757d",
+  },
+  accordionButton: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#e9ecef",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginVertical: 10,
+  },
+  accordionTitle: {
+    fontSize: 16,
+    color: "#046E37",
+  },
+  icon: {
+    marginLeft: 10,
+    color: "#046E37",
+  },
+  scheduleItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e9ecef",
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    marginVertical: 4,
+  },
+  scheduleText: {
+    fontSize: 16,
+    color: "#343a40",
+  },
+  accordionContent: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
+  containerNoSched: {
+    flex: 1,
+    alignItems: "center",
+    padding: 50,
+    backgroundColor: "#e9ecef",
+    borderRadius: 10,
+    borderColor: "#046E37",
+    borderWidth: 1,
+  },
+  iconNoSched: {
+    marginBottom: 10,
+    color: "#046E37",
+  },
+  messageNoSched: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#046E37",
+    textAlign: "center",
+  },
+});
+
 export default Schedules;

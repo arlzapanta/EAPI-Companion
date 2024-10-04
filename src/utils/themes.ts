@@ -2,7 +2,7 @@ export const lightTheme = {
     containerBackgroundColor: '#f0f0f0',
     announcementBackgroundColor: '#ffffff',
     chartBackgroundColor: '#f8f8f8',
-    chartColor: '#046E37',
+    chartColor: 'white',
     titleColor: '#333',
     buttonColor: '#046E37',
     buttonTextColor: '#ffffff',
