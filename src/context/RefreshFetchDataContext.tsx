@@ -1,4 +1,5 @@
 import React, { createContext, useContext, ReactNode, useState } from "react";
+import { getCurrentDatePH } from "../utils/dateUtils";
 
 const RefreshFetchDataContext = createContext<
   RefreshFetchDataContextProps | undefined
@@ -14,8 +15,13 @@ export const RefreshFetchDataProvider: React.FC<{ children: ReactNode }> = ({
     setShouldRefresh(refresh + 1);
   };
 
+  const getCurrentDate = async () => {
+    return await getCurrentDatePH();
+  };
+
   return (
-    <RefreshFetchDataContext.Provider value={{ refreshSchedData, refresh }}>
+    <RefreshFetchDataContext.Provider
+      value={{ refreshSchedData, getCurrentDate, refresh }}>
       {children}
     </RefreshFetchDataContext.Provider>
   );

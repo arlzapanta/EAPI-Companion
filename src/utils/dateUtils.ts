@@ -105,6 +105,10 @@ export const formatDate = (dateString: string) => {
   return format(date, "MMM d, yyyy EEEE");
 };
 
+export const formatDatev1 = (dateString: string) => {
+  return moment(new Date(dateString)).format("MMMM DD, yyyy");
+};
+
 export const formatDateYMD = (dateString: string) => {
   const date = parseISO(dateString);
   return format(date, "yyyy-MM-dd");

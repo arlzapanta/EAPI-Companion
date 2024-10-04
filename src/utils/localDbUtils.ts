@@ -413,6 +413,10 @@ export const saveRescheduleListLocalDb = async (request: RescheduleRecord[]): Pr
 
   try {
     await Promise.all(insertPromises);
+
+    const query = `SELECT * FROM reschedule_req_tbl`;
+    const existingRows = await db.getAllAsync(query);
+     console.log('test test existingRows reschedule_req_tbl', existingRows);
     return 'Success';
   } catch (error) {
     console.error('Error saving data:44444444444444', error);
@@ -819,6 +823,83 @@ export const getSchedulesWeekLocalDb = async (): Promise<ScheduleAPIRecord[]> =>
     const existingRows = result as ScheduleAPIRecord[];
 
     return existingRows;
+  } catch (error) {
+    console.error('Error fetching schedule records data:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getDatesAndTypeForCalendarView = async (): Promise<CalendarRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      schedule_id TEXT, 
+      address TEXT, 
+      date TEXT, 
+      doctors_id TEXT, 
+      full_name TEXT, 
+      municipality_city TEXT, 
+      province TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS calls_tbl (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+      schedule_id TEXT, 
+      address TEXT, 
+      call_start TEXT, 
+      call_end TEXT, 
+      date TEXT, 
+      doctor_name TEXT, 
+      municipality_city TEXT, 
+      photo TEXT, 
+      photo_location TEXT, 
+      province TEXT, 
+      signature TEXT, 
+      signature_location TEXT,
+      signature_attempts TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      request_id TEXT,
+      schedule_id TEXT,
+      sales_portal_id TEXT,
+      doctors_id TEXT,
+      date_from TEXT,
+      date_to TEXT,
+      status TEXT,
+      type TEXT,
+      created_at TEXT,
+      full_name TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+  `);
+
+  const qMakeup = `SELECT date_to FROM reschedule_req_tbl WHERE type = ? AND status = ?`;
+  const qAdvance = `SELECT date_to FROM reschedule_req_tbl WHERE type = ? AND status = ?`;
+
+  try {
+    const qMakeupResult: { date_to: string }[] = await db.getAllAsync(qMakeup, ['Makeup', '1']);
+    const qAdvanceResult: { date_to: string }[] = await db.getAllAsync(qAdvance, ['Advance', '1']);
+    const qSched: { date: string }[] = await db.getAllAsync(`SELECT date FROM schedule_API_tbl`);
+    const qCalls: { date: string }[] = await db.getAllAsync(`SELECT date FROM calls_tbl`);
+
+    const data: CalendarRecord = {
+      plotData: Array.from(new Set(qSched.map(record => parseInt(record.date.split('-')[2])))).map(String),
+      advanceData: Array.from(new Set(qAdvanceResult.map(record => parseInt(record.date_to.split('-')[2])))).map(String),
+      makeupData: Array.from(new Set(qMakeupResult.map(record => parseInt(record.date_to.split('-')[2])))).map(String),
+      actualData: Array.from(new Set(qCalls.map(record => parseInt(record.date.split('-')[2])))).map(String)
+    };
+
+    return [data];
   } catch (error) {
     console.error('Error fetching schedule records data:', error);
     return [];

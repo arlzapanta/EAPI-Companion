@@ -88,6 +88,7 @@ declare global {
 
     export interface RefreshFetchDataContextProps {
       refreshSchedData: () => void;
+      getCurrentDate: () => Promise<string>;
       refresh: number;
     }
 
@@ -313,7 +314,16 @@ declare global {
     notes_names: string | null;
     notes_values: string | null;
   };
-  
+  export interface CalendarProps {
+    data: CalendarRecord[];
   }
+
+  export interface CalendarRecord {
+    plotData: string [];
+    advanceData: string [];
+    makeupData: string [];
+    actualData: string [];
+  }
+}
   
   export {};
