@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   View,
+  Image,
   Text,
   TouchableOpacity,
   Alert,
@@ -30,6 +31,10 @@ import {
 } from "../../utils/apiUtility";
 import AttendanceTable from "../tables/AttendanceTable";
 import { getQuickCalls } from "../../utils/quickCallUtil";
+// added 10-5-24
+import SignatureCapture from "../../components/SignatureCapture";
+import { useImagePicker } from "../../hook/useImagePicker";
+import { getLocation } from "../../utils/currentLocation";
 
 const Attendance: React.FC = () => {
   const navigation = useNavigation<AttendanceScreenNavigationProp>();
@@ -54,6 +59,11 @@ const Attendance: React.FC = () => {
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusColor, setStatusColor] = useState<string>("");
+  // added 10-5-24
+  const [signatureVal, setSignatureVal] = useState<string>("");
+  const [signatureLoc, setSignatureLoc] = useState<string>("");
+  const [selfieVal, setSelfieVal] = useState<string>("");
+  const [selfieLoc, setSelfieLoc] = useState<string>("");
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
@@ -136,45 +146,50 @@ const Attendance: React.FC = () => {
       Alert.alert("Error", "User information is missing.");
       return;
     }
-    setLoading(true);
-    try {
-      const timeInIsProceed = await apiTimeIn(userInfo);
-      if (timeInIsProceed.isProceed) {
-        const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
-        if (checkIfTimedIn === 1) {
-          Alert.alert("Failed", "Already timed In today");
-        } else {
-          await fetchAttendanceData();
-          const scheduleData = await getSChedulesAPI(userInfo);
-          if (scheduleData) {
-            const result = await saveSchedulesAPILocalDb(scheduleData);
-            await getDoctors(userInfo);
-            await getReschedulesData(userInfo);
-            {
-              result == "Success"
-                ? Alert.alert("Success", "Successfully synced data from server")
-                : Alert.alert("Failed", "Error syncing");
-            }
-            const res = await saveUserSyncHistoryLocalDb(userInfo, 1);
-            console.log(
-              "AttendanceScreen > timeIn > saveUserSyncHistoryLocalDb > res : ",
-              res
-            );
-          }
-        }
-      } else if (!timeInIsProceed.isProceed) {
-        console.log("timeInIsProceed", timeInIsProceed);
-        console.log(timeInIsProceed);
-      }
-    } catch (error) {
-      Alert.alert("Error", "Failed to time in.");
-    } finally {
-      setLoading(false);
-    }
+    // setLoading(true);
+
+    console.log(signatureVal, "signatureVal timein");
+    console.log(selfieVal, "selfieVal timein");
+    console.log(selfieLoc, "selfieLoc timein");
+    console.log(signatureLoc, "signatureVal timein");
+
+    // try {
+    //   const timeInIsProceed = await apiTimeIn(userInfo);
+    //   if (timeInIsProceed.isProceed) {
+    //     const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
+    //     if (checkIfTimedIn === 1) {
+    //       Alert.alert("Failed", "Already timed In today");
+    //     } else {
+    //       await fetchAttendanceData();
+    //       const scheduleData = await getSChedulesAPI(userInfo);
+    //       if (scheduleData) {
+    //         const result = await saveSchedulesAPILocalDb(scheduleData);
+    //         await getDoctors(userInfo);
+    //         await getReschedulesData(userInfo);
+    //         {
+    //           result == "Success"
+    //             ? Alert.alert("Success", "Successfully synced data from server")
+    //             : Alert.alert("Failed", "Error syncing");
+    //         }
+    //         const res = await saveUserSyncHistoryLocalDb(userInfo, 1);
+    //         console.log(
+    //           "AttendanceScreen > timeIn > saveUserSyncHistoryLocalDb > res : ",
+    //           res
+    //         );
+    //       }
+    //     }
+    //   } else if (!timeInIsProceed.isProceed) {
+    //     console.log("timeInIsProceed", timeInIsProceed);
+    //     console.log(timeInIsProceed);
+    //   }
+    // } catch (error) {
+    //   Alert.alert("Error", "Failed to time in.");
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   const timeOut = async () => {
-    // add logic here if post call are all filled up already
     const checkQC = await getQuickCalls();
     if (checkQC.length > 0) {
       Alert.alert("Error", "Please check quick calls.");
@@ -243,6 +258,32 @@ const Attendance: React.FC = () => {
     navigation.goBack();
   };
 
+  const handlePhotoCaptured = async (
+    base64: string,
+    location: { latitude: number; longitude: number }
+  ) => {
+    try {
+      setSelfieVal(base64);
+      setSelfieLoc(JSON.stringify(location));
+    } catch (error) {
+      console.log("handlePhotoCaptured error", error);
+    }
+  };
+
+  const { imageBase64, location, handleImagePicker } = useImagePicker({
+    onPhotoCaptured: handlePhotoCaptured,
+  });
+
+  const handleSignatureUpdate = async (base64Signature: string) => {
+    if (base64Signature) {
+      setSignatureVal(base64Signature);
+      const loc = await getLocation();
+      setSignatureLoc(JSON.stringify(loc));
+    } else {
+      console.error("Signature update failed: No base64 data");
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -255,11 +296,40 @@ const Attendance: React.FC = () => {
           )}
           <View style={styles.centerItems}>
             {!hasTimedIn && !loading && (
-              <TouchableOpacity
-                onPress={() => showConfirmAlert(timeIn, "Time In")}
-                style={styles.buttonContainer}>
-                <Text style={styles.buttonText}>Time In</Text>
-              </TouchableOpacity>
+              <>
+                {signatureVal || selfieVal ? (
+                  <TouchableOpacity
+                    onPress={() => showConfirmAlert(timeIn, "Time In")}
+                    style={styles.buttonContainer}>
+                    <Text style={styles.buttonText}>Time In</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => showConfirmAlert(timeIn, "Time In")}
+                    style={styles.buttonContainerDisabled}
+                    disabled>
+                    <Text style={styles.buttonText}>Time In</Text>
+                  </TouchableOpacity>
+                )}
+
+                {signatureVal ? (
+                  <></>
+                ) : (
+                  <SignatureCapture
+                    callId={12340000}
+                    onSignatureUpdate={handleSignatureUpdate}
+                  />
+                )}
+                {!selfieVal ? (
+                  <TouchableOpacity
+                    style={styles.buttonContainer1}
+                    onPress={handleImagePicker}>
+                    <Text style={styles.buttonText1}>Take a photo</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <></>
+                )}
+              </>
             )}
             {!hasTimedOut && hasTimedIn && !loading && (
               <TouchableOpacity
@@ -312,6 +382,34 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 5,
   },
+  signImage: {
+    marginVertical: 15,
+    width: "100%",
+    height: 200,
+    resizeMode: "contain",
+  },
+  image: {
+    width: 400,
+    height: 260,
+    marginTop: 10,
+    resizeMode: "contain",
+  },
+  signatureLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#007bff",
+  },
+  takePhotoButton: {
+    padding: 10,
+    backgroundColor: "#007BFF",
+    borderRadius: 5,
+    width: 200,
+    alignItems: "center",
+  },
+  imageContainer: {
+    marginTop: 20,
+    alignItems: "center",
+  },
   title_stack_settings: {
     fontSize: 24,
     fontWeight: "bold",
@@ -335,10 +433,31 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     elevation: 5,
   },
+  buttonContainerDisabled: {
+    backgroundColor: "lightgray",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginBottom: 10,
+    elevation: 5,
+  },
+  buttonContainer1: {
+    backgroundColor: "#046E37",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    elevation: 5,
+    minWidth: 165,
+  },
   buttonText: {
     color: "#fff",
     fontSize: 25,
     fontWeight: "600",
+  },
+  buttonText1: {
+    color: "#FFF",
+    fontWeight: "bold",
+    alignSelf: "center",
   },
   floatingButtonContainer: {
     position: "absolute",

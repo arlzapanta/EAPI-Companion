@@ -103,7 +103,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={styles.openModalButton}
+        style={styles.buttonContainer}
         onPress={() => setIsModalVisible(true)}>
         <Text style={styles.buttonText}>Open Signature Pad</Text>
       </TouchableOpacity>
@@ -237,6 +237,13 @@ const styles = StyleSheet.create({
   signatureModalContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 20,
+  },
+  buttonContainer: {
+    backgroundColor: "#046E37",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    elevation: 5,
   },
 });
 
