@@ -6,6 +6,7 @@ import {
   getCallsTodayLocalDb,
   getRescheduleRequestRecordsLocalDb,
   getUpdatedDoctorRecordsLocalDb,
+  saveChartDataLocalDb,
   saveDoctorListLocalDb,
   saveRescheduleHistoryLocalDb,
   saveRescheduleListLocalDb,
@@ -398,6 +399,39 @@ export const getReschedulesData = async (user: User): Promise<any> => {
       console.error("API Error request:", request);
     } else {
       console.error("An unexpected error occurred:", error);
+    }
+    throw error;
+  }
+};
+
+export const getChartData = async (user: User): Promise<any[]> => {
+  try {
+    const {sales_portal_id } = user;
+    const response = await axios.post(
+      `${API_URL_ENV}/getChartData`,
+        {
+          sales_portal_id,
+          user_type : "medrep"
+        },
+      { 
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    await saveChartDataLocalDb(response.data);
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API getChartData Error message:", message);
+      console.error("API getChartData Error response data:", response?.data);
+      console.error("API getChartData Error response status:", response?.status);
+      console.error("API getChartData Error response headers:", response?.headers);
+      console.error("API getChartData Error request:", request);
+    } else {
+      console.error("An unexpected error occurred: getChartData", error);
     }
     throw error;
   }

@@ -38,7 +38,7 @@ const Home = () => {
     | "quickcall"
     | "doctors"
   >("dashboard");
-  const [fadeAnim] = useState(new Animated.Value(1));
+  const [fadeAnim] = useState(new Animated.Value(0));
 
   const dynamicStyles = getStyleUtil({});
 
@@ -61,63 +61,44 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 0.8,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    });
-  }, [selectedScreen]);
-
   return (
     <View style={dynamicStyles.homeContainer_home}>
       <View style={dynamicStyles.navContainer_home}>
         <NavLinkComponent
-          iconName="home"
+          iconName="house-circle-exclamation"
           onPress={() => setSelectedScreen("dashboard")}
           active={selectedScreen === "dashboard"}
         />
         <NavLinkComponent
-          iconName="settings"
+          iconName="user-gear"
           onPress={() => setSelectedScreen("settings")}
           active={selectedScreen === "settings"}
         />
         <NavLinkComponent
-          iconName="calendar-clear"
+          iconName="calendar-alt"
           onPress={() => setSelectedScreen("schedules")}
           active={selectedScreen === "schedules"}
         />
 
         <NavLinkComponent
-          iconName="calendar"
+          iconName="calendar-check"
           onPress={() => setSelectedScreen("actualcalls")}
           active={selectedScreen === "actualcalls"}
         />
 
         <NavLinkComponent
-          iconName="medkit"
+          iconName="user-doctor"
           onPress={() => setSelectedScreen("doctors")}
           active={selectedScreen === "doctors"}
         />
 
         <NavLinkComponent
-          iconName="flame"
+          iconName="pen"
           onPress={() => setSelectedScreen("quickcall")}
           active={selectedScreen === "quickcall"}
         />
       </View>
-      <Animated.View
-        style={[dynamicStyles.contentContainer_home, { opacity: fadeAnim }]}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          {renderContent()}
-        </ScrollView>
-      </Animated.View>
+      <ScrollView>{renderContent()}</ScrollView>
     </View>
   );
 };

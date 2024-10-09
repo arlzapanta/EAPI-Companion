@@ -47,7 +47,6 @@ export const useImagePicker = ({ onPhotoCaptured }: UseImagePickerOptions = {}) 
 
       // Execute the callback function if provided
       if (onPhotoCaptured && base64Image && currentLocation) {
-        console.log("Triggering callback with base64Image and location");
         onPhotoCaptured(base64Image, currentLocation);
       }
     }

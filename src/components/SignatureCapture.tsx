@@ -89,8 +89,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
           if (callId !== 12340000) {
             await updateCallSignature(callId, uri, locationString);
           }
-          console.log("Signature and location updated successfully!");
-          onSignatureUpdate(base64Signature); // Pass the base64 signature to the parent
+          onSignatureUpdate(base64Signature);
         } catch (error) {
           console.error("Error updating signature:", error);
         }

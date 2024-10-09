@@ -11,6 +11,7 @@ import SyncSettingsScreen from "./src/screens/settings/SyncSettingsScreen";
 import RescheduleScreen from "./src/screens/RescheduleScreen";
 import AttendanceScreen from "./src/screens/settings/AttendanceScreen";
 import OnCallScreen from "./src/screens/call/OnCallScreen";
+import { DataProvider } from "./src/context/DataContext";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -47,9 +48,11 @@ const App = () => {
   return (
     <AuthProvider>
       <RefreshFetchDataProvider>
-        <NavigationContainer>
-          <Layout />
-        </NavigationContainer>
+        <DataProvider>
+          <NavigationContainer>
+            <Layout />
+          </NavigationContainer>
+        </DataProvider>
       </RefreshFetchDataProvider>
     </AuthProvider>
   );
@@ -58,7 +61,7 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "transparent",
+    backgroundColor: "#046E37",
   },
 });
 

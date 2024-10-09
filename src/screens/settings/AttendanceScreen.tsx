@@ -23,6 +23,7 @@ import {
   apiTimeOut,
   doctorRecordsSync,
   getCallsAPI,
+  getChartData,
   getDoctors,
   getReschedulesData,
   getSChedulesAPI,
@@ -35,6 +36,7 @@ import { getQuickCalls } from "../../utils/quickCallUtil";
 import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
 import { getLocation } from "../../utils/currentLocation";
+import { showConfirmAlert } from "../../utils/commonUtil";
 
 const Attendance: React.FC = () => {
   const navigation = useNavigation<AttendanceScreenNavigationProp>();
@@ -146,47 +148,48 @@ const Attendance: React.FC = () => {
       Alert.alert("Error", "User information is missing.");
       return;
     }
-    // setLoading(true);
+    setLoading(true);
 
-    console.log(signatureVal, "signatureVal timein");
-    console.log(selfieVal, "selfieVal timein");
-    console.log(selfieLoc, "selfieLoc timein");
-    console.log(signatureLoc, "signatureVal timein");
+    // console.log(signatureVal, "signatureVal timein");
+    // console.log(selfieVal, "selfieVal timein");
+    // console.log(selfieLoc, "selfieLoc timein");
+    // console.log(signatureLoc, "signatureVal timein");
 
-    // try {
-    //   const timeInIsProceed = await apiTimeIn(userInfo);
-    //   if (timeInIsProceed.isProceed) {
-    //     const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
-    //     if (checkIfTimedIn === 1) {
-    //       Alert.alert("Failed", "Already timed In today");
-    //     } else {
-    //       await fetchAttendanceData();
-    //       const scheduleData = await getSChedulesAPI(userInfo);
-    //       if (scheduleData) {
-    //         const result = await saveSchedulesAPILocalDb(scheduleData);
-    //         await getDoctors(userInfo);
-    //         await getReschedulesData(userInfo);
-    //         {
-    //           result == "Success"
-    //             ? Alert.alert("Success", "Successfully synced data from server")
-    //             : Alert.alert("Failed", "Error syncing");
-    //         }
-    //         const res = await saveUserSyncHistoryLocalDb(userInfo, 1);
-    //         console.log(
-    //           "AttendanceScreen > timeIn > saveUserSyncHistoryLocalDb > res : ",
-    //           res
-    //         );
-    //       }
-    //     }
-    //   } else if (!timeInIsProceed.isProceed) {
-    //     console.log("timeInIsProceed", timeInIsProceed);
-    //     console.log(timeInIsProceed);
-    //   }
-    // } catch (error) {
-    //   Alert.alert("Error", "Failed to time in.");
-    // } finally {
-    //   setLoading(false);
-    // }
+    try {
+      const timeInIsProceed = await apiTimeIn(userInfo);
+      if (timeInIsProceed.isProceed) {
+        const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
+        if (checkIfTimedIn === 1) {
+          Alert.alert("Failed", "Already timed In today");
+        } else {
+          await fetchAttendanceData();
+          const scheduleData = await getSChedulesAPI(userInfo);
+          if (scheduleData) {
+            const result = await saveSchedulesAPILocalDb(scheduleData);
+            await getDoctors(userInfo);
+            await getReschedulesData(userInfo);
+            await getChartData(userInfo);
+            {
+              result == "Success"
+                ? Alert.alert("Success", "Successfully synced data from server")
+                : Alert.alert("Failed", "Error syncing");
+            }
+            const res = await saveUserSyncHistoryLocalDb(userInfo, 1);
+            console.log(
+              "AttendanceScreen > timeIn > saveUserSyncHistoryLocalDb > res : ",
+              res
+            );
+          }
+        }
+      } else if (!timeInIsProceed.isProceed) {
+        console.log("timeInIsProceed", timeInIsProceed);
+        console.log(timeInIsProceed);
+      }
+    } catch (error) {
+      Alert.alert("Error", "Failed to time in.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const timeOut = async () => {
@@ -234,24 +237,6 @@ const Attendance: React.FC = () => {
         }
       }
     }
-  };
-
-  const showConfirmAlert = (action: () => void, actionName: string) => {
-    Alert.alert(
-      `Confirm ${actionName}`,
-      `Are you sure you want to ${actionName.toLowerCase()}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "OK",
-          onPress: action,
-        },
-      ],
-      { cancelable: false }
-    );
   };
 
   const handleBack = () => {

@@ -1,5 +1,7 @@
 export const lightTheme = {
-    containerBackgroundColor: '#f0f0f0',
+    containerBackgroundColor: '#046E37',
+    containerSubBackgroundColor: '#dadada',
+    containerSecondaryBackgroundColor: '#6ED7A5',
     announcementBackgroundColor: '#ffffff',
     chartBackgroundColor: '#f8f8f8',
     chartColor: 'white',
@@ -13,6 +15,8 @@ export const lightTheme = {
 
 export const darkTheme = {
     containerBackgroundColor: '#1a1a1a',
+    containerSubBackgroundColor: '#97C99D',
+    containerSecondaryBackgroundColor: '#6ED7A5',
     announcementBackgroundColor: '#333333',
     chartBackgroundColor: '#2c2c2c',
     chartColor: '#046E37',

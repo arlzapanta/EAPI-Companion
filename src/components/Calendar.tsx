@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet, FlatList, Dimensions } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getCurrentDatePH } from "../utils/dateUtils";
@@ -9,13 +9,23 @@ const numColumns = 7;
 let currentMonth = 0;
 let currentYear = 0;
 let currentDate = "";
+const mainColor = "#046E37";
+
+const daysOfWeek = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 const CalendarComponent: React.FC<CalendarProps> = ({ data }) => {
-  const fetchData = async () => {
-    currentDate = await getCurrentDatePH();
-    currentMonth = moment(currentDate).tz("Asia/Manila").month();
-    currentYear = moment(currentDate).tz("Asia/Manila").year();
-  };
+  const [monthArray, setMonthArray] = useState<(number | null)[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      currentDate = await getCurrentDatePH();
+      currentMonth = moment(currentDate).tz("Asia/Manila").month();
+      currentYear = moment(currentDate).tz("Asia/Manila").year();
+      setMonthArray(createMonthArray());
+    };
+
+    fetchData();
+  }, []);
 
   const getFirstDayOfMonth = (year: number, month: number): Date => {
     return new Date(year, month, 1);
@@ -30,7 +40,9 @@ const CalendarComponent: React.FC<CalendarProps> = ({ data }) => {
     const lastDay = getLastDayOfMonth(currentYear, currentMonth);
     const daysInMonth = [];
 
-    for (let i = 0; i < firstDay.getDay(); i++) {
+    let firstDayIndex = firstDay.getDay();
+
+    for (let i = 0; i < firstDayIndex; i++) {
       daysInMonth.push(null);
     }
 
@@ -38,25 +50,47 @@ const CalendarComponent: React.FC<CalendarProps> = ({ data }) => {
       daysInMonth.push(day);
     }
 
+    while (daysInMonth.length % numColumns !== 0) {
+      daysInMonth.push(null);
+    }
+
     return daysInMonth;
   };
 
-  const monthArray = createMonthArray();
-
   const renderDay = (day: number | null, index: number) => {
+    const isLastColumn = (index + 1) % numColumns === 0;
+    const isFirstColumn = index % numColumns === 0;
+    const isLastRow = index >= monthArray.length - numColumns;
+    const isFirstRow = index < numColumns;
+    const isSunday = index % numColumns === 0;
+    const isSaturday = (index + 1) % numColumns === 0;
+
+    const borderStyles = [
+      isFirstColumn ? styles.leftBorder : null,
+      isLastColumn ? styles.rightBorder : null,
+      isLastRow ? styles.bottomBorder : null,
+      isFirstRow ? styles.topBorder : null,
+    ];
+
     if (!day) {
-      return <View key={index} style={styles.emptyDay} />;
+      return (
+        <View
+          key={index}
+          style={[
+            styles.dayContainer,
+            ...borderStyles, // Apply the border styles conditionally
+          ]}
+        />
+      );
     }
 
     const dayString = day.toString();
 
-    // Initialize flags for whether the day is included in any data array
     let isPlotDay = false;
     let isAdvanceDay = false;
     let isMakeupDay = false;
     let isActualDay = false;
 
-    // Loop through each CalendarRecord in the data array
     data.forEach((record) => {
       if (record.plotData.includes(dayString)) isPlotDay = true;
       if (record.advanceData.includes(dayString)) isAdvanceDay = true;
@@ -65,23 +99,79 @@ const CalendarComponent: React.FC<CalendarProps> = ({ data }) => {
     });
 
     return (
-      <View key={index} style={styles.dayContainer}>
-        <Text style={styles.dayText}>{day}</Text>
-
+      <View
+        key={index}
+        style={[
+          styles.dayContainer,
+          ...borderStyles, // Apply the border styles conditionally
+        ]}>
+        <Text
+          style={[
+            styles.dayText,
+            isSunday || isSaturday ? styles.weekendText : null,
+          ]}>
+          {day}
+        </Text>
         <View style={styles.logoContainer}>
-          {isPlotDay && <Ionicons name="logo-react" size={14} color="green" />}
-          {isAdvanceDay && (
-            <Ionicons name="logo-react" size={14} color="purple" />
+          {isPlotDay && (
+            <Ionicons
+              style={styles.logoLegend}
+              name="square"
+              size={22}
+              color="green"
+            />
           )}
-          {isMakeupDay && <Ionicons name="logo-react" size={14} color="red" />}
-          {isActualDay && <Ionicons name="logo-react" size={14} color="gray" />}
+          {isAdvanceDay && (
+            <Ionicons
+              style={styles.logoLegend}
+              name="square"
+              size={22}
+              color="purple"
+            />
+          )}
+          {isMakeupDay && (
+            <Ionicons
+              style={styles.logoLegend}
+              name="square"
+              size={22}
+              color="red"
+            />
+          )}
+          {isActualDay && (
+            <Ionicons
+              style={styles.logoLegend}
+              name="square"
+              size={22}
+              color="gray"
+            />
+          )}
         </View>
       </View>
     );
   };
 
+  const renderHeader = () => {
+    return daysOfWeek.map((day, index) => {
+      const isSaturday = index === 6;
+      const isSunday = index === 0;
+
+      return (
+        <View key={index} style={styles.dayHeader}>
+          <Text
+            style={[
+              styles.dayHeaderText,
+              (isSaturday || isSunday) && styles.weekendHeaderText,
+            ]}>
+            {day}
+          </Text>
+        </View>
+      );
+    });
+  };
+
   return (
     <View style={styles.calendarContainer}>
+      <View style={styles.headerContainer}>{renderHeader()}</View>
       <FlatList
         data={monthArray}
         renderItem={({ item, index }) => renderDay(item, index)}
@@ -96,38 +186,115 @@ const CalendarComponent: React.FC<CalendarProps> = ({ data }) => {
 const styles = StyleSheet.create({
   calendarContainer: {
     flex: 1,
-    alignItems: "center",
     padding: 10,
     backgroundColor: "#fff",
   },
-  header: {
-    fontSize: 24,
-    marginBottom: 10,
-    fontWeight: "bold",
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    backgroundColor: mainColor, // Adjust as necessary
+    shadowColor: "rgba(0, 0, 0, 0.09)",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+  },
+  calendarHeader: {
+    fontSize: 32, // 2em converted to pixels
+    color: mainColor, // Use main color
+    fontWeight: "600",
+  },
+  cstsDays: {
+    gap: 5,
+  },
+  dayHeader: {
+    flex: 1,
+    alignItems: "center",
+    padding: 15,
+    marginVertical: 20,
+  },
+  dayHeaderText: {
+    fontSize: 20,
+    fontWeight: "bold", // Adjusted to a common React Native weight
+    color: "white", // Use main color
   },
   dayContainer: {
-    width: (width * 0.37) / numColumns,
-    height: (width * 0.37) / numColumns,
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    justifyContent: "flex-start",
-    // borderWidth: 1,
-    // borderColor: "#e0e0e0",
+    paddingVertical: 10,
+    paddingLeft: 10,
+    minHeight: 100,
+    borderWidth: 1,
+    borderColor: mainColor,
+    fontFamily: "monospace",
+  },
+  leftBorder: {
+    borderLeftWidth: 1.5,
+    borderLeftColor: mainColor, // Use main color
+  },
+  rightBorder: {
+    borderRightWidth: 1.5,
+    borderRightColor: mainColor, // Use main color
+  },
+  bottomBorder: {
+    borderBottomWidth: 1.5,
+    borderBottomColor: mainColor, // Use main color
+  },
+  topBorder: {
+    borderTopWidth: 1.5,
+    borderTopColor: mainColor, // Use main color
   },
   dayText: {
-    fontSize: 14,
+    fontSize: 18,
+    color: "#55544",
+    fontWeight: "400", // Adjusted to a common React Native weight
   },
-  logo: {
-    marginTop: 5,
-  },
-  emptyDay: {
-    width: (width * 0.37) / numColumns,
-    height: (width * 0.37) / numColumns,
-    // borderWidth: 1,
-    // borderColor: "#e0e0e0",
+  inactiveDate: {
+    color: "#cacaca",
+    backgroundColor: "#00000009",
   },
   logoContainer: {
-    flexDirection: "row", // Arrange logos in a horizontal line
+    flexDirection: "row",
     marginTop: 5,
+    justifyContent: "center",
+    alignItems: "center",
+    flex: 1,
+  },
+  logoLegend: {
+    marginHorizontal: 2,
+  },
+  emptyDay: {
+    flex: 1,
+    padding: 10,
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+    borderColor: "#fff",
+  },
+  weekendText: {
+    color: "lightgray",
+  },
+  weekendHeaderText: {
+    color: "white",
+  },
+  calendarBorder: {
+    borderColor: mainColor, // Use main color for outer calendar border
+    borderWidth: 1,
+  },
+  calendarTHead: {
+    backgroundColor: mainColor, // Adjust as necessary
+    shadowColor: "rgba(0, 0, 0, 0.09)",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 1,
+    shadowRadius: 12,
+  },
+  calendarBtnHeader: {
+    minWidth: 96, // 6em converted to pixels
   },
 });
 

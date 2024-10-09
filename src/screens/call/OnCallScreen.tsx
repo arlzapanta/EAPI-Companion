@@ -145,14 +145,10 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
     setSignatureValue(base64Signature);
     const loc = await getLocation();
     setSignatureLocation(JSON.stringify(loc));
-    console.log("signatureValue", base64Signature.slice(0, 20));
-    console.log("signatureValue", signatureValue.slice(0, 20));
-    console.log("signatureValue", signatureLocation.slice(0, 20));
   };
 
   const handleSignatureClear = () => {
     setSignatureAttempts((prevAttempts) => prevAttempts + 1);
-    console.log("Signature cleared. Total attempts:", signatureAttempts + 1);
   };
 
   return (

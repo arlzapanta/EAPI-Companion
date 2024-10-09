@@ -1,15 +1,8 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  StyleSheet,
-  Dimensions,
-  ActivityIndicator,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
-import { dropLocalTablesDb } from "../../utils/localDbUtils";
 
 const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -20,7 +13,7 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1000);
+    }, 500);
 
     return () => clearTimeout(timer);
   }, []);

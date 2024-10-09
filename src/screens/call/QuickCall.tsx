@@ -133,7 +133,6 @@ const QuickCall = () => {
       [
         {
           text: "Cancel",
-          onPress: () => console.log("Removal cancelled"),
           style: "cancel",
         },
         {
@@ -220,11 +219,16 @@ const QuickCall = () => {
     };
 
     const handleSaveQuickCall = async () => {
+      if (!selectedDoctor || selectedDoctor.full_name === undefined) {
+        customToast("Please select doctor");
+        return;
+      }
+
       if (selectedDoctor) {
         const callDetails = {
           schedule_id: selectedDoctor.schedule_id,
-          call_start: "test",
-          call_end: "test",
+          call_start: "quick",
+          call_end: "quick",
           signature: call.signature,
           signature_attempts: "0",
           signature_location: call.signature_location,
@@ -233,14 +237,14 @@ const QuickCall = () => {
           doctor_name: call.full_name,
         };
 
-        const result = await saveCallsDoneFromSchedules(
-          selectedDoctor.schedule_id,
-          callDetails
-        );
-        if (result == "Success") {
-          await removeCallFromLocalDb(call.id);
-          await fetchCallsData();
-        }
+        // const result = await saveCallsDoneFromSchedules(
+        //   selectedDoctor.schedule_id,
+        //   callDetails
+        // );
+        // if (result == "Success") {
+        //   await removeCallFromLocalDb(call.id);
+        //   await fetchCallsData();
+        // }
       } else {
         console.log("No doctor selected");
       }
@@ -296,7 +300,23 @@ const QuickCall = () => {
             <Picker
               style={styles.picker}
               selectedValue={selectedDoctor}
-              onValueChange={(itemValue) => setSelectedDoctor(itemValue)}>
+              onValueChange={(itemValue: ScheduleAPIRecord | null) => {
+                setSelectedDoctor(null);
+                if (itemValue !== selectedDoctor) {
+                  setSelectedDoctor(itemValue);
+                  if (itemValue && itemValue.date) {
+                  }
+                } else {
+                  if (itemValue && itemValue.date) {
+                    console.log("laskdlakd");
+                  }
+                }
+              }}>
+              <Picker.Item
+                label="Select doctor"
+                value="selectdoc"
+                style={styles.pickerInitialLabel}
+              />
               {doctorScheduleList
                 .filter((schedule) => schedule.full_name !== null) // Filter out null names
                 .map((schedule) => (
@@ -373,6 +393,9 @@ const styles = StyleSheet.create({
   },
   column2: {
     width: "70%",
+  },
+  pickerInitialLabel: {
+    color: "#888",
   },
   innerCard: {
     flex: 1,

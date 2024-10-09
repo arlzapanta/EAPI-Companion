@@ -424,6 +424,119 @@ export const saveRescheduleListLocalDb = async (request: RescheduleRecord[]): Pr
   }
 };
 
+export const saveChartDataLocalDb = async (chartData: ChartDashboardRecord | ChartDashboardRecord[]): Promise<string> => {
+  console.log(chartData, 'aslkdalskjd');
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    DROP TABLE IF EXISTS chart_data_tbl;
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE chart_data_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      daily_plotting_count TEXT,
+      daily_calls_count TEXT,
+      daily_target_count INTEGER,
+      monthly_plotting_count TEXT,
+      monthly_calls_count TEXT,
+      monthly_target_count INTEGER,
+      yearly_plotting_count TEXT,
+      yearly_calls_count TEXT,
+      yearly_target_count INTEGER,
+      ytd_plotting_count TEXT,
+      ytd_calls_count TEXT, 
+      ytd_target_count TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const dataToInsert = Array.isArray(chartData) ? chartData : [chartData];
+
+  const insertPromises = dataToInsert.map((chart: ChartDashboardRecord) => {
+    return db.execAsync(`
+      INSERT INTO chart_data_tbl (
+        daily_plotting_count,
+        daily_calls_count,
+        daily_target_count,
+        monthly_plotting_count,
+        monthly_calls_count,
+        monthly_target_count,
+        yearly_plotting_count,
+        yearly_calls_count,
+        yearly_target_count,
+        ytd_plotting_count,
+        ytd_calls_count,
+        ytd_target_count
+      ) VALUES (
+        ${chart.daily.plottingCount !== undefined && chart.daily.plottingCount !== null ? `'${chart.daily.plottingCount}'` : 'NULL'},
+        ${chart.daily.callsCount !== undefined && chart.daily.callsCount !== null ? `'${chart.daily.callsCount}'` : 'NULL'},
+        ${chart.daily.targetCount !== undefined && chart.daily.targetCount !== null ? chart.daily.targetCount : 'NULL'},
+        ${chart.monthly.plottingCount !== undefined && chart.monthly.plottingCount !== null ? `'${chart.monthly.plottingCount}'` : 'NULL'},
+        ${chart.monthly.callsCount !== undefined && chart.monthly.callsCount !== null ? `'${chart.monthly.callsCount}'` : 'NULL'},
+        ${chart.monthly.targetCount !== undefined && chart.monthly.targetCount !== null ? chart.monthly.targetCount : 'NULL'},
+        ${chart.yearly.plottingCount !== undefined && chart.yearly.plottingCount !== null ? `'${chart.yearly.plottingCount}'` : 'NULL'},
+        ${chart.yearly.callsCount !== undefined && chart.yearly.callsCount !== null ? `'${chart.yearly.callsCount}'` : 'NULL'},
+        ${chart.yearly.targetCount !== undefined && chart.yearly.targetCount !== null ? chart.yearly.targetCount : 'NULL'},
+        '${JSON.stringify(chart.ytd.plottingCount)}',
+        '${JSON.stringify(chart.ytd.callsCount)}',
+        '${JSON.stringify(chart.ytd.targetCount)}'
+      );
+    `);
+  });
+
+  try {
+    await Promise.all(insertPromises);
+
+    // const query = `SELECT * FROM chart_data_tbl`;
+    // const existingRows = await db.getAllAsync(query);
+    // console.log('test test existingRows chart_data_tbl', existingRows);
+    return 'Success';
+  } catch (error) {
+    console.error('Error saving data:chart_data_tbl:saveChartDataLocalDb', error);
+    return 'Failed to save data';
+  }
+};
+
+
+export const fetchChartDataLocalDb = async (): Promise<ChartDashboardRecord[]> =>{
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS chart_data_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      daily_plotting_count TEXT,
+      daily_calls_count TEXT,
+      daily_target_count INTEGER,
+      monthly_plotting_count TEXT,
+      monthly_calls_count TEXT,
+      monthly_target_count INTEGER,
+      yearly_plotting_count TEXT,
+      yearly_calls_count TEXT,
+      yearly_target_count INTEGER,
+      ytd_plotting_count TEXT,
+      ytd_calls_count TEXT, 
+      ytd_target_count TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const query = `SELECT * FROM chart_data_tbl`;
+
+  try {
+    const existingRows = await db.getAllAsync(query);
+    // console.log('Fetched data from chart_data_tbl:', existingRows);
+
+    return existingRows as ChartDashboardRecord[];
+  } catch (error) {
+    console.error('Error fetching data from chart_data_tbl:', error);
+    throw new Error('Failed to fetch data');
+  }
+};
+
 export const getDoctorRecordsLocalDb = async () => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -753,7 +866,7 @@ export const getSchedulesLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
     const existingRows = result as ScheduleAPIRecord[];
     return existingRows;
   } catch (error) {
-    console.error('Error fetching schedule records data:', error);
+    console.error('Error fetching schedule records data1:', error);
     return [];
   } finally {
     await db.closeAsync();
@@ -788,7 +901,7 @@ export const getSchedulesTodayLocalDb = async (): Promise<ScheduleAPIRecord[]> =
 
     return existingRows;
   } catch (error) {
-    console.error('Error fetching schedule records data:', error);
+    console.error('Error fetching schedule records data2:', error);
     return [];
   } finally {
     await db.closeAsync();
@@ -824,7 +937,7 @@ export const getSchedulesWeekLocalDb = async (): Promise<ScheduleAPIRecord[]> =>
 
     return existingRows;
   } catch (error) {
-    console.error('Error fetching schedule records data:', error);
+    console.error('Error fetching schedule records data3:', error);
     return [];
   } finally {
     await db.closeAsync();
@@ -891,17 +1004,18 @@ export const getDatesAndTypeForCalendarView = async (): Promise<CalendarRecord[]
     const qAdvanceResult: { date_to: string }[] = await db.getAllAsync(qAdvance, ['Advance', '1']);
     const qSched: { date: string }[] = await db.getAllAsync(`SELECT date FROM schedule_API_tbl`);
     const qCalls: { date: string }[] = await db.getAllAsync(`SELECT date FROM calls_tbl`);
-
+    
     const data: CalendarRecord = {
-      plotData: Array.from(new Set(qSched.map(record => parseInt(record.date.split('-')[2])))).map(String),
-      advanceData: Array.from(new Set(qAdvanceResult.map(record => parseInt(record.date_to.split('-')[2])))).map(String),
-      makeupData: Array.from(new Set(qMakeupResult.map(record => parseInt(record.date_to.split('-')[2])))).map(String),
-      actualData: Array.from(new Set(qCalls.map(record => parseInt(record.date.split('-')[2])))).map(String)
+      plotData: Array.from(new Set(qSched.map(record => parseInt((record.date || '0000-00-00').split('-')[2])))).map(String),
+      advanceData: Array.from(new Set(qAdvanceResult.map(record => parseInt((record.date_to || '0000-00-00').split('-')[2])))).map(String),
+      makeupData: Array.from(new Set(qMakeupResult.map(record => parseInt((record.date_to || '0000-00-00').split('-')[2])))).map(String),
+      actualData: Array.from(new Set(qCalls.map(record => parseInt((record.date || '0000-00-00').split('-')[2])))).map(String)
     };
+    
 
     return [data];
   } catch (error) {
-    console.error('Error fetching schedule records data:', error);
+    console.error('Error fetching schedule records data4:', error);
     return [];
   } finally {
     await db.closeAsync();
@@ -936,7 +1050,7 @@ export const getDoctorsTodaySchedLocalDb = async (): Promise<ScheduleAPIRecord[]
 
     return existingRows;
   } catch (error) {
-    console.error('Error fetching schedule records data:', error);
+    console.error('Error fetching schedule records data5:', error);
     return [];
   } finally {
     await db.closeAsync();
@@ -972,7 +1086,7 @@ export const getDoctorsWeekSchedLocalDb = async (): Promise<ScheduleAPIRecord[]>
 
     return existingRows;
   } catch (error) {
-    console.error('Error fetching schedule records data:', error);
+    console.error('Error fetching schedule records data6:', error);
     return [];
   } finally {
     await db.closeAsync();

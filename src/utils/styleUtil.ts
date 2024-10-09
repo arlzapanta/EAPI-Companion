@@ -10,10 +10,35 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     // ***************************************************************************************
     container: {
       flex: 1,
-      padding: 16,
-      flexDirection: 'column',
-      justifyContent: 'space-between',
-      backgroundColor: currentTheme.containerBackgroundColor,
+      backgroundColor: currentTheme.containerSubBackgroundColor,
+    } as ViewStyle,
+    mainBgColor : {
+      backgroundColor : currentTheme.containerBackgroundColor
+    },
+    card: {
+      height: 740,
+      padding: 40,
+      backgroundColor: "#ffffff",
+      borderRadius: 10,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 5,
+      marginVertical: 10,
+      marginStart: 20,
+      marginEnd: 10,
+    } as ViewStyle,
+    mainText: {
+      color: currentTheme.containerBackgroundColor,
+      fontSize: 16,
+      fontWeight: "bold",
+    } as TextStyle,
+    containerLoading: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: currentTheme.containerSubBackgroundColor,
     } as ViewStyle,
     scrollViewContainer:{
       position: 'relative',
@@ -53,12 +78,6 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       alignContent: 'center',
       alignItems: 'center',
     }as ViewStyle,
-    card: {
-      flex:1,
-      padding: 30,
-      borderRadius: 20,
-      backgroundColor: '#fff',
-    },
     title: {
       fontSize: 24,
       fontWeight: 'bold',
@@ -141,23 +160,28 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     // ***************************************************************************************
     homeContainer_home: {
       flex: 1,
-      backgroundColor: currentTheme.containerBackgroundColor,
+      backgroundColor: currentTheme.containerSubBackgroundColor,
       flexDirection: 'row',
-      marginTop: 20,
-      marginEnd: 20,
-      marginBottom: 10
+      // marginTop: 20,
+      // marginEnd: 20,
+      // marginBottom: 10
+      paddingTop: 20,
     } as ViewStyle,
     homeText_home: {
       color: currentTheme.textColor, 
     } as TextStyle,
     navContainer_home: {
+      marginTop: -20, 
+      paddingStart: 5,
       backgroundColor: currentTheme.containerBackgroundColor,
       justifyContent: 'center', 
       alignItems: 'center', 
+      borderTopRightRadius: 20,
+      borderBottomRightRadius: 20,
     } as ViewStyle,
     contentContainer_home: {
       flex: 1,
-      backgroundColor: currentTheme.containerBackgroundColor,
+      backgroundColor: currentTheme.containerSubBackgroundColor,
     },
     // ***************************************************************************************
     // *  LOGIN STYLES
@@ -216,25 +240,56 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     // *  NAVLINK STYLES
     // ***************************************************************************************
     navLink: {
-      width: 40,
-      height: 50,
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 2,
-      borderColor: currentTheme.textColor, 
+      backgroundColor: currentTheme.containerBackgroundColor,
       borderRadius: 10,
-      marginVertical: 5,
+      marginVertical: 15,
+      marginStart: 10,
+      marginEnd: 15,
+      alignItems: "center",
+      justifyContent: "center",
     } as ViewStyle,
     activeNavLink: {
-      backgroundColor: '#046E37',
+      backgroundColor: currentTheme.containerSecondaryBackgroundColor,
+      // backgroundColor: "transparent",
+      paddingVertical: 15,
+      minWidth: 80
     },
+    navLinkBox: {
+      backgroundColor: currentTheme.containerBackgroundColor,
+      borderTopLeftRadius: 10,
+      borderBottomLeftRadius: 10,
+      marginVertical: 5,
+    }as ViewStyle,
+    navLinkBoxActive: {
+      backgroundColor: currentTheme.containerSubBackgroundColor,
+      marginEnd: -10,
+    } as ViewStyle,
     navIcon: {
       fontSize: 30,
-      color: currentTheme.textColor,
+      color: currentTheme.containerSubBackgroundColor,
     },
     activeNavIcon: {
-      color: '#ffffff',
+      color:  currentTheme.containerBackgroundColor,
+      fontSize: 30
     },
+    navLinkBoxTopDesign: {
+      height: 0,
+    } as ViewStyle,
+    navLinkBoxBottomDesign: {
+      height: 0,
+    } as ViewStyle,
+    navLinkBoxTopDesignActive: {
+      height: 10,
+      maxWidth: 95,
+      backgroundColor: currentTheme.containerBackgroundColor,
+      borderBottomEndRadius: 20,
+    } as ViewStyle,
+    navLinkBoxBottomDesignActive: {
+      height: 10,
+      maxWidth: 95,
+      borderTopRightRadius: 20,
+      backgroundColor: currentTheme.containerBackgroundColor,
+    } as ViewStyle,
    // ***************************************************************************************
     // *  DASHBOARD STYLES
     // ***************************************************************************************

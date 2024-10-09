@@ -1,119 +1,56 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, Image, StyleSheet } from "react-native";
 import { getStyleUtil } from "../utils/styleUtil";
 import { PieChart, BarChart, LineChart } from "react-native-gifted-charts";
-import { createShimmerPlaceHolder } from "expo-shimmer-placeholder";
-import { LinearGradient } from "expo-linear-gradient";
 import CalendarComponent from "../components/Calendar";
-import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import { formatDatev1 } from "../utils/dateUtils";
-import { getDatesAndTypeForCalendarView } from "../utils/localDbUtils";
-
-const ShimmerPlaceHolder = createShimmerPlaceHolder(LinearGradient);
-const dynamicStyles = getStyleUtil({}); // { theme: 'light' or 'dark' }
+import { Ionicons } from "@expo/vector-icons";
+import { useDataContext } from "../context/DataContext";
+import Loading from "../components/Loading";
+const dynamicStyles = getStyleUtil({});
 
 const Dashboard = () => {
-  const [showLoader, setShowLoader] = useState(true);
-  const [dataLoaded, setDataLoaded] = useState(false);
-  const [currentDate, setCurrentDate] = useState<string>("");
-  const [calendarData, setCalendarData] = useState<CalendarProps>({
-    data: [],
-  });
-
-  const announcementText =
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
-
-  const actualVTargetData = [
-    { value: 75, label: "W1", frontColor: "#4ABFF4" },
-    { value: 60, label: "W2", frontColor: "#79C3DB" },
-    { value: 70, label: "W3", frontColor: "#28B2B3" },
-    { value: 45, label: "W4", frontColor: "#4ADDBA" },
-  ];
-
-  const weeklyPerformanceTestData1 = [
-    { value: 70 },
-    { value: 36 },
-    { value: 50 },
-    { value: 40 },
-    { value: 18 },
-    { value: 38 },
-  ];
-
-  const weeklyPerformanceTestData2 = [
-    { value: 50 },
-    { value: 10 },
-    { value: 45 },
-    { value: 30 },
-    { value: 45 },
-    { value: 18 },
-  ];
-
-  const lineDataSample = [
-    { value: 0, dataPointText: "0" },
-    { value: 20, dataPointText: "20" },
-    { value: 18, dataPointText: "18" },
-    { value: 40, dataPointText: "40" },
-    { value: 36, dataPointText: "36" },
-    { value: 60, dataPointText: "60" },
-    { value: 54, dataPointText: "54" },
-    { value: 85, dataPointText: "85" },
-  ];
-
-  const lineDataSample1 = [
-    { value: 0, dataPointText: "0" },
-    { value: 10, dataPointText: "10" },
-    { value: 8, dataPointText: "8" },
-    { value: 58, dataPointText: "58" },
-    { value: 56, dataPointText: "56" },
-    { value: 78, dataPointText: "78" },
-    { value: 74, dataPointText: "74" },
-    { value: 98, dataPointText: "98" },
-  ];
-
-  const lineDataSample2 = [
-    { value: 0, dataPointText: "0" },
-    { value: 20, dataPointText: "20" },
-    { value: 18, dataPointText: "18" },
-    { value: 40, dataPointText: "40" },
-    { value: 36, dataPointText: "36" },
-    { value: 60, dataPointText: "60" },
-    { value: 54, dataPointText: "54" },
-    { value: 85, dataPointText: "85" },
-  ];
-
-  const dailyData: dailyCompletionData[] = [
-    { value: 70, color: "#046E37" },
-    { value: 30, color: "lightgray" },
-  ];
-
-  const { getCurrentDate } = useRefreshFetchDataContext();
+  const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchDate = async () => {
-      const date = await getCurrentDate();
-      setCurrentDate(date);
-
-      const getDates = await getDatesAndTypeForCalendarView(); // Ensure this returns an array
-      if (getDates && Array.isArray(getDates)) {
-        setCalendarData({
-          data: getDates,
-        });
-      }
-    };
-
     const timer = setTimeout(() => {
-      setShowLoader(false);
-      setDataLoaded(true);
-    }, 10);
-
-    fetchDate();
+      setTimeOutLoading(false);
+    }, 1000);
     return () => clearTimeout(timer);
-  }, [getCurrentDate, getDatesAndTypeForCalendarView]);
+  }, []);
+
+  const SpacerW = ({ size }: { size: number }) => (
+    <View style={{ width: size }} />
+  );
+
+  const SpacerH = ({ size }: { size: number }) => (
+    <View style={{ height: size }} />
+  );
+
+  const announcementText =
+    "Welcome to CMMS companion App! No announcement for today";
+
+  const {
+    currentDate,
+    calendarData,
+    chartData,
+    dailyDataCompletion,
+    dailyData,
+    monthlyData,
+    yearlyData,
+    ytdData,
+    isLoading,
+    isDashboardLoading,
+    ytdDataMonthValues,
+  } = useDataContext();
+
+  const actualColor = "#046E37";
+  const plottedColor = "lightgray";
 
   return (
-    <View style={styles.container}>
-      {showLoader ? (
-        <ShimmerPlaceHolder visible={false} style={styles.shimmerPlaceholder} />
+    <View style={dynamicStyles.container}>
+      {isDashboardLoading || timeOutLoading ? (
+        <Loading />
       ) : (
         <>
           <View style={styles.announcementContainer}>
@@ -125,159 +62,476 @@ const Dashboard = () => {
             />
           </View>
           <View style={styles.chartRow}>
-            <View style={styles.chartContainer1}>
+            <View style={styles.chartContainer}>
               <View style={styles.chartCard}>
-                <Text style={styles.chartTitle}>Daily Completion</Text>
-                <View style={styles.centerView}>
-                  <PieChart
-                    data={dailyData}
-                    donut
-                    showGradient
-                    sectionAutoFocus
-                    radius={142.9}
-                    innerRadius={85}
-                    innerCircleColor={"#fff"}
-                    centerLabelComponent={() => (
-                      <View style={styles.centerLabelContainer}>
-                        <Text style={styles.centerLabelText}>70%</Text>
-                      </View>
-                    )}
-                  />
-                </View>
-              </View>
-            </View>
-            <View style={styles.chartContainer2}>
-              <View style={styles.chartCard}>
-                <Text style={styles.chartTitle}>
-                  {formatDatev1(currentDate)}
-                </Text>
+                <Text style={styles.chartTitle}>Calendar</Text>
                 <CalendarComponent data={calendarData.data} />
-              </View>
-            </View>
-          </View>
-          <View style={styles.chartRow}></View>
-          <View style={styles.chartRow}>
-            <View style={styles.chartContainer1}>
-              <View style={styles.chartCard}>
-                <Text style={styles.chartTitle}>Actual VS Target</Text>
-                <View style={styles.centerView}>
-                  <BarChart
-                    showFractionalValues
-                    showYAxisIndices
-                    noOfSections={3}
-                    maxValue={75}
-                    data={actualVTargetData}
-                    isAnimated
-                  />
-                </View>
-              </View>
-            </View>
-            <View style={styles.chartContainer2}>
-              <View style={styles.chartCard}>
-                <Text style={styles.chartTitle}>Weekly Performance</Text>
-                <View style={styles.centerView}>
-                  <LineChart
-                    areaChart
-                    curved
-                    data={weeklyPerformanceTestData1}
-                    data2={weeklyPerformanceTestData2}
-                    hideDataPoints
-                    spacing={68}
-                    color1="#8a56ce"
-                    color2="#56acce"
-                    startFillColor1="#8a56ce"
-                    startFillColor2="#56acce"
-                    endFillColor1="#8a56ce"
-                    endFillColor2="#56acce"
-                    startOpacity={0.9}
-                    endOpacity={0.2}
-                    initialSpacing={0}
-                    noOfSections={4}
-                    yAxisColor="white"
-                    yAxisThickness={0}
-                    rulesType="solid"
-                    rulesColor="gray"
-                    yAxisTextStyle={{ color: "gray" }}
-                    yAxisLabelSuffix="%"
-                    xAxisColor="lightgray"
-                    pointerConfig={{
-                      pointerStripUptoDataPoint: true,
-                      pointerStripColor: "lightgray",
-                      pointerStripWidth: 2,
-                      strokeDashArray: [2, 5],
-                      pointerColor: "lightgray",
-                      radius: 4,
-                      pointerLabelWidth: 100,
-                      pointerLabelHeight: 120,
-                      pointerLabelComponent: (
-                        items: {
-                          value: number;
-                          x: number;
-                          y: number;
-                          index: number;
-                        }[]
-                      ) => (
-                        <View>
-                          <Text>Value: {items[0].value}</Text>
-                          <Text>X: {items[0].x}</Text>
-                          <Text>Y: {items[0].y}</Text>
-                          <Text>Index: {items[0].index}</Text>
-                        </View>
-                      ),
-                    }}
-                  />
+                <View style={styles.titleRow}>
+                  <Text style={styles.dateLegend}>
+                    {formatDatev1(currentDate)}
+                  </Text>
+                  <View style={styles.chartSubTitleContainer}>
+                    <Text style={styles.chartSubTitle}>
+                      <View style={styles.itemContainer}>
+                        <Ionicons name="square" size={18} color="gray" />
+                        <SpacerW size={2} />
+                        <Text style={styles.legendText}>ACTUAL</Text>
+                      </View>
+                      <SpacerW size={20} />
+                      <View style={styles.itemContainer}>
+                        <Ionicons name="square" size={18} color="red" />
+                        <SpacerW size={2} />
+                        <Text style={styles.legendText}>MAKEUP</Text>
+                      </View>
+                      <SpacerW size={18} />
+                      <View style={styles.itemContainer}>
+                        <Ionicons name="square" size={18} color="green" />
+                        <SpacerW size={2} />
+                        <Text style={styles.legendText}>SCHEDULED</Text>
+                      </View>
+                      <SpacerW size={17} />
+                      <View style={styles.itemContainer}>
+                        <Ionicons name="square" size={18} color="purple" />
+                        <SpacerW size={2} />
+                        <Text style={styles.legendText}>ADVANCE</Text>
+                      </View>
+                    </Text>
+                  </View>
                 </View>
               </View>
             </View>
           </View>
           <View style={styles.chartRow}>
+            <View style={styles.chartContainer}>
+              <View style={styles.chartCard}>
+                <Text style={styles.chartTitle}>Daily</Text>
+                <View style={styles.chartRowDaily}>
+                  <View style={styles.dailyPieCharts1}>
+                    {!dailyDataCompletion && <Text>No data available</Text>}
+                    {dailyDataCompletion && (
+                      <PieChart
+                        data={dailyDataCompletion}
+                        donut
+                        showGradient
+                        sectionAutoFocus
+                        radius={122}
+                        innerRadius={75}
+                        innerCircleColor={"#fff"}
+                        centerLabelComponent={() => (
+                          <View style={styles.centerLabelContainer}>
+                            <Text style={styles.centerLabelText}>
+                              {dailyDataCompletion[0].value}%
+                            </Text>
+                            <View
+                              style={{
+                                alignItems: "center",
+                                justifyContent: "center",
+                                marginTop: 10,
+                              }}>
+                              <Text>Completion</Text>
+                            </View>
+                          </View>
+                        )}
+                      />
+                    )}
+                    <SpacerH size={30} />
+                  </View>
+                  <View style={styles.dailyPieCharts2}>
+                    {!dailyData && <Text>No data available</Text>}
+                    {dailyData && (
+                      <>
+                        <PieChart
+                          data={dailyData}
+                          donut
+                          showGradient
+                          sectionAutoFocus
+                          radius={122}
+                          innerRadius={75}
+                          innerCircleColor={"#fff"}
+                        />
+                        {dailyData && (
+                          <View
+                            style={{
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginTop: 10,
+                            }}>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                width: "100%",
+                                maxWidth: 360,
+                                alignItems: "center",
+                              }}>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}>
+                                <View
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    borderRadius: 7.5,
+                                    backgroundColor: "#6ED7A5",
+                                    marginRight: 5,
+                                  }}
+                                />
+                                <Text style={{ color: "black" }}>
+                                  Scheduled: {dailyData[0].value ?? 0}
+                                </Text>
+                              </View>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}>
+                                <View
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    borderRadius: 7.5,
+                                    backgroundColor: "#046E37",
+                                    marginRight: 5,
+                                  }}
+                                />
+                                <Text style={{ color: "black" }}>
+                                  Actual: {dailyData[1].value ?? 0}
+                                </Text>
+                              </View>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}>
+                                <View
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    borderRadius: 7.5,
+                                    backgroundColor: "lightgray",
+                                    marginRight: 5,
+                                  }}
+                                />
+                                <Text style={{ color: "black" }}>
+                                  Target: {dailyData[2].value ?? 0}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        )}
+                      </>
+                    )}
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View style={styles.chartRow}>
             <View style={styles.chartContainer1}>
               <View style={styles.chartCard}>
-                <Text style={styles.chartTitle}>Monthly Call Frequency</Text>
-                <View style={styles.centerView}>
-                  <LineChart
-                    initialSpacing={0}
-                    data={lineDataSample}
-                    height={250}
-                    spacing={44}
-                    textColor1="black"
-                    textShiftY={-8}
-                    textShiftX={-10}
-                    textFontSize={13}
-                    thickness={5}
-                    hideRules
-                    yAxisColor="#0BA5A4"
-                    showVerticalLines
-                    verticalLinesColor="rgba(14,164,164,0.5)"
-                    xAxisColor="#0BA5A4"
-                    color="#0BA5A4"
-                  />
+                <Text style={styles.chartTitle}>Monthly</Text>
+                <View style={{ marginStart: 20 }}>
+                  <View style={styles.centerView}>
+                    {!monthlyData && <Text>No data available</Text>}
+                    {monthlyData && (
+                      <>
+                        <PieChart
+                          data={monthlyData}
+                          donut
+                          showGradient
+                          sectionAutoFocus
+                          radius={122}
+                          innerRadius={75}
+                          innerCircleColor={"#fff"}
+                        />
+                        {monthlyData && (
+                          <View
+                            style={{
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginTop: 10,
+                            }}>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                width: "100%",
+                                maxWidth: 360,
+                                alignItems: "center",
+                              }}>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  marginEnd: 10,
+                                }}>
+                                <View
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    borderRadius: 7.5,
+                                    backgroundColor: "#6ED7A5",
+                                    marginRight: 5,
+                                  }}
+                                />
+                                <Text style={{ color: "black" }}>
+                                  Scheduled: {monthlyData[0].value ?? 0}
+                                </Text>
+                              </View>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  marginEnd: 10,
+                                }}>
+                                <View
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    borderRadius: 7.5,
+                                    backgroundColor: "#046E37",
+                                    marginRight: 5,
+                                  }}
+                                />
+                                <Text style={{ color: "black" }}>
+                                  Actual: {monthlyData[1].value ?? 0}
+                                </Text>
+                              </View>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  marginEnd: 10,
+                                }}>
+                                <View
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    borderRadius: 7.5,
+                                    backgroundColor: "#lightgray",
+                                    marginRight: 5,
+                                  }}
+                                />
+                                <Text style={{ color: "black" }}>
+                                  Target: {monthlyData[2].value ?? 0}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        )}
+                      </>
+                    )}
+                  </View>
                 </View>
               </View>
             </View>
             <View style={styles.chartContainer2}>
               <View style={styles.chartCard}>
-                <Text style={styles.chartTitle}>
-                  Monthly Call Performance VS Target
-                </Text>
-                <View style={styles.centerView}>
-                  <LineChart
-                    initialSpacing={0}
-                    data={lineDataSample1}
-                    height={250}
-                    spacing={44}
-                    textColor1="black"
-                    textShiftY={-8}
-                    textShiftX={-10}
-                    textFontSize={13}
-                    thickness={5}
-                    hideRules
-                    yAxisColor="#FF3C3C"
-                    showVerticalLines
-                    verticalLinesColor="rgba(255,60,60,0.5)"
-                    xAxisColor="#FF3C3C"
-                    color="#FF3C3C"
-                  />
+                <Text style={styles.chartTitle}>Yearly</Text>
+                <View style={{ marginStart: 20 }}>
+                  <View style={styles.centerView}>
+                    {!yearlyData && <Text>No data available</Text>}
+                    {yearlyData && (
+                      <>
+                        <PieChart
+                          data={yearlyData}
+                          donut
+                          showGradient
+                          sectionAutoFocus
+                          radius={122}
+                          innerRadius={75}
+                          innerCircleColor={"#fff"}
+                        />
+                        {yearlyData && (
+                          <View
+                            style={{
+                              alignItems: "center",
+                              justifyContent: "center",
+                              marginTop: 10,
+                            }}>
+                            <View
+                              style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                width: "100%",
+                                maxWidth: 360,
+                                alignItems: "center",
+                              }}>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  marginEnd: 20,
+                                }}>
+                                <View
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    borderRadius: 7.5,
+                                    backgroundColor: "#6ED7A5",
+                                    marginRight: 5,
+                                  }}
+                                />
+                                <Text style={{ color: "black" }}>
+                                  Scheduled: {yearlyData[0].value ?? 0}
+                                </Text>
+                              </View>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                  marginEnd: 10,
+                                }}>
+                                <View
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    borderRadius: 7.5,
+                                    backgroundColor: "#046E37",
+                                    marginRight: 5,
+                                  }}
+                                />
+                                <Text style={{ color: "black" }}>
+                                  Actual: {yearlyData[1].value ?? 0}
+                                </Text>
+                              </View>
+                              <View
+                                style={{
+                                  flexDirection: "row",
+                                  alignItems: "center",
+                                }}>
+                                <View
+                                  style={{
+                                    width: 15,
+                                    height: 15,
+                                    borderRadius: 7.5,
+                                    backgroundColor: "#lightgray",
+                                    marginRight: 5,
+                                  }}
+                                />
+                                <Text style={{ color: "black" }}>
+                                  Target: {yearlyData[2].value ?? 0}
+                                </Text>
+                              </View>
+                            </View>
+                          </View>
+                        )}
+                      </>
+                    )}
+                  </View>
+                </View>
+              </View>
+            </View>
+          </View>
+          <View style={styles.chartRow}>
+            <View style={styles.chartContainer}>
+              <View style={styles.chartCard}>
+                <Text style={styles.chartTitle}>YTD Calls/Target</Text>
+                <View
+                  style={{
+                    margin: 10,
+                    padding: 16,
+                    borderRadius: 20,
+                  }}>
+                  <View style={{ padding: 20, alignItems: "center" }}>
+                    <View style={{ marginBottom: 10 }}>
+                      <View
+                        style={{ flexDirection: "row", alignItems: "center" }}>
+                        <View
+                          style={{
+                            height: 12,
+                            width: 12,
+                            borderRadius: 6,
+                            backgroundColor: actualColor,
+                            marginRight: 8,
+                          }}
+                        />
+                        <Text
+                          style={{
+                            width: 60,
+                            height: 16,
+                            color: "black",
+                          }}>
+                          Actual
+                        </Text>
+                        <View
+                          style={{
+                            height: 12,
+                            width: 12,
+                            borderRadius: 6,
+                            backgroundColor: plottedColor,
+                            marginRight: 8,
+                          }}
+                        />
+                        <Text
+                          style={{
+                            width: 60,
+                            height: 16,
+                            color: "black",
+                          }}>
+                          Plotted
+                        </Text>
+                        <View
+                          style={{
+                            height: 12,
+                            width: 12,
+                            borderRadius: 6,
+                            backgroundColor: "red",
+                            marginRight: 8,
+                          }}
+                        />
+                        <Text
+                          style={{
+                            width: 60,
+                            height: 16,
+                            color: "red",
+                          }}>
+                          Target
+                        </Text>
+                      </View>
+                    </View>
+                    {!ytdDataMonthValues && <Text>No data available</Text>}
+                    {ytdDataMonthValues && (
+                      <BarChart
+                        data={ytdDataMonthValues}
+                        barWidth={16}
+                        isAnimated
+                        initialSpacing={20}
+                        spacing={39}
+                        barBorderRadius={4}
+                        yAxisThickness={0}
+                        xAxisType={"dashed"}
+                        xAxisColor={"lightgray"}
+                        yAxisTextStyle={{ color: "black" }}
+                        stepValue={50}
+                        maxValue={350}
+                        yAxisLabelTexts={[
+                          "0",
+                          "50",
+                          "100",
+                          "150",
+                          "200",
+                          "250",
+                          "300",
+                          "350",
+                        ]}
+                        labelWidth={40}
+                        xAxisLabelTextStyle={{
+                          color: "black",
+                          textAlign: "center",
+                        }}
+                        showReferenceLine1
+                        referenceLine1Position={330}
+                        referenceLine1Config={{
+                          color: "red",
+                          thickness: 2,
+                          type: "solid",
+                        }}
+                      />
+                    )}
+                  </View>
                 </View>
               </View>
             </View>
@@ -290,11 +544,40 @@ const Dashboard = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "#046E37",
   },
   centerView: {
     alignSelf: "center",
+  },
+  dailyPieCharts1: {
+    marginStart: 150,
+  },
+  dailyPieCharts2: {
+    marginEnd: 150,
+  },
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 10,
+    marginBottom: 10,
+    marginTop: 40,
+  },
+  chartSubTitleContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  itemContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  legendText: {
+    color: "#666666",
+    fontWeight: "condensedBold",
+  },
+  dateLegend: {
+    color: "#666666",
+    fontWeight: "condensedBold",
   },
   announcementContainer: {
     backgroundColor: "#FFFFFF",
@@ -307,11 +590,20 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     marginStart: 20,
     marginEnd: 10,
-    elevation: 5,
+    elevation: 2,
   },
   chartRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    marginBottom: 10,
+    marginStart: 20,
+    marginEnd: 10,
+    elevation: 5,
+  },
+  chartRowDaily: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 10,
     marginStart: 20,
     marginEnd: 10,
@@ -330,11 +622,10 @@ const styles = StyleSheet.create({
   },
   announcementImage: {
     width: "100%",
-    height: 150,
+    height: 60,
     borderRadius: 8,
     marginTop: 8,
   },
-
   chartContainer: {
     flex: 1,
   },
@@ -360,6 +651,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#333333",
     marginBottom: 12,
+  },
+  chartSubTitle: {
+    fontSize: 10,
+    fontWeight: "normal",
+    color: "#lightgray",
+    marginBottom: 12,
+    marginRight: 40,
   },
   shimmerPlaceholder: {
     width: "100%",

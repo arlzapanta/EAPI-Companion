@@ -35,7 +35,40 @@ declare global {
       full_name : string;
       created_at: string;
     }
-
+    export interface ChartDashboardRecord {
+      id: string; 
+      daily: {
+          plottingCount: string; 
+          callsCount: string;    
+          targetCount: number;   
+      };
+      monthly: {
+          plottingCount: string; 
+          callsCount: string;    
+          targetCount: number;   
+      };
+      yearly: {
+          plottingCount: string; 
+          callsCount: string;    
+          targetCount: number;   
+      };
+      ytd: {
+          plottingCount: number[]; 
+          callsCount: number[];    
+          targetCount: number[];    
+      };
+      created_at: string; 
+  }
+  interface DailyTargetState {
+    data: { callsCount: string, plotCount: string }[];
+  }
+  interface chartData {
+    value: number;
+    color: string;
+  }
+  interface chartYtdData {
+    value: number[];
+  }
     export interface CallComponentsProps {
       scheduleId: string;
       docName: string;
@@ -106,12 +139,6 @@ declare global {
       isVisible: boolean;
       onClose: () => void;
     }
-
-    export interface dailyCompletionData {
-      value: number;
-      color: string;
-    }
-
     export interface Props {
       route: OnCallScreenRouteProp;
       navigation: OnCallScreenNavigationProp;

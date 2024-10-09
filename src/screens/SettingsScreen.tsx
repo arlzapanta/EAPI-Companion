@@ -13,6 +13,7 @@ import {
 } from "../utils/localDbUtils";
 import { doctorRecordsSync, syncUser } from "../utils/apiUtility";
 import { getCurrentTimePH, isTimeBetween12and1PM } from "../utils/dateUtils";
+import Loading from "../components/Loading";
 
 type SettingsScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -34,7 +35,7 @@ const Settings = () => {
     created_at: string;
     updated_at: string;
   } | null>(null);
-  // const styles = getStyleUtil({});
+  const dynamicStyle = getStyleUtil({});
   const navigation = useNavigation<SettingsScreenNavigationProp>();
 
   const handleLogout = () => {
@@ -157,62 +158,75 @@ const Settings = () => {
     await dropLocalTablesDb();
   };
 
+  const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeOutLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Settings</Text>
+    <View style={dynamicStyle.container}>
+      {timeOutLoading ? (
+        <Loading />
+      ) : (
+        <>
+          <View style={dynamicStyle.card}>
+            <Text style={styles.title}>Settings</Text>
+            <View style={styles.centerItems}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleAttendanceOnPress}>
+                <Text style={styles.buttonText}>Attendance</Text>
+              </TouchableOpacity>
 
-        <View style={styles.centerItems}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleAttendanceOnPress}>
-            <Text style={styles.buttonText}>Attendance</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleSyncSettingsOnPress}>
+                <Text style={styles.buttonText}>Sync History</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSyncSettingsOnPress}>
-            <Text style={styles.buttonText}>Sync History</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
+                style={styles.button}>
+                <Text style={styles.buttonText}>Mid Sync</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
-            style={styles.button}>
-            <Text style={styles.buttonText}>Mid Sync</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleRequestreschedOnPress}>
+                <Text style={styles.buttonText}>Request Reschedule</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleRequestreschedOnPress}>
-            <Text style={styles.buttonText}>Request Reschedule</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.buttonLogout}
+                onPress={handleLogout}>
+                <Text style={styles.buttonTextLogout}>Logout</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>
-            <Text style={styles.buttonTextLogout}>Logout</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.buttonTest} onPress={dropLocalTables}>
-            <Text style={styles.buttonTextTest}>
-              DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+              <TouchableOpacity
+                style={styles.buttonTest}
+                onPress={dropLocalTables}>
+                <Text style={styles.buttonTextTest}>
+                  DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F0F0F0",
-  },
   centerItems: {
     alignContent: "center",
     alignItems: "center",
   },
   card: {
-    flex: 1,
+    height: 740,
     padding: 40,
     backgroundColor: "#ffffff",
     borderRadius: 10,
@@ -270,7 +284,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 400,
+    marginTop: 100,
     width: 600,
   },
   buttonTextTest: {

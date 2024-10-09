@@ -22,12 +22,13 @@ import { Picker } from "@react-native-picker/picker";
 import { generateFutureDates, isWithinWeekOrAdvance } from "../utils/dateUtils";
 import { customToast } from "../utils/customToast";
 import RescheduleTable from "../screens/tables/RescheduleTable";
-import { getStatusText, showConfirmAlert } from "../utils/commonUtil";
+import { getStyleUtil } from "../utils/styleUtil";
+import { lightTheme, darkTheme } from "../utils/themes";
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const RescheduleScreen: React.FC = () => {
   const navigation = useNavigation<RescheduleScreenNavigationProp>();
   const { authState } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     first_name: string;
     last_name: string;
@@ -211,7 +212,7 @@ const RescheduleScreen: React.FC = () => {
           <View style={styles.requestContainer}>
             <Text style={styles.title}>Reschedule Request</Text>
             <View style={styles.dropdownContainer}>
-              <Text style={styles.signatureLabel}>Select schedule/doctor</Text>
+              <Text style={dynamicStyles.mainText}>Select schedule/doctor</Text>
               <Picker
                 style={styles.picker}
                 selectedValue={selectedDoctor}
@@ -248,7 +249,7 @@ const RescheduleScreen: React.FC = () => {
                   ))}
               </Picker>
 
-              <Text style={styles.signatureLabel}>Date to</Text>
+              <Text style={dynamicStyles.mainText}>Date to</Text>
               <Picker
                 selectedValue={selectedDateTo}
                 onValueChange={(itemValue) => setSelectedDateTo(itemValue)}
@@ -281,7 +282,7 @@ const RescheduleScreen: React.FC = () => {
               </Picker>
 
               <TouchableOpacity
-                style={styles.saveButton}
+                style={[styles.saveButton, dynamicStyles.mainBgColor]}
                 disabled={!selectedDateTo}
                 onPress={handleSaveReschedule}>
                 <Text style={styles.buttonText}>Add Request</Text>

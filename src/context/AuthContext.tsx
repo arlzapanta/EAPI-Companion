@@ -3,6 +3,7 @@ import * as SecureStore from "expo-secure-store";
 import { API_URL_ENV, TOKEN_USERNAME_ENV, TOKEN_PASSWORD_ENV } from "@env";
 import axios from "axios";
 import { View, Text } from "react-native";
+import Loading from "../components/Loading";
 
 const AuthContext = createContext<AuthProps>({
   authState: { token: null, authenticated: false },
@@ -178,7 +179,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider value={value}>
       {loading ? (
         <View>
-          <Text>Loading...</Text>
+          <Loading />
         </View>
       ) : (
         children

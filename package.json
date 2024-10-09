@@ -48,7 +48,8 @@
     "react-native-table-component": "^1.2.2",
     "react-native-vector-icons": "^10.1.0",
     "react-native-view-shot": "^3.8.0",
-    "typescript": "~5.3.3"
+    "typescript": "~5.3.3",
+    "lottie-react-native": "6.7.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

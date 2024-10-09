@@ -45,7 +45,6 @@ const ActualCalls = () => {
         const getDate = await getCurrentDatePH();
         getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
         const data = await getCallsTodayLocalDb();
-        console.log(data);
         setCallsDate(data);
       } catch (error: any) {
         console.log("fetchActualCallsData error", error);
