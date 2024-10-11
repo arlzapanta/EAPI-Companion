@@ -11,10 +11,7 @@ import { useAuth } from "../context/AuthContext";
 import { getStyleUtil } from "../utils/styleUtil";
 import { customToast } from "../utils/customToast";
 
-import {
-  getCallsTestLocalDb,
-  getCallsTodayLocalDb,
-} from "../utils/localDbUtils";
+import { getCallsLocalDb, getCallsTodayLocalDb } from "../utils/localDbUtils";
 import {
   getPostCallNotesLocalDb,
   savePostCallNotesLocalDb,
@@ -44,7 +41,8 @@ const ActualCalls = () => {
       try {
         const getDate = await getCurrentDatePH();
         getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
-        const data = await getCallsTodayLocalDb();
+        // const data = await getCallsTodayLocalDb();
+        const data = await getCallsLocalDb();
         setCallsDate(data);
       } catch (error: any) {
         console.log("fetchActualCallsData error", error);

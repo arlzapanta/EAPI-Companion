@@ -21,10 +21,11 @@ import {
 
 import { showConfirmAlert } from "../utils/commonUtil";
 import { customToast } from "../utils/customToast";
+import { getStyleUtil } from "../utils/styleUtil";
 
 const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const { authState } = useAuth();
-
+  const dynamicStyles = getStyleUtil({});
   const [currentDate, setCurrentDate] = useState("");
   const [doctorList, setDoctorList] = useState<DoctorRecord[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorRecord | null>(
@@ -322,10 +323,10 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       <View style={styles.row}>
         <View style={styles.column1}>
-          <View style={styles.innerCard}>
+          <View style={dynamicStyles.card1Col}>
             <Text style={styles.columnTitle}>Doctors</Text>
             <Text style={styles.columnSubTitle}>{currentDate}</Text>
             <ScrollView contentContainerStyle={styles.scrollViewContainer}>
@@ -338,7 +339,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                     <Text
                       style={
                         styles.callText
-                      }>{`${doc.first_name} ${doc.last_name}`}</Text>
+                      }>{`${doc.first_name} ${doc.last_name} - ${doc.specialization}`}</Text>
                   </TouchableOpacity>
                 ))
               ) : (
@@ -348,7 +349,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
           </View>
         </View>
         <View style={styles.column2}>
-          <View style={styles.innerCard}>
+          <View style={dynamicStyles.card2Col}>
             {selectedDoctor ? (
               <DoctorDetails doc={selectedDoctor} />
             ) : (
@@ -395,28 +396,12 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     flex: 1,
-    marginVertical: 10,
-    marginStart: 20,
-    marginEnd: 20,
   },
   column1: {
     width: "30%",
-    marginEnd: 10,
   },
   column2: {
     width: "70%",
-  },
-  innerCard: {
-    flex: 1,
-    paddingHorizontal: 20,
-    paddingVertical: 30,
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
   },
   columnTitle: {
     fontSize: 24,
@@ -429,9 +414,17 @@ const styles = StyleSheet.create({
     color: "#6c757d",
   },
   callItem: {
-    backgroundColor: "rgba(0,0,0,0.2)",
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    elevation: 1,
+    marginVertical: 4,
+  },
+  callText: {
+    fontSize: 16,
+    color: "#343a40",
   },
   signImage: {
     marginVertical: 15,
@@ -463,12 +456,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     backgroundColor: "#f1f1f1",
     borderRadius: 5,
-  },
-  callText: {
-    fontSize: 18,
-    color: "#fff",
-    fontWeight: "bold",
-    // color: "#495057",
   },
   containerNoCallData: {
     flex: 1,

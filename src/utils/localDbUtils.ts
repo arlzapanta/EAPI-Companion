@@ -171,6 +171,8 @@ export const saveRescheduleHistoryLocalDb = async (rescheduleDetails : Reschedul
 };
 
 export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<string> => {
+
+  console.log(schedules,'saveActualCallsLocalDb');
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
@@ -194,13 +196,14 @@ export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<
       signature TEXT, 
       signature_location TEXT,
       signature_attempts TEXT,
+      created_at TEXT,
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
     );
   `);
 
   const insertPromises = schedules.map((schedule: CallAPIDown) => {
     return db.execAsync(`
-      INSERT INTO calls_tbl (schedule_id, address, call_start, call_end, date, doctor_name, municipality_city, photo, photo_location, province, signature, signature_location)
+      INSERT INTO calls_tbl (schedule_id, address, call_start, call_end, date, doctor_name, municipality_city, photo, photo_location, province, signature, signature_location, created_at)
       VALUES (
         ${schedule.id !== undefined && schedule.id !== null ? `'${schedule.id}'` : 'NULL'},
         ${schedule.address !== undefined && schedule.address !== null ? `'${schedule.address}'` : 'NULL'},
@@ -213,7 +216,8 @@ export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<
         ${schedule.photo_location !== undefined && schedule.photo_location !== null ? `'${schedule.photo_location}'` : 'NULL'},
         ${schedule.province !== undefined && schedule.province !== null ? `'${schedule.province}'` : 'NULL'},
         ${schedule.signature !== undefined && schedule.signature !== null ? `'${schedule.signature}'` : 'NULL'},
-        ${schedule.signature_location !== undefined && schedule.signature_location !== null ? `'${schedule.signature_location}'` : 'NULL'}
+        ${schedule.signature_location !== undefined && schedule.signature_location !== null ? `'${schedule.signature_location}'` : 'NULL'},
+        ${schedule.created_at !== undefined && schedule.created_at !== null ? `'${schedule.created_at}'` : 'NULL'}
       );
     `);
   });
@@ -268,10 +272,81 @@ export const saveSchedulesAPILocalDb = async (schedules: ScheduleAPIRecord[]): P
 
   try {
     await Promise.all(insertPromises);
-      // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+      const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+      // console.log(testRecords,'asdasd saveSchedulesAPILocalDb');
     return 'Success';
   } catch (error) {
     console.error('Error saving data: asdasdasdasdasd', error);
+    return 'Failed to save data';
+  }
+};
+
+export const saveCallsAPILocalDb = async (calls: CallAPIRecord[]): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    DROP TABLE IF EXISTS calls_tbl;
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE calls_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      date TEXT, 
+      ts_name TEXT, 
+      schedule_id TEXT, 
+      doctors_name TEXT, 
+      call_start TEXT, 
+      call_end TEXT, 
+      signature TEXT, 
+      signature_attempts TEXT, 
+      signature_location TEXT, 
+      photo TEXT, 
+      photo_location TEXT,
+      created_at TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
+    );
+  `);
+
+  const insertPromises = calls.map((calls: CallAPIRecord) => {
+    return db.execAsync(`
+      INSERT INTO calls_tbl (date,
+                              ts_name,
+                              schedule_id,
+                              doctors_name,
+                              call_start,
+                              call_end,
+                              signature,
+                              signature_attempts,
+                              signature_location,
+                              photo,
+                              photo_location,
+                              created_at
+                              )
+      VALUES (
+        ${calls.date !== undefined && calls.date !== null ? `'${calls.date}'` : 'NULL'},
+        ${calls.ts_name !== undefined && calls.ts_name !== null ? `'${calls.ts_name}'` : 'NULL'},
+        ${calls.schedule_id !== undefined && calls.schedule_id !== null ? `'${calls.schedule_id}'` : 'NULL'},
+        ${calls.doctors_name !== undefined && calls.doctors_name !== null ? `'${calls.doctors_name}'` : 'NULL'},
+        ${calls.call_start !== undefined && calls.call_start !== null ? `'${calls.call_start}'` : 'NULL'},
+        ${calls.call_end !== undefined && calls.call_end !== null ? `'${calls.call_end}'` : 'NULL'},
+        ${calls.signature !== undefined && calls.signature !== null ? `'${calls.signature}'` : 'NULL'},
+        ${calls.signature_attempts !== undefined && calls.signature_attempts !== null ? `'${calls.signature_attempts}'` : 'NULL'},
+        ${calls.signature_location !== undefined && calls.signature_location !== null ? `'${calls.signature_location}'` : 'NULL'},
+        ${calls.photo !== undefined && calls.photo !== null ? `'${calls.photo}'` : 'NULL'},
+        ${calls.photo_location !== undefined && calls.photo_location !== null ? `'${calls.photo_location}'` : 'NULL'},
+        ${calls.created_at !== undefined && calls.created_at !== null ? `'${calls.created_at}'` : 'NULL'}
+      );
+    `);
+  });
+
+  try {
+    await Promise.all(insertPromises);
+      const testRecords = await db.getAllAsync('SELECT * FROM calls_tbl');
+      console.log(calls,'callscallscallscallscalls');
+      console.log(testRecords,'saveCallsAPILocalDb saveCallsAPILocalDb');
+    return 'Success';
+  } catch (error) {
+    console.error('Error saving data: saveCallsAPILocalDb', error);
     return 'Failed to save data';
   }
 };
@@ -415,8 +490,8 @@ export const saveRescheduleListLocalDb = async (request: RescheduleRecord[]): Pr
     await Promise.all(insertPromises);
 
     const query = `SELECT * FROM reschedule_req_tbl`;
-    const existingRows = await db.getAllAsync(query);
-     console.log('test test existingRows reschedule_req_tbl', existingRows);
+    // const existingRows = await db.getAllAsync(query);
+    //  console.log('test test existingRows reschedule_req_tbl', existingRows);
     return 'Success';
   } catch (error) {
     console.error('Error saving data:44444444444444', error);
@@ -977,6 +1052,7 @@ export const getDatesAndTypeForCalendarView = async (): Promise<CalendarRecord[]
       signature TEXT, 
       signature_location TEXT,
       signature_attempts TEXT,
+      created_at TEXT,
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -1003,7 +1079,7 @@ export const getDatesAndTypeForCalendarView = async (): Promise<CalendarRecord[]
     const qMakeupResult: { date_to: string }[] = await db.getAllAsync(qMakeup, ['Makeup', '1']);
     const qAdvanceResult: { date_to: string }[] = await db.getAllAsync(qAdvance, ['Advance', '1']);
     const qSched: { date: string }[] = await db.getAllAsync(`SELECT date FROM schedule_API_tbl`);
-    const qCalls: { date: string }[] = await db.getAllAsync(`SELECT date FROM calls_tbl`);
+    const qCalls: { date: string }[] = await db.getAllAsync(`SELECT date, created_at FROM calls_tbl`);
     
     const data: CalendarRecord = {
       plotData: Array.from(new Set(qSched.map(record => parseInt((record.date || '0000-00-00').split('-')[2])))).map(String),
@@ -1011,11 +1087,10 @@ export const getDatesAndTypeForCalendarView = async (): Promise<CalendarRecord[]
       makeupData: Array.from(new Set(qMakeupResult.map(record => parseInt((record.date_to || '0000-00-00').split('-')[2])))).map(String),
       actualData: Array.from(new Set(qCalls.map(record => parseInt((record.date || '0000-00-00').split('-')[2])))).map(String)
     };
-    
 
     return [data];
   } catch (error) {
-    console.error('Error fetching schedule records data4:', error);
+    console.error('Error fetching schedule records data getDatesAndTypeForCalendarView:', error);
     return [];
   } finally {
     await db.closeAsync();
@@ -1046,6 +1121,40 @@ export const getDoctorsTodaySchedLocalDb = async (): Promise<ScheduleAPIRecord[]
 
   try {
     const result = await db.getAllAsync(query, [currentDate]);
+    const existingRows = result as ScheduleAPIRecord[];
+
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching schedule records data5:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getDoctorsSchedLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      schedule_id TEXT, 
+      address TEXT, 
+      date TEXT, 
+      doctors_id TEXT, 
+      full_name TEXT, 
+      municipality_city TEXT, 
+      province TEXT
+    );
+  `);
+
+  const query = `SELECT * FROM schedule_API_tbl`;
+
+  try {
+    const result = await db.getAllAsync(query);
     const existingRows = result as ScheduleAPIRecord[];
 
     return existingRows;
@@ -1093,7 +1202,7 @@ export const getDoctorsWeekSchedLocalDb = async (): Promise<ScheduleAPIRecord[]>
   }
 };
 
-export const getCallsTestLocalDb = async (): Promise<ScheduleRecord[]> => {
+export const getCallsLocalDb = async (): Promise<ScheduleRecord[]> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
@@ -1101,7 +1210,7 @@ export const getCallsTestLocalDb = async (): Promise<ScheduleRecord[]> => {
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
     CREATE TABLE IF NOT EXISTS calls_tbl (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
       schedule_id TEXT, 
       address TEXT, 
       call_start TEXT, 
@@ -1115,19 +1224,20 @@ export const getCallsTestLocalDb = async (): Promise<ScheduleRecord[]> => {
       signature TEXT, 
       signature_location TEXT,
       signature_attempts TEXT,
+      created_at TEXT,
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
-  const currentDate = await getCurrentDatePH();
   const query = `SELECT * FROM calls_tbl`;
 
   try {
-    const result = await db.getAllAsync(query, [currentDate]);
+    const result = await db.getAllAsync(query);
     const existingRows = result as ScheduleRecord[];
+    // console.log(existingRows,'getCallsLocaldb');
     return existingRows;
   } catch (error) {
-    console.error('Error fetching data for today:', error);
+    console.error('Error fetching data for getCallsLocalDb:', error);
     return [];
   } finally {
     await db.closeAsync();
@@ -1156,7 +1266,8 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
       signature TEXT, 
       signature_location TEXT,
       signature_attempts TEXT,
-      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
+      created_at TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
   `);
 
@@ -1168,7 +1279,7 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
     const existingRows = result as ScheduleRecord[];
     return existingRows;
   } catch (error) {
-    console.error('Error fetching data for today:', error);
+    console.error('Error fetching data for today: getCallsTodayLocalDb', error);
     return [];
   } finally {
     await db.closeAsync();
@@ -1340,8 +1451,6 @@ export const fetchAllDetailers = async (): Promise<DetailerRecord[]> => {
 export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails: SchedToCall): Promise<string> => {
   const db = await SQLite.openDatabaseAsync('cmms', { useNewConnection: true });
 
-  console.log('saveCallsDoneFromSchedules callDetails:', callDetails);
-
   try {
     await db.execAsync(`
       PRAGMA journal_mode = WAL;
@@ -1357,6 +1466,7 @@ export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails
         signature_location TEXT,
         signature_attempts TEXT,
         doctor_name TEXT,
+        created_at TEXT,
         created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
       );
     `);

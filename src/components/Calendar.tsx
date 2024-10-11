@@ -4,7 +4,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { getCurrentDatePH } from "../utils/dateUtils";
 import moment from "moment";
 
-const { width } = Dimensions.get("window");
 const numColumns = 7;
 let currentMonth = 0;
 let currentYear = 0;
@@ -74,13 +73,7 @@ const CalendarComponent: React.FC<CalendarProps> = ({ data }) => {
 
     if (!day) {
       return (
-        <View
-          key={index}
-          style={[
-            styles.dayContainer,
-            ...borderStyles, // Apply the border styles conditionally
-          ]}
-        />
+        <View key={index} style={[styles.dayContainer, ...borderStyles]} />
       );
     }
 
@@ -99,12 +92,7 @@ const CalendarComponent: React.FC<CalendarProps> = ({ data }) => {
     });
 
     return (
-      <View
-        key={index}
-        style={[
-          styles.dayContainer,
-          ...borderStyles, // Apply the border styles conditionally
-        ]}>
+      <View key={index} style={[styles.dayContainer, ...borderStyles]}>
         <Text
           style={[
             styles.dayText,
@@ -192,7 +180,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: mainColor, // Adjust as necessary
+    backgroundColor: mainColor,
     shadowColor: "rgba(0, 0, 0, 0.09)",
     shadowOffset: {
       width: 0,
@@ -202,8 +190,8 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   calendarHeader: {
-    fontSize: 32, // 2em converted to pixels
-    color: mainColor, // Use main color
+    fontSize: 32,
+    color: mainColor,
     fontWeight: "600",
   },
   cstsDays: {
@@ -213,12 +201,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     padding: 15,
-    marginVertical: 20,
+    marginVertical: 6,
   },
   dayHeaderText: {
-    fontSize: 20,
-    fontWeight: "bold", // Adjusted to a common React Native weight
-    color: "white", // Use main color
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "white",
   },
   dayContainer: {
     flex: 1,
@@ -226,31 +214,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     paddingLeft: 10,
-    minHeight: 100,
+    minHeight: 60,
     borderWidth: 1,
     borderColor: mainColor,
     fontFamily: "monospace",
   },
   leftBorder: {
     borderLeftWidth: 1.5,
-    borderLeftColor: mainColor, // Use main color
+    borderLeftColor: mainColor,
   },
   rightBorder: {
     borderRightWidth: 1.5,
-    borderRightColor: mainColor, // Use main color
+    borderRightColor: mainColor,
   },
   bottomBorder: {
     borderBottomWidth: 1.5,
-    borderBottomColor: mainColor, // Use main color
+    borderBottomColor: mainColor,
   },
   topBorder: {
     borderTopWidth: 1.5,
-    borderTopColor: mainColor, // Use main color
+    borderTopColor: mainColor,
   },
   dayText: {
-    fontSize: 18,
+    fontSize: 14,
     color: "#55544",
-    fontWeight: "400", // Adjusted to a common React Native weight
+    fontWeight: "400",
   },
   inactiveDate: {
     color: "#cacaca",
@@ -258,13 +246,13 @@ const styles = StyleSheet.create({
   },
   logoContainer: {
     flexDirection: "row",
-    marginTop: 5,
+    marginTop: 1,
     justifyContent: "center",
     alignItems: "center",
     flex: 1,
   },
   logoLegend: {
-    marginHorizontal: 2,
+    marginHorizontal: 1,
   },
   emptyDay: {
     flex: 1,
@@ -280,11 +268,11 @@ const styles = StyleSheet.create({
     color: "white",
   },
   calendarBorder: {
-    borderColor: mainColor, // Use main color for outer calendar border
+    borderColor: mainColor,
     borderWidth: 1,
   },
   calendarTHead: {
-    backgroundColor: mainColor, // Adjust as necessary
+    backgroundColor: mainColor,
     shadowColor: "rgba(0, 0, 0, 0.09)",
     shadowOffset: {
       width: 0,
@@ -294,7 +282,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   calendarBtnHeader: {
-    minWidth: 96, // 6em converted to pixels
+    minWidth: 96,
   },
 });
 

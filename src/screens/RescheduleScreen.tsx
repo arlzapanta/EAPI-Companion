@@ -14,6 +14,7 @@ import {
   cancelRescheduleReqLocalDb,
   deleteRescheduleReqLocalDb,
   getDoctorsWeekSchedLocalDb,
+  getDoctorsSchedLocalDb,
   getRescheduleListLocalDb,
   insertRescheduleRequest,
   undoCancelRescheduleReqLocalDb,
@@ -137,7 +138,7 @@ const RescheduleScreen: React.FC = () => {
 
   const fetchDoctorSchedules = async () => {
     try {
-      const schedules = await getDoctorsWeekSchedLocalDb();
+      const schedules = await getDoctorsSchedLocalDb();
       setDoctorScheduleList(schedules);
       const localFromAPIdata = await getRescheduleListLocalDb();
       setRescheduleData(localFromAPIdata);

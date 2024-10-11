@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  ScrollView,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { getStyleUtil } from "../utils/styleUtil";
@@ -36,13 +37,9 @@ const Schedules = () => {
   const [accordionTodayExpanded, setAccordionTodayExpanded] = useState(false);
   const [accordionWeekExpanded, setAccordionWeekExpanded] = useState(false);
   const [currentDate, getCurrentDate] = useState("");
-
   const { authState } = useAuth();
-
   const { refresh } = useRefreshFetchDataContext();
-
-  const styles = getStyleUtil({});
-
+  const dynamicStyles = getStyleUtil({});
   const fetchScheduleData = async () => {
     if (authState.user) {
       try {
@@ -118,84 +115,86 @@ const Schedules = () => {
   };
 
   return (
-    <View style={styles1.container}>
+    <View style={dynamicStyles.container}>
       <View style={styles1.row}>
         <View style={styles1.column1}>
-          <View style={styles1.innerCard}>
+          <View style={dynamicStyles.card1Col}>
             <Text style={styles1.columnTitle}>Schedules</Text>
             <Text style={styles1.columnSubTitle}>{currentDate}</Text>
-            <TouchableOpacity
-              onPress={toggleAccordionToday}
-              style={styles1.accordionButton}>
-              <Text style={styles1.accordionTitle}>
-                {accordionTodayExpanded ? "Hide Today" : "View Today"}
-              </Text>
-              <Ionicons
-                name={accordionTodayExpanded ? "chevron-up" : "chevron-down"}
-                size={20}
-                color="#007BFF"
-                style={styles1.icon}
-              />
-            </TouchableOpacity>
+            <ScrollView>
+              <TouchableOpacity
+                onPress={toggleAccordionToday}
+                style={styles1.accordionButton}>
+                <Text style={styles1.accordionTitle}>
+                  {accordionTodayExpanded ? "Hide Today" : "View Today"}
+                </Text>
+                <Ionicons
+                  name={accordionTodayExpanded ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#007BFF"
+                  style={styles1.icon}
+                />
+              </TouchableOpacity>
 
-            {accordionTodayExpanded && (
-              <View style={styles1.accordionContent}>
-                {scheduleDataToday.map((schedule) => (
-                  <TouchableOpacity
-                    key={schedule.schedule_id}
-                    onPress={() => handleScheduleClickToday(schedule)}
-                    style={styles1.scheduleItem}>
-                    <Text style={styles1.scheduleText}>
-                      {schedule.full_name}
-                      {`${
-                        schedule.municipality_city
-                          ? ` - ${schedule.municipality_city} - ${schedule.province}`
-                          : ""
-                      }`}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+              {accordionTodayExpanded && (
+                <View style={styles1.accordionContent}>
+                  {scheduleDataToday.map((schedule) => (
+                    <TouchableOpacity
+                      key={schedule.schedule_id}
+                      onPress={() => handleScheduleClickToday(schedule)}
+                      style={styles1.scheduleItem}>
+                      <Text style={styles1.scheduleText}>
+                        {schedule.full_name}
+                        {`${
+                          schedule.municipality_city
+                            ? ` - ${schedule.municipality_city} - ${schedule.province}`
+                            : ""
+                        }`}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
 
-            <TouchableOpacity
-              onPress={toggleAccordionWeek}
-              style={styles1.accordionButton}>
-              <Text style={styles1.accordionTitle}>
-                {accordionWeekExpanded ? "Hide This Week" : "View This Week"}
-              </Text>
-              <Ionicons
-                name={accordionWeekExpanded ? "chevron-up" : "chevron-down"}
-                size={20}
-                color="#007BFF"
-                style={styles1.icon}
-              />
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={toggleAccordionWeek}
+                style={styles1.accordionButton}>
+                <Text style={styles1.accordionTitle}>
+                  {accordionWeekExpanded ? "Hide This Week" : "View This Week"}
+                </Text>
+                <Ionicons
+                  name={accordionWeekExpanded ? "chevron-up" : "chevron-down"}
+                  size={20}
+                  color="#007BFF"
+                  style={styles1.icon}
+                />
+              </TouchableOpacity>
 
-            {accordionWeekExpanded && (
-              <View style={styles1.accordionContent}>
-                {scheduleWeekData.map((schedule) => (
-                  <TouchableOpacity
-                    key={schedule.schedule_id}
-                    onPress={() => handleScheduleClickWeek(schedule)}
-                    style={styles1.scheduleItem}>
-                    <Text style={styles1.scheduleText}>
-                      {`${moment(schedule.date).format("MMMM DD, dddd")}, `}
-                      {`\n${schedule.full_name}, ${
-                        schedule.municipality_city
-                          ? `${schedule.municipality_city}`
-                          : ""
-                      }`}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
+              {accordionWeekExpanded && (
+                <View style={styles1.accordionContent}>
+                  {scheduleWeekData.map((schedule) => (
+                    <TouchableOpacity
+                      key={schedule.schedule_id}
+                      onPress={() => handleScheduleClickWeek(schedule)}
+                      style={styles1.scheduleItem}>
+                      <Text style={styles1.scheduleText}>
+                        {`${moment(schedule.date).format("MMMM DD, dddd")}, `}
+                        {`\n${schedule.full_name}, ${
+                          schedule.municipality_city
+                            ? `${schedule.municipality_city}`
+                            : ""
+                        }`}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </ScrollView>
           </View>
         </View>
 
         <View style={styles1.column2}>
-          <View style={styles1.innerCard}>
+          <View style={dynamicStyles.card2Col}>
             {selectedScheduleToday || selectedScheduleWeek ? (
               <>
                 {selectedScheduleToday ? (
@@ -260,18 +259,12 @@ const styles1 = StyleSheet.create({
   row: {
     flexDirection: "row",
     flex: 1,
-    marginVertical: 10,
-    marginStart: 20,
-    marginEnd: 20,
   },
   column1: {
     width: "30%",
-    marginEnd: 10,
-    elevation: 5,
   },
   column2: {
     width: "70%",
-    elevation: 5,
   },
   innerCard: {
     height: "100%",

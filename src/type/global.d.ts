@@ -186,6 +186,21 @@ declare global {
       province: string;
       schedule_id: string;
     }
+    export interface CallAPIRecord {
+      id?: string; 
+      date: string; 
+      ts_name: string; 
+      schedule_id: string; 
+      doctors_name: string; 
+      call_start: string; 
+      call_end: string; 
+      signature: string; 
+      signature_attempts: string; 
+      signature_location: string; 
+      photo: string; 
+      photo_location: string; 
+      created_at: string; 
+    }
 
     export interface UpdateDoctorsNotes {
       doctors_id: string;
@@ -299,6 +314,7 @@ declare global {
       photo: string | null;
       photo_location: string | null;
       signature_attempts: string | null;
+      created_at : string | null;
       
     }
     export interface RescheduleDetails {

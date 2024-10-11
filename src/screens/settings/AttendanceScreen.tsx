@@ -17,6 +17,7 @@ import {
   getUserAttendanceRecordsLocalDb,
   saveUserSyncHistoryLocalDb,
   saveSchedulesAPILocalDb,
+  saveCallsAPILocalDb,
 } from "../../utils/localDbUtils";
 import {
   apiTimeIn,
@@ -162,15 +163,17 @@ const Attendance: React.FC = () => {
         if (checkIfTimedIn === 1) {
           Alert.alert("Failed", "Already timed In today");
         } else {
+          await getDoctors(userInfo);
+          await getReschedulesData(userInfo);
+          await getChartData(userInfo);
           await fetchAttendanceData();
+          const callData = await getCallsAPI(userInfo);
           const scheduleData = await getSChedulesAPI(userInfo);
-          if (scheduleData) {
-            const result = await saveSchedulesAPILocalDb(scheduleData);
-            await getDoctors(userInfo);
-            await getReschedulesData(userInfo);
-            await getChartData(userInfo);
+          if (callData && scheduleData) {
+            const CallResult = await saveCallsAPILocalDb(callData);
+            const scheduleResult = await saveSchedulesAPILocalDb(scheduleData);
             {
-              result == "Success"
+              CallResult && scheduleResult == "Success"
                 ? Alert.alert("Success", "Successfully synced data from server")
                 : Alert.alert("Failed", "Error syncing");
             }

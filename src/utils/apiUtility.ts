@@ -253,7 +253,7 @@ export const requestRecordSync = async (user: User): Promise<any> => {
         },
       }
     );
-
+    
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
@@ -276,10 +276,9 @@ export const getCallsAPI = async (user: User): Promise<any> => {
   try {
     const {sales_portal_id } = user;
     const response = await axios.post(
-      `${API_URL_ENV}/checkSchedules`,
+      `${API_URL_ENV}/getCalls`,
         {
-          sales_portal_id,
-          date: formatDateYMD(now),
+          sales_portal_id
         },
       {
         headers: {

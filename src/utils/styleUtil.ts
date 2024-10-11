@@ -29,6 +29,33 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       marginStart: 20,
       marginEnd: 10,
     } as ViewStyle,
+    card1Col: {
+      height: 740,
+      padding: 40,
+      backgroundColor: "#ffffff",
+      borderRadius: 10,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 5,
+      marginVertical: 10,
+      marginStart: 20,
+    } as ViewStyle,
+    card2Col: {
+      height: 740,
+      padding: 40,
+      backgroundColor: "#ffffff",
+      borderRadius: 10,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 5,
+      marginVertical: 10,
+      marginStart: 10,
+      marginEnd: 10,
+    } as ViewStyle,
     mainText: {
       color: currentTheme.containerBackgroundColor,
       fontSize: 16,
@@ -77,7 +104,7 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     centerItems: {
       alignContent: 'center',
       alignItems: 'center',
-    }as ViewStyle,
+    } as ViewStyle,
     title: {
       fontSize: 24,
       fontWeight: 'bold',
@@ -241,6 +268,8 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     // ***************************************************************************************
     navLink: {
       backgroundColor: currentTheme.containerBackgroundColor,
+      // backgroundColor: "black",
+      padding: 15,
       borderRadius: 10,
       marginVertical: 15,
       marginStart: 10,
@@ -250,7 +279,6 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     } as ViewStyle,
     activeNavLink: {
       backgroundColor: currentTheme.containerSecondaryBackgroundColor,
-      // backgroundColor: "transparent",
       paddingVertical: 15,
       minWidth: 80
     },
@@ -265,7 +293,7 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       marginEnd: -10,
     } as ViewStyle,
     navIcon: {
-      fontSize: 30,
+      fontSize: 32,
       color: currentTheme.containerSubBackgroundColor,
     },
     activeNavIcon: {
