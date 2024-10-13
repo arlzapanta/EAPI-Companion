@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Animated,
   ScrollView,
+  Button,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { getStyleUtil } from "../utils/styleUtil";
@@ -13,19 +14,33 @@ import {
   getSchedulesTodayLocalDb,
   getSchedulesLocalDb,
   getSchedulesWeekLocalDb,
+  getSchedulesFilterLocalDb,
+  getAllSchedulesFilterLocalDb,
 } from "../utils/localDbUtils";
 import CallComponents from "./call/CallComponents";
 import { getCurrentDatePH, formatDate } from "../utils/dateUtils";
 import moment from "moment";
 import { Ionicons } from "@expo/vector-icons";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
+import Loading from "../components/Loading";
+import { useDataContext } from "../context/DataContext";
+import { Picker } from "@react-native-picker/picker";
 
 const Schedules = () => {
-  const [loading, setLoading] = useState(false);
+  const { isScheduleLoading } = useDataContext();
+  const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeOutLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+  const dynamicStyles = getStyleUtil({});
   const [error, setError] = useState<string | null>(null);
-
   const [scheduleDataToday, setScheduleDataToday] = useState<any[]>([]);
   const [scheduleWeekData, setScheduleWeekData] = useState<any[]>([]);
+  const [scheduleFilterData, setScheduleFilterData] = useState<any[]>([]);
+  const [scheduleAllFilterData, setScheduleAllFilterData] = useState<any[]>([]);
 
   const [selectedScheduleToday, setSelectedScheduleToday] = useState<
     any | null
@@ -33,25 +48,37 @@ const Schedules = () => {
   const [selectedScheduleWeek, setSelectedScheduleWeek] = useState<any | null>(
     null
   );
+  const [selectedScheduleFilter, setSelectedScheduleFilter] = useState<
+    any | null
+  >(null);
 
   const [accordionTodayExpanded, setAccordionTodayExpanded] = useState(false);
   const [accordionWeekExpanded, setAccordionWeekExpanded] = useState(false);
+  const [accordionFilterExpanded, setAccordionFilterExpanded] = useState(false);
   const [currentDate, getCurrentDate] = useState("");
   const { authState } = useAuth();
   const { refresh } = useRefreshFetchDataContext();
-  const dynamicStyles = getStyleUtil({});
+
+  const uniqueDates = Array.from(
+    new Set(scheduleFilterData.map((item) => formatDate(item.date)))
+  );
+
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const fetchScheduleData = async () => {
     if (authState.user) {
       try {
+        // today schedules
         const getDate = await getCurrentDatePH();
         const formattedDate = formatDate(getDate);
         getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
         const data = await getSchedulesTodayLocalDb();
         setScheduleDataToday(data);
-
         // week schedules
         const weekData = await getSchedulesWeekLocalDb();
         setScheduleWeekData(weekData);
+        // filter schedules
+        const filterData = await getAllSchedulesFilterLocalDb();
+        setScheduleAllFilterData(filterData);
       } catch (error: any) {
         console.log("fetchScheduleData error", error);
       }
@@ -69,6 +96,7 @@ const Schedules = () => {
     if (!accordionTodayExpanded) {
       setSelectedScheduleToday(null);
       setSelectedScheduleWeek(null);
+      setSelectedScheduleToday(null);
     }
   };
 
@@ -77,17 +105,46 @@ const Schedules = () => {
     if (!accordionWeekExpanded) {
       setSelectedScheduleWeek(null);
       setSelectedScheduleToday(null);
+      setSelectedScheduleToday(null);
+    }
+  };
+
+  const toggleAccordionFilter = () => {
+    setAccordionFilterExpanded(!accordionFilterExpanded);
+    if (!accordionFilterExpanded) {
+      setSelectedScheduleWeek(null);
+      setSelectedScheduleToday(null);
+      setSelectedScheduleToday(null);
     }
   };
 
   const handleScheduleClickToday = (schedule: any) => {
-    setSelectedScheduleWeek(null);
     setSelectedScheduleToday(schedule);
+    setSelectedScheduleWeek(null);
+    setSelectedScheduleFilter(null);
   };
 
   const handleScheduleClickWeek = (schedule: any) => {
     setSelectedScheduleToday(null);
     setSelectedScheduleWeek(schedule);
+    setSelectedScheduleFilter(null);
+  };
+
+  const handleScheduleClickFilter = (schedule: any) => {
+    setSelectedScheduleToday(null);
+    setSelectedScheduleWeek(null);
+    setSelectedScheduleFilter(schedule);
+  };
+
+  const fetchFilterSchedule = async (itemValue: string) => {
+    try {
+      const date = new Date(itemValue);
+      const filterData = await getSchedulesFilterLocalDb(date);
+      setScheduleFilterData(filterData);
+      setSelectedDate(itemValue);
+    } catch (error) {
+      console.error("Error fetching filtered schedules:", error);
+    }
   };
 
   useEffect(() => {
@@ -95,6 +152,7 @@ const Schedules = () => {
       fetchScheduleData();
       setSelectedScheduleToday(null);
       setSelectedScheduleWeek(null);
+      setSelectedScheduleFilter(null);
     }
   }, [refresh]);
 
@@ -116,137 +174,251 @@ const Schedules = () => {
 
   return (
     <View style={dynamicStyles.container}>
-      <View style={styles1.row}>
-        <View style={styles1.column1}>
-          <View style={dynamicStyles.card1Col}>
-            <Text style={styles1.columnTitle}>Schedules</Text>
-            <Text style={styles1.columnSubTitle}>{currentDate}</Text>
-            <ScrollView>
-              <TouchableOpacity
-                onPress={toggleAccordionToday}
-                style={styles1.accordionButton}>
-                <Text style={styles1.accordionTitle}>
-                  {accordionTodayExpanded ? "Hide Today" : "View Today"}
-                </Text>
-                <Ionicons
-                  name={accordionTodayExpanded ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color="#007BFF"
-                  style={styles1.icon}
-                />
-              </TouchableOpacity>
+      {isScheduleLoading || timeOutLoading ? (
+        <Loading />
+      ) : (
+        <View style={styles1.row}>
+          <View style={styles1.column1}>
+            <View style={dynamicStyles.card1Col}>
+              <Text style={styles1.columnTitle}>Schedules</Text>
+              <Text style={styles1.columnSubTitle}>{currentDate}</Text>
+              <ScrollView>
+                <View style={dynamicStyles.filterMainContainer}>
+                  <View style={dynamicStyles.filterContainer}>
+                    <Picker
+                      selectedValue={selectedDate}
+                      onValueChange={(itemValue: string) =>
+                        fetchFilterSchedule(itemValue)
+                      }
+                      style={dynamicStyles.picker1col}>
+                      <Picker.Item
+                        label="Select Date"
+                        value=""
+                        style={dynamicStyles.pickerInitialLabel}
+                      />
 
-              {accordionTodayExpanded && (
-                <View style={styles1.accordionContent}>
-                  {scheduleDataToday.map((schedule) => (
-                    <TouchableOpacity
-                      key={schedule.schedule_id}
-                      onPress={() => handleScheduleClickToday(schedule)}
-                      style={styles1.scheduleItem}>
-                      <Text style={styles1.scheduleText}>
-                        {schedule.full_name}
-                        {`${
-                          schedule.municipality_city
-                            ? ` - ${schedule.municipality_city} - ${schedule.province}`
-                            : ""
-                        }`}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                      {[
+                        ...new Map(
+                          scheduleAllFilterData.map((item) => [
+                            moment(item.date).format("YYYY-MM-DD"),
+                            item,
+                          ])
+                        ).values(),
+                      ].map((item) => (
+                        <Picker.Item
+                          label={moment(item.date).format("MMMM DD, dddd")}
+                          value={item.date}
+                          key={item.id}
+                          style={dynamicStyles.pickerLabel}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={toggleAccordionFilter}
+                    style={styles1.accordionButton}>
+                    <Text style={styles1.accordionTitle}>
+                      {accordionFilterExpanded ? "Hide Filter" : "View Filter"}
+                    </Text>
+                    <Ionicons
+                      name={
+                        accordionFilterExpanded ? "chevron-up" : "chevron-down"
+                      }
+                      size={20}
+                      color="#007BFF"
+                      style={styles1.icon}
+                    />
+                  </TouchableOpacity>
+                  {accordionFilterExpanded && (
+                    <View style={styles1.accordionContent}>
+                      {scheduleFilterData.length === 0 ? (
+                        <Text>No schedules found for this date.</Text>
+                      ) : (
+                        scheduleFilterData.map((scheduleFilter) => (
+                          <TouchableOpacity
+                            key={scheduleFilter.schedule_id}
+                            onPress={() =>
+                              handleScheduleClickFilter(scheduleFilter)
+                            }
+                            style={styles1.scheduleItem}>
+                            <Text style={styles1.scheduleText}>
+                              {`${moment(scheduleFilter.date).format(
+                                "MMMM DD, dddd"
+                              )}, `}
+                              {`\n${scheduleFilter.full_name}, ${
+                                scheduleFilter.municipality_city
+                                  ? `${scheduleFilter.municipality_city}`
+                                  : ""
+                              }`}
+                            </Text>
+                          </TouchableOpacity>
+                        ))
+                      )}
+                    </View>
+                  )}
                 </View>
-              )}
+                <TouchableOpacity
+                  onPress={toggleAccordionToday}
+                  style={styles1.accordionButton}>
+                  <Text style={styles1.accordionTitle}>
+                    {accordionTodayExpanded ? "Hide Today" : "View Today"}
+                  </Text>
+                  <Ionicons
+                    name={
+                      accordionTodayExpanded ? "chevron-up" : "chevron-down"
+                    }
+                    size={20}
+                    color="#007BFF"
+                    style={styles1.icon}
+                  />
+                </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={toggleAccordionWeek}
-                style={styles1.accordionButton}>
-                <Text style={styles1.accordionTitle}>
-                  {accordionWeekExpanded ? "Hide This Week" : "View This Week"}
-                </Text>
-                <Ionicons
-                  name={accordionWeekExpanded ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color="#007BFF"
-                  style={styles1.icon}
-                />
-              </TouchableOpacity>
+                {accordionTodayExpanded && (
+                  <View style={styles1.accordionContent}>
+                    {scheduleDataToday.map((schedule) => (
+                      <TouchableOpacity
+                        key={schedule.schedule_id}
+                        onPress={() => handleScheduleClickToday(schedule)}
+                        style={styles1.scheduleItem}>
+                        <Text style={styles1.scheduleText}>
+                          {schedule.full_name}
+                          {`${
+                            schedule.municipality_city
+                              ? ` - ${schedule.municipality_city} - ${schedule.province}`
+                              : ""
+                          }`}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
 
-              {accordionWeekExpanded && (
-                <View style={styles1.accordionContent}>
-                  {scheduleWeekData.map((schedule) => (
-                    <TouchableOpacity
-                      key={schedule.schedule_id}
-                      onPress={() => handleScheduleClickWeek(schedule)}
-                      style={styles1.scheduleItem}>
-                      <Text style={styles1.scheduleText}>
-                        {`${moment(schedule.date).format("MMMM DD, dddd")}, `}
-                        {`\n${schedule.full_name}, ${
-                          schedule.municipality_city
-                            ? `${schedule.municipality_city}`
-                            : ""
-                        }`}
+                <TouchableOpacity
+                  onPress={toggleAccordionWeek}
+                  style={styles1.accordionButton}>
+                  <Text style={styles1.accordionTitle}>
+                    {accordionWeekExpanded
+                      ? "Hide This Week"
+                      : "View This Week"}
+                  </Text>
+                  <Ionicons
+                    name={accordionWeekExpanded ? "chevron-up" : "chevron-down"}
+                    size={20}
+                    color="#007BFF"
+                    style={styles1.icon}
+                  />
+                </TouchableOpacity>
+
+                {accordionWeekExpanded && (
+                  <View style={styles1.accordionContent}>
+                    {scheduleWeekData
+                      .filter(
+                        (record) =>
+                          new Date(record.date) != new Date(currentDate)
+                      )
+                      .map((schedule) => (
+                        <TouchableOpacity
+                          key={schedule.schedule_id}
+                          onPress={() => handleScheduleClickWeek(schedule)}
+                          style={styles1.scheduleItem}>
+                          <Text style={styles1.scheduleText}>
+                            {`${moment(schedule.date).format(
+                              "MMMM DD, dddd"
+                            )}, `}
+                            {`\n${schedule.full_name}, ${
+                              schedule.municipality_city
+                                ? `${schedule.municipality_city}`
+                                : ""
+                            }`}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                  </View>
+                )}
+              </ScrollView>
+            </View>
+          </View>
+
+          <View style={styles1.column2}>
+            <View style={dynamicStyles.card2Col}>
+              {selectedScheduleToday ||
+              selectedScheduleWeek ||
+              selectedScheduleFilter ? (
+                <>
+                  {selectedScheduleToday ? (
+                    <>
+                      <Text style={styles1.columnTitle}>
+                        {String(selectedScheduleToday.full_name)}
                       </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                      <Text style={styles1.columnSubTitle}>
+                        {moment(selectedScheduleToday.date).format(
+                          "MMMM DD, dddd"
+                        )}
+                      </Text>
+                      <Text style={styles1.columnSubTitle}>
+                        {selectedScheduleToday.municipality_city} {" - "}
+                        {selectedScheduleToday.province}
+                      </Text>
+                      <CallComponents
+                        scheduleId={String(selectedScheduleToday.schedule_id)}
+                        docName={String(selectedScheduleToday.full_name)}
+                        canStartCall={true}
+                      />
+                    </>
+                  ) : null}
+
+                  {selectedScheduleWeek ? (
+                    <>
+                      <Text style={styles1.columnTitle}>
+                        {String(selectedScheduleWeek.full_name)}
+                      </Text>
+                      <Text style={styles1.columnSubTitle}>
+                        {moment(selectedScheduleWeek.date).format(
+                          "MMMM DD, dddd"
+                        )}
+                      </Text>
+                      <Text style={styles1.columnSubTitle}>
+                        {selectedScheduleWeek.municipality_city} {" - "}
+                        {selectedScheduleWeek.province}
+                      </Text>
+                      <CallComponents
+                        scheduleId={String(selectedScheduleWeek.schedule_id)}
+                        docName={String(selectedScheduleWeek.full_name)}
+                        canStartCall={true}
+                      />
+                    </>
+                  ) : null}
+
+                  {selectedScheduleFilter ? (
+                    <>
+                      <Text style={styles1.columnTitle}>
+                        {String(selectedScheduleFilter.full_name)}
+                      </Text>
+                      <Text style={styles1.columnSubTitle}>
+                        {moment(selectedScheduleFilter.date).format(
+                          "MMMM DD, dddd"
+                        )}
+                      </Text>
+                      <Text style={styles1.columnSubTitle}>
+                        {selectedScheduleFilter.municipality_city} {" - "}
+                        {selectedScheduleFilter.province}
+                      </Text>
+                      <CallComponents
+                        scheduleId={String(selectedScheduleFilter.schedule_id)}
+                        docName={String(selectedScheduleFilter.full_name)}
+                        canStartCall={false}
+                      />
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                <NoScheduleSelected />
               )}
-            </ScrollView>
+            </View>
           </View>
         </View>
-
-        <View style={styles1.column2}>
-          <View style={dynamicStyles.card2Col}>
-            {selectedScheduleToday || selectedScheduleWeek ? (
-              <>
-                {selectedScheduleToday ? (
-                  <>
-                    <Text style={styles1.columnTitle}>
-                      {String(selectedScheduleToday.full_name)}
-                    </Text>
-                    <Text style={styles1.columnSubTitle}>
-                      {moment(selectedScheduleToday.date).format(
-                        "MMMM DD, dddd"
-                      )}
-                    </Text>
-                    <Text style={styles1.columnSubTitle}>
-                      {selectedScheduleToday.municipality_city} {" - "}
-                      {selectedScheduleToday.province}
-                    </Text>
-                    <CallComponents
-                      scheduleId={String(selectedScheduleToday.schedule_id)}
-                      docName={String(selectedScheduleToday.full_name)}
-                      canStartCall={true}
-                    />
-                  </>
-                ) : null}
-
-                {selectedScheduleWeek ? (
-                  <>
-                    <Text style={styles1.columnTitle}>
-                      {String(selectedScheduleWeek.full_name)}
-                    </Text>
-                    <Text style={styles1.columnSubTitle}>
-                      {moment(selectedScheduleWeek.date).format(
-                        "MMMM DD, dddd"
-                      )}
-                    </Text>
-                    <Text style={styles1.columnSubTitle}>
-                      {selectedScheduleWeek.municipality_city} {" - "}
-                      {selectedScheduleWeek.province}
-                    </Text>
-                    <CallComponents
-                      scheduleId={String(selectedScheduleWeek.schedule_id)}
-                      docName={String(selectedScheduleWeek.full_name)}
-                      canStartCall={false}
-                    />
-                  </>
-                ) : null}
-              </>
-            ) : (
-              <NoScheduleSelected />
-            )}
-          </View>
-        </View>
-      </View>
+      )}
     </View>
   );
 };

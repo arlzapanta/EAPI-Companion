@@ -303,7 +303,7 @@ declare global {
       id?: string; // id is optional
       schedule_id?: string; // New column
       date: string | null;
-      doctor_name: string | null;
+      doctors_name: string | null;
       address: string | null;
       municipality_city: string | null;
       province: string | null;
@@ -339,7 +339,8 @@ declare global {
       signature_location: string  | null;
       photo: string  | null;
       photo_location: string  | null;
-      doctor_name: string | null;
+      doctors_name: string | null;
+      created_at: string | null;
     }
 
     export interface DetailerRecord{

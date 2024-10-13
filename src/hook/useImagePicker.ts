@@ -24,7 +24,7 @@ export const useImagePicker = ({ onPhotoCaptured }: UseImagePickerOptions = {}) 
     // Open camera and capture image
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      // allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
       base64: true,

@@ -38,6 +38,10 @@ import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
 import { getLocation } from "../../utils/currentLocation";
 import { showConfirmAlert } from "../../utils/commonUtil";
+import { AntDesign } from "@expo/vector-icons";
+import { getStyleUtil } from "../../utils/styleUtil";
+import Loading from "../../components/Loading";
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const Attendance: React.FC = () => {
   const navigation = useNavigation<AttendanceScreenNavigationProp>();
@@ -150,11 +154,7 @@ const Attendance: React.FC = () => {
       return;
     }
     setLoading(true);
-
-    // console.log(signatureVal, "signatureVal timein");
-    // console.log(selfieVal, "selfieVal timein");
-    // console.log(selfieLoc, "selfieLoc timein");
-    // console.log(signatureLoc, "signatureVal timein");
+    // todo : add functionality to insert pre-approved advance calls (for tracking)
 
     try {
       const timeInIsProceed = await apiTimeIn(userInfo);
@@ -240,6 +240,7 @@ const Attendance: React.FC = () => {
         }
       }
     }
+    setLoading(false);
   };
 
   const handleBack = () => {
@@ -274,69 +275,75 @@ const Attendance: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.content}>
-          <Text style={styles.title_stack_settings}>Attendance</Text>
-          {statusMessage && (
-            <Text style={[styles.statusLabel, { color: statusColor }]}>
-              {statusMessage}
-            </Text>
-          )}
-          <View style={styles.centerItems}>
-            {!hasTimedIn && !loading && (
-              <>
-                {signatureVal || selfieVal ? (
-                  <TouchableOpacity
-                    onPress={() => showConfirmAlert(timeIn, "Time In")}
-                    style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>Time In</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => showConfirmAlert(timeIn, "Time In")}
-                    style={styles.buttonContainerDisabled}
-                    disabled>
-                    <Text style={styles.buttonText}>Time In</Text>
-                  </TouchableOpacity>
-                )}
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <View style={styles.content}>
+              <Text style={styles.title_stack_settings}>Attendance</Text>
+              {statusMessage && (
+                <Text style={[styles.statusLabel, { color: statusColor }]}>
+                  {statusMessage}
+                </Text>
+              )}
+              <View style={styles.centerItems}>
+                {!hasTimedIn && !loading && (
+                  <>
+                    {signatureVal && selfieVal ? (
+                      <TouchableOpacity
+                        onPress={() => showConfirmAlert(timeIn, "Time In")}
+                        style={styles.buttonContainer}>
+                        <Text style={styles.buttonText}>Time In</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <TouchableOpacity
+                        onPress={() => showConfirmAlert(timeIn, "Time In")}
+                        style={styles.buttonContainerDisabled}
+                        disabled>
+                        <Text style={styles.buttonText}>Time In</Text>
+                      </TouchableOpacity>
+                    )}
 
-                {signatureVal ? (
-                  <></>
-                ) : (
-                  <SignatureCapture
-                    callId={12340000}
-                    onSignatureUpdate={handleSignatureUpdate}
-                  />
+                    {signatureVal ? (
+                      <></>
+                    ) : (
+                      <SignatureCapture
+                        callId={12340000}
+                        onSignatureUpdate={handleSignatureUpdate}
+                      />
+                    )}
+                    {!selfieVal ? (
+                      <TouchableOpacity
+                        style={styles.buttonContainer1}
+                        onPress={handleImagePicker}>
+                        <Text style={styles.buttonText1}>Take a photo</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <></>
+                    )}
+                  </>
                 )}
-                {!selfieVal ? (
+                {!hasTimedOut && hasTimedIn && !loading && (
                   <TouchableOpacity
-                    style={styles.buttonContainer1}
-                    onPress={handleImagePicker}>
-                    <Text style={styles.buttonText1}>Take a photo</Text>
+                    onPress={() => showConfirmAlert(timeOut, "Time Out")}
+                    style={styles.buttonContainer}>
+                    <Text style={styles.buttonText}>Time Out</Text>
                   </TouchableOpacity>
-                ) : (
-                  <></>
                 )}
-              </>
-            )}
-            {!hasTimedOut && hasTimedIn && !loading && (
-              <TouchableOpacity
-                onPress={() => showConfirmAlert(timeOut, "Time Out")}
-                style={styles.buttonContainer}>
-                <Text style={styles.buttonText}>Time Out</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          <AttendanceTable data={attendanceData} />
-        </View>
-      </ScrollView>
-      <TouchableOpacity
-        onPress={handleBack}
-        style={styles.floatingButtonContainer}>
-        <View style={styles.floatingButton}>
-          <Icon name="arrow-back" size={20} color="#fff" />
-        </View>
-      </TouchableOpacity>
+              </View>
+              <AttendanceTable data={attendanceData} />
+            </View>
+          </ScrollView>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={dynamicStyles.floatingButtonContainer}>
+            <View style={dynamicStyles.floatingButton}>
+              <AntDesign name="back" size={24} color="white" />
+            </View>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 };
@@ -459,10 +466,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    elevation: 3,
+    elevation: 5,
   },
   floatingButton: {
     alignItems: "center",
     justifyContent: "center",
+    minWidth: 60,
   },
 });

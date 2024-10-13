@@ -1,4 +1,4 @@
-import { ViewStyle, TextStyle, ImageStyle,  } from 'react-native';
+import { ViewStyle, TextStyle, ImageStyle, Dimensions } from 'react-native';
 import { lightTheme, darkTheme } from './themes'; 
 
 export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
@@ -28,6 +28,25 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       marginVertical: 10,
       marginStart: 20,
       marginEnd: 10,
+    } as ViewStyle,
+    floatingButtonContainer: {
+      position: "absolute",
+      bottom: 40,
+      right: 50,
+      backgroundColor: "#046E37",
+      opacity: 0.9,
+      borderRadius: 10,
+      padding: 10,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+      elevation: 5,
+    } as ViewStyle,
+    floatingButton: {
+      alignItems: "center",
+      justifyContent: "center",
+      minWidth: 60,
     } as ViewStyle,
     card1Col: {
       height: 740,
@@ -61,6 +80,17 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       fontSize: 16,
       fontWeight: "bold",
     } as TextStyle,
+    mainTextBig: {
+      color: currentTheme.containerBackgroundColor,
+      fontSize: 24,
+      fontWeight: "bold",
+      marginBottom: 2,
+    } as TextStyle,
+    mainTextWhite: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold",
+    } as TextStyle,
     containerLoading: {
       flex: 1,
       justifyContent: "center",
@@ -79,19 +109,6 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       flex: 1,
       padding: 15,
     } as ViewStyle,
-    floatingButtonContainer: {
-      position: 'absolute',
-      top: 15,
-      left: 15,
-      zIndex: 1000, 
-      // backgroundColor: 'rgba(50, 211, 211, 0.8)',
-      backgroundColor: 'rgba(4, 110, 55, 0.8)',
-      padding: 12,
-      borderRadius: 50,
-    } as ViewStyle,
-    floatingButton: {
-      // Add any
-    },
     containerCenter: {
       flex: 1,
       padding: 16,
@@ -182,6 +199,45 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       textAlign: "center",
       marginBottom: 15,
     } as TextStyle,
+    filterContainer: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+    }as ViewStyle,
+    picker: {
+      width: Dimensions.get("window").width * 0.55,
+      height: 40,
+      backgroundColor: "#f9f9f9",
+      borderRadius: 4,
+      borderColor: "#ddd",
+      borderWidth: 1,
+    },
+    picker1col: {
+      width: Dimensions.get("window").width * 0.16,
+      backgroundColor: "#f9f9f9",
+      borderRadius: 4,
+      borderColor: "#ddd",
+      borderWidth: 1,
+    },
+    pickerInitialLabel: {
+      color: "lightgray",
+    },
+    pickerLabel: {
+      color: "black",
+    },
+    resetButton: {
+      backgroundColor: "#046E37",
+      marginLeft: 10,
+      width: Dimensions.get("window").width * 0.2,
+      borderRadius: 5,
+    },
+    filterMainContainer: {
+      padding: 20,
+      marginVertical: 5,
+      borderRadius: 20,
+      borderWidth: 2.5,
+      borderColor: currentTheme.containerBackgroundColor
+    } as ViewStyle,
     // ***************************************************************************************
     // *  HOME STYLES
     // ***************************************************************************************

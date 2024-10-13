@@ -1,6 +1,249 @@
 import * as SQLite from "expo-sqlite";
-import { getCurrentDatePH, getRelevantDateRange, getWeekdaysRange } from "./dateUtils"; 
+import { formatDate, formatDateYMD, getCurrentDatePH, getRelevantDateRange, getWeekdaysRange } from "./dateUtils"; 
+import moment from "moment";
 
+// ************************************************************
+// ************************************************************
+// STATIC CREATE TABLE SQL START
+// ************************************************************
+// ************************************************************
+const dropCreateCallsTable = `
+  DROP TABLE IF EXISTS calls_tbl;
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE calls_tbl (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    date TEXT, 
+    ts_name TEXT, 
+    schedule_id TEXT, 
+    doctors_name TEXT, 
+    call_start TEXT, 
+    call_end TEXT, 
+    signature TEXT, 
+    signature_attempts TEXT, 
+    signature_location TEXT, 
+    photo TEXT, 
+    photo_location TEXT,
+    created_at TEXT,
+    created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
+  );
+`;
+const dropCreate_scheduleAPI = `
+    DROP TABLE IF EXISTS schedule_API_tbl;
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE schedule_API_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      address TEXT, 
+      date TEXT, 
+      doctors_id TEXT, 
+      full_name TEXT, 
+      municipality_city TEXT, 
+      province TEXT,
+      schedule_id TEXT
+    );
+`;
+const dropCreate_Doctors = `
+  DROP TABLE IF EXISTS doctors_tbl;
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE doctors_tbl (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    doctors_id TEXT,
+    first_name TEXT,
+    last_name TEXT,
+    specialization TEXT,
+    classification TEXT,
+    birthday TEXT,
+    address_1 TEXT,
+    address_2 TEXT,
+    municipality_city TEXT,
+    province TEXT,
+    phone_mobile TEXT,
+    phone_office TEXT,
+    phone_secretary TEXT,
+    notes_names TEXT,
+    notes_values TEXT,
+    date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    update_date TEXT
+  );
+`;
+const dropCreate_Reschedule = `
+    DROP TABLE IF EXISTS reschedule_req_tbl;
+    
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE reschedule_req_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      request_id TEXT,
+      schedule_id TEXT,
+      sales_portal_id TEXT,
+      doctors_id TEXT,
+      date_from TEXT,
+      date_to TEXT,
+      status TEXT,
+      type TEXT,
+      created_at TEXT,
+      full_name TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+`;
+const dropCreate_chartData = `
+    DROP TABLE IF EXISTS chart_data_tbl;
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE chart_data_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      daily_plotting_count TEXT,
+      daily_calls_count TEXT,
+      daily_target_count INTEGER,
+      monthly_plotting_count TEXT,
+      monthly_calls_count TEXT,
+      monthly_target_count INTEGER,
+      yearly_plotting_count TEXT,
+      yearly_calls_count TEXT,
+      yearly_target_count INTEGER,
+      ytd_plotting_count TEXT,
+      ytd_calls_count TEXT, 
+      ytd_target_count TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+`;
+const createIfNE_userAttendance = `
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE IF NOT EXISTS user_attendance_tbl (
+    id INTEGER PRIMARY KEY NOT NULL, 
+    email TEXT NOT NULL, 
+    sales_portal_id TEXT NOT NULL, 
+    type TEXT NOT NULL,
+    date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`;
+const createIfNE_userSyncHistory = `
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE IF NOT EXISTS user_sync_history_tbl (
+    id INTEGER PRIMARY KEY NOT NULL, 
+    sales_portal_id TEXT NOT NULL, 
+    type NUMBER NOT NULL,
+    date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`;
+const createIfNE_rescheduleHistory =`
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE IF NOT EXISTS reschedule_history_tbl (
+    id INTEGER PRIMARY KEY NOT NULL, 
+    sales_portal_id TEXT, 
+    request_id TEXT, 
+    schedule_id TEXT, 
+    type NUMBER,
+    status NUMBER,
+    date_from TEXT,
+    date_to TEXT,
+    doctors_id TEXT,
+    full_name TEXT,
+    date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`;
+const createIfNEchartData = `
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS chart_data_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      daily_plotting_count TEXT,
+      daily_calls_count TEXT,
+      daily_target_count INTEGER,
+      monthly_plotting_count TEXT,
+      monthly_calls_count TEXT,
+      monthly_target_count INTEGER,
+      yearly_plotting_count TEXT,
+      yearly_calls_count TEXT,
+      yearly_target_count INTEGER,
+      ytd_plotting_count TEXT,
+      ytd_calls_count TEXT, 
+      ytd_target_count TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+`;
+const createIfNEDoctors = `
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS doctors_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      doctors_id TEXT,
+      first_name TEXT,
+      last_name TEXT,
+      specialization TEXT,
+      classification TEXT,
+      birthday TEXT,
+      address_1 TEXT,
+      address_2 TEXT,
+      municipality_city TEXT,
+      province TEXT,
+      phone_mobile TEXT,
+      phone_office TEXT,
+      phone_secretary TEXT,
+      notes_names TEXT,
+      notes_values TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      update_date TEXT
+    );
+`;
+const createIfNERescheduleReq = `
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      request_id TEXT,
+      schedule_id TEXT,
+      sales_portal_id TEXT,
+      doctors_id TEXT,
+      date_from TEXT,
+      date_to TEXT,
+      status TEXT,
+      type TEXT,
+      created_at TEXT,
+      full_name TEXT,
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+`;
+const createIfNEscheduleAPI = `
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      schedule_id TEXT, 
+      address TEXT, 
+      date TEXT, 
+      doctors_id TEXT, 
+      full_name TEXT, 
+      municipality_city TEXT, 
+      province TEXT
+    );
+`;
+const createIfNECalls = `
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE IF NOT EXISTS calls_tbl (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+      schedule_id TEXT, 
+      ts_name TEXT, 
+      call_start TEXT, 
+      call_end TEXT, 
+      date TEXT, 
+      doctors_name TEXT, 
+      municipality_city TEXT, 
+      photo TEXT, 
+      photo_location TEXT, 
+      province TEXT, 
+      signature TEXT, 
+      signature_location TEXT,
+      signature_attempts TEXT,
+      created_at TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+`;
+const createIfNEDetailers = `
+  CREATE TABLE IF NOT EXISTS detailers_tbl (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+    category TEXT NOT NULL, 
+    image TEXT NOT NULL
+  );
+`;
+// ************************************************************
+// ************************************************************
+// STATIC CREATE TABLE SQL END
+// ************************************************************
+// ************************************************************
 
 export const saveUserAttendanceLocalDb = async (user: User, type: string): Promise<number> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
@@ -9,16 +252,7 @@ export const saveUserAttendanceLocalDb = async (user: User, type: string): Promi
 
   const currentDatePH = await getCurrentDatePH();
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS user_attendance_tbl (
-      id INTEGER PRIMARY KEY NOT NULL, 
-      email TEXT NOT NULL, 
-      sales_portal_id TEXT NOT NULL, 
-      type TEXT NOT NULL,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNE_userAttendance);
 
   let result: number;
 
@@ -70,15 +304,7 @@ export const saveUserSyncHistoryLocalDb = async (user: User, type: number): Prom
 
   const currentDatePH = await getCurrentDatePH();
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS user_sync_history_tbl (
-      id INTEGER PRIMARY KEY NOT NULL, 
-      sales_portal_id TEXT NOT NULL, 
-      type NUMBER NOT NULL,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNE_userSyncHistory);
 
   const existingRow = await db.getFirstAsync(
     `SELECT * FROM user_sync_history_tbl WHERE DATE(date) = ? AND type = ?`,
@@ -125,22 +351,7 @@ export const saveRescheduleHistoryLocalDb = async (rescheduleDetails : Reschedul
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS reschedule_history_tbl (
-      id INTEGER PRIMARY KEY NOT NULL, 
-      sales_portal_id TEXT, 
-      request_id TEXT, 
-      schedule_id TEXT, 
-      type NUMBER,
-      status NUMBER,
-      date_from TEXT,
-      date_to TEXT,
-      doctors_id TEXT,
-      full_name TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNE_rescheduleHistory);
 
   const insertPromises = rescheduleDetails.map((reschedules: RescheduleDetails) => {
     return db.execAsync(`
@@ -170,89 +381,12 @@ export const saveRescheduleHistoryLocalDb = async (rescheduleDetails : Reschedul
   }
 };
 
-export const saveActualCallsLocalDb = async (schedules: CallAPIDown[]): Promise<string> => {
-
-  console.log(schedules,'saveActualCallsLocalDb');
-  const db = await SQLite.openDatabaseAsync('cmms', {
-    useNewConnection: true,
-  });
-
-  await db.execAsync(`
-    DROP TABLE IF EXISTS calls_tbl;
-    
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS calls_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-      schedule_id TEXT, 
-      address TEXT, 
-      call_start TEXT, 
-      call_end TEXT, 
-      date TEXT, 
-      doctor_name TEXT, 
-      municipality_city TEXT, 
-      photo TEXT, 
-      photo_location TEXT, 
-      province TEXT, 
-      signature TEXT, 
-      signature_location TEXT,
-      signature_attempts TEXT,
-      created_at TEXT,
-      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
-    );
-  `);
-
-  const insertPromises = schedules.map((schedule: CallAPIDown) => {
-    return db.execAsync(`
-      INSERT INTO calls_tbl (schedule_id, address, call_start, call_end, date, doctor_name, municipality_city, photo, photo_location, province, signature, signature_location, created_at)
-      VALUES (
-        ${schedule.id !== undefined && schedule.id !== null ? `'${schedule.id}'` : 'NULL'},
-        ${schedule.address !== undefined && schedule.address !== null ? `'${schedule.address}'` : 'NULL'},
-        ${schedule.call_start !== undefined && schedule.call_start !== null ? `'${schedule.call_start}'` : 'NULL'},
-        ${schedule.call_end !== undefined && schedule.call_end !== null ? `'${schedule.call_end}'` : 'NULL'},
-        ${schedule.date !== undefined && schedule.date !== null ? `'${schedule.date}'` : 'NULL'},
-        ${schedule.doctor_name !== undefined && schedule.doctor_name !== null ? `'${schedule.doctor_name}'` : 'NULL'},
-        ${schedule.municipality_city !== undefined && schedule.municipality_city !== null ? `'${schedule.municipality_city}'` : 'NULL'},
-        ${schedule.photo !== undefined && schedule.photo !== null ? `'${schedule.photo}'` : 'NULL'},
-        ${schedule.photo_location !== undefined && schedule.photo_location !== null ? `'${schedule.photo_location}'` : 'NULL'},
-        ${schedule.province !== undefined && schedule.province !== null ? `'${schedule.province}'` : 'NULL'},
-        ${schedule.signature !== undefined && schedule.signature !== null ? `'${schedule.signature}'` : 'NULL'},
-        ${schedule.signature_location !== undefined && schedule.signature_location !== null ? `'${schedule.signature_location}'` : 'NULL'},
-        ${schedule.created_at !== undefined && schedule.created_at !== null ? `'${schedule.created_at}'` : 'NULL'}
-      );
-    `);
-  });
-  
-  try {
-    await Promise.all(insertPromises);
-      // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
-      // console.log('All actual calls records test:', testRecords);
-    return 'Success';
-  } catch (error) {
-    console.error('Error saving data: asdasdasd', error);
-    return 'Failed to save data';
-  }
-};
-
 export const saveSchedulesAPILocalDb = async (schedules: ScheduleAPIRecord[]): Promise<string> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    DROP TABLE IF EXISTS schedule_API_tbl;
-    
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE schedule_API_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      address TEXT, 
-      date TEXT, 
-      doctors_id TEXT, 
-      full_name TEXT, 
-      municipality_city TEXT, 
-      province TEXT,
-      schedule_id TEXT
-    );
-  `);
+  await db.execAsync(dropCreate_scheduleAPI);
 
   const insertPromises = schedules.map((schedule: ScheduleAPIRecord) => {
     return db.execAsync(`
@@ -268,11 +402,10 @@ export const saveSchedulesAPILocalDb = async (schedules: ScheduleAPIRecord[]): P
       );
     `);
   });
-  
 
   try {
     await Promise.all(insertPromises);
-      const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+      // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
       // console.log(testRecords,'asdasd saveSchedulesAPILocalDb');
     return 'Success';
   } catch (error) {
@@ -286,26 +419,7 @@ export const saveCallsAPILocalDb = async (calls: CallAPIRecord[]): Promise<strin
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    DROP TABLE IF EXISTS calls_tbl;
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE calls_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      date TEXT, 
-      ts_name TEXT, 
-      schedule_id TEXT, 
-      doctors_name TEXT, 
-      call_start TEXT, 
-      call_end TEXT, 
-      signature TEXT, 
-      signature_attempts TEXT, 
-      signature_location TEXT, 
-      photo TEXT, 
-      photo_location TEXT,
-      created_at TEXT,
-      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
-    );
-  `);
+  await db.execAsync(dropCreateCallsTable);
 
   const insertPromises = calls.map((calls: CallAPIRecord) => {
     return db.execAsync(`
@@ -356,31 +470,7 @@ export const saveDoctorListLocalDb = async (doctors: DoctorRecord[]): Promise<st
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    DROP TABLE IF EXISTS doctors_tbl;
-    
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE doctors_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      doctors_id TEXT,
-      first_name TEXT,
-      last_name TEXT,
-      specialization TEXT,
-      classification TEXT,
-      birthday TEXT,
-      address_1 TEXT,
-      address_2 TEXT,
-      municipality_city TEXT,
-      province TEXT,
-      phone_mobile TEXT,
-      phone_office TEXT,
-      phone_secretary TEXT,
-      notes_names TEXT,
-      notes_values TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      update_date TEXT
-    );
-  `);
+  await db.execAsync(dropCreate_Doctors);
 
   const insertPromises = doctors.map((doctors: DoctorRecord) => {
     return db.execAsync(`
@@ -437,25 +527,7 @@ export const saveRescheduleListLocalDb = async (request: RescheduleRecord[]): Pr
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    DROP TABLE IF EXISTS reschedule_req_tbl;
-    
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE reschedule_req_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      request_id TEXT,
-      schedule_id TEXT,
-      sales_portal_id TEXT,
-      doctors_id TEXT,
-      date_from TEXT,
-      date_to TEXT,
-      status TEXT,
-      type TEXT,
-      created_at TEXT,
-      full_name TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(dropCreate_Reschedule);
 
   const insertPromises = request.map((request: RescheduleRecord) => {
     return db.execAsync(`
@@ -500,31 +572,11 @@ export const saveRescheduleListLocalDb = async (request: RescheduleRecord[]): Pr
 };
 
 export const saveChartDataLocalDb = async (chartData: ChartDashboardRecord | ChartDashboardRecord[]): Promise<string> => {
-  console.log(chartData, 'aslkdalskjd');
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    DROP TABLE IF EXISTS chart_data_tbl;
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE chart_data_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      daily_plotting_count TEXT,
-      daily_calls_count TEXT,
-      daily_target_count INTEGER,
-      monthly_plotting_count TEXT,
-      monthly_calls_count TEXT,
-      monthly_target_count INTEGER,
-      yearly_plotting_count TEXT,
-      yearly_calls_count TEXT,
-      yearly_target_count INTEGER,
-      ytd_plotting_count TEXT,
-      ytd_calls_count TEXT, 
-      ytd_target_count TEXT,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(dropCreate_chartData);
 
   const dataToInsert = Array.isArray(chartData) ? chartData : [chartData];
 
@@ -573,31 +625,12 @@ export const saveChartDataLocalDb = async (chartData: ChartDashboardRecord | Cha
   }
 };
 
-
 export const fetchChartDataLocalDb = async (): Promise<ChartDashboardRecord[]> =>{
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS chart_data_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      daily_plotting_count TEXT,
-      daily_calls_count TEXT,
-      daily_target_count INTEGER,
-      monthly_plotting_count TEXT,
-      monthly_calls_count TEXT,
-      monthly_target_count INTEGER,
-      yearly_plotting_count TEXT,
-      yearly_calls_count TEXT,
-      yearly_target_count INTEGER,
-      ytd_plotting_count TEXT,
-      ytd_calls_count TEXT, 
-      ytd_target_count TEXT,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNEchartData);
 
   const query = `SELECT * FROM chart_data_tbl`;
 
@@ -617,29 +650,7 @@ export const getDoctorRecordsLocalDb = async () => {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS doctors_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      doctors_id TEXT,
-      first_name TEXT,
-      last_name TEXT,
-      specialization TEXT,
-      classification TEXT,
-      birthday TEXT,
-      address_1 TEXT,
-      address_2 TEXT,
-      municipality_city TEXT,
-      province TEXT,
-      phone_mobile TEXT,
-      phone_office TEXT,
-      phone_secretary TEXT,
-      notes_names TEXT,
-      notes_values TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      update_date TEXT
-    );
-  `);
+  await db.execAsync(createIfNEDoctors);
 
   const query = `SELECT * FROM doctors_tbl`;
 
@@ -655,29 +666,12 @@ export const getDoctorRecordsLocalDb = async () => {
   }
 };
 
-
 export const getRescheduleListLocalDb = async (): Promise<RescheduleRecord[]> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      request_id TEXT,
-      schedule_id TEXT,
-      sales_portal_id TEXT,
-      doctors_id TEXT,
-      date_from TEXT,
-      date_to TEXT,
-      status TEXT,
-      type TEXT,
-      created_at TEXT,
-      full_name TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNERescheduleReq);
 
   const query = `SELECT * FROM reschedule_req_tbl`;
 
@@ -701,29 +695,7 @@ export const getUpdatedDoctorRecordsLocalDb = async (): Promise<UpdateDoctorsNot
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS doctors_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      doctors_id TEXT,
-      first_name TEXT,
-      last_name TEXT,
-      specialization TEXT,
-      classification TEXT,
-      birthday TEXT,
-      address_1 TEXT,
-      address_2 TEXT,
-      municipality_city TEXT,
-      province TEXT,
-      phone_mobile TEXT,
-      phone_office TEXT,
-      phone_secretary TEXT,
-      notes_names TEXT,
-      notes_values TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      update_date TEXT
-    );
-  `);
+  await db.execAsync(createIfNEDoctors);
 
   const query = `SELECT doctors_id, notes_names, notes_values FROM doctors_tbl WHERE DATE(update_date) = DATE('now')`;
 
@@ -745,23 +717,7 @@ export const getRescheduleRequestRecordsLocalDb = async (): Promise<RescheduleRe
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    request_id TEXT,
-    schedule_id TEXT,
-    sales_portal_id TEXT,
-    doctors_id TEXT,
-    date_from TEXT,
-    date_to TEXT,
-    status TEXT,
-    type TEXT,
-    created_at TEXT,
-    full_name TEXT,
-    date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNERescheduleReq);
 
   const query = `SELECT * FROM reschedule_req_tbl`;
 
@@ -783,16 +739,7 @@ export const getUserAttendanceRecordsLocalDb = async (user: User) => {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS user_attendance_tbl (
-      id INTEGER PRIMARY KEY NOT NULL, 
-      email TEXT NOT NULL, 
-      sales_portal_id TEXT NOT NULL, 
-      type TEXT NOT NULL,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNE_userAttendance);
 
   const dateRange = await getRelevantDateRange();
   const placeholders = dateRange.map(() => '?').join(', ');
@@ -815,15 +762,7 @@ export const getSyncHistoryRecordsLocalDb = async (user: User) => {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS user_sync_history_tbl (
-      id INTEGER PRIMARY KEY NOT NULL, 
-      sales_portal_id TEXT NOT NULL, 
-      type NUMBER NOT NULL,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNE_userSyncHistory);
 
   const dateRange = await getRelevantDateRange();
   const placeholders = dateRange.map(() => '?').join(', ');
@@ -846,22 +785,7 @@ export const getRescheduleHistoryRecordsLocalDb = async (user: User) => {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS reschedule_history_tbl (
-      id INTEGER PRIMARY KEY NOT NULL, 
-      sales_portal_id TEXT NOT NULL, 
-      request_id TEXT NOT NULL, 
-      schedule_id TEXT NOT NULL, 
-      type NUMBER NOT NULL,
-      status NUMBER,
-      date_from TEXT,
-      date_to TEXT,
-      doctors_id TEXT,
-      full_name TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNE_rescheduleHistory);
 
   const dateRange = await getRelevantDateRange();
   const placeholders = dateRange.map(() => '?').join(', ');
@@ -884,22 +808,7 @@ export const getStatusRescheduleHistoryRecords = async (request_id: string) => {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS reschedule_history_tbl (
-      id INTEGER PRIMARY KEY NOT NULL, 
-      sales_portal_id TEXT NOT NULL, 
-      request_id TEXT NOT NULL, 
-      schedule_id TEXT NOT NULL, 
-      type NUMBER NOT NULL,
-      status NUMBER,
-      date_from TEXT,
-      date_to TEXT,
-      doctors_id TEXT,
-      full_name TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNE_rescheduleHistory);
 
   const query = `SELECT * FROM reschedule_history_tbl WHERE request_id = ?`;
 
@@ -920,19 +829,7 @@ export const getSchedulesLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      schedule_id TEXT, 
-      address TEXT, 
-      date TEXT, 
-      doctors_id TEXT, 
-      full_name TEXT, 
-      municipality_city TEXT, 
-      province TEXT
-    );
-  `);
+  await db.execAsync(createIfNEscheduleAPI);
 
   const query = `SELECT * FROM schedule_API_tbl`;
 
@@ -953,19 +850,7 @@ export const getSchedulesTodayLocalDb = async (): Promise<ScheduleAPIRecord[]> =
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      schedule_id TEXT, 
-      address TEXT, 
-      date TEXT, 
-      doctors_id TEXT, 
-      full_name TEXT, 
-      municipality_city TEXT, 
-      province TEXT
-    );
-  `);
+  await db.execAsync(createIfNEscheduleAPI);
 
   const currentDate = await getCurrentDatePH();
   const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) = ?`;
@@ -973,7 +858,8 @@ export const getSchedulesTodayLocalDb = async (): Promise<ScheduleAPIRecord[]> =
   try {
     const result = await db.getAllAsync(query, [currentDate]);
     const existingRows = result as ScheduleAPIRecord[];
-
+    // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+    // console.log(testRecords,existingRows,'asdasd asdasdas');
     return existingRows;
   } catch (error) {
     console.error('Error fetching schedule records data2:', error);
@@ -988,19 +874,7 @@ export const getSchedulesWeekLocalDb = async (): Promise<ScheduleAPIRecord[]> =>
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      schedule_id TEXT, 
-      address TEXT, 
-      date TEXT, 
-      doctors_id TEXT, 
-      full_name TEXT, 
-      municipality_city TEXT, 
-      province TEXT
-    );
-  `);
+  await db.execAsync(createIfNEscheduleAPI);
 
   const weekDates = await getWeekdaysRange();
   const placeholders = weekDates.map(() => '?').join(', ');
@@ -1009,6 +883,76 @@ export const getSchedulesWeekLocalDb = async (): Promise<ScheduleAPIRecord[]> =>
   try {
     const result = await db.getAllAsync(query, weekDates);
     const existingRows = result as ScheduleAPIRecord[];
+    // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+    // console.log(testRecords,existingRows,'asdasd asdasdas');
+
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching schedule records data3:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getSchedulesFilterLocalDb = async (date: Date): Promise<ScheduleAPIRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNEscheduleAPI);
+  const formattedDate = moment(date).format('YYYY-MM-DD');
+  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) = ?`;
+  try {
+    const result = await db.getAllAsync(query , [formattedDate]);
+    const existingRows = result as ScheduleAPIRecord[];
+    // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+    // console.log(testRecords,existingRows,'asdasd asdasdas');
+
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching schedule records data3:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getActualFilterLocalDb = async (date: Date): Promise<ScheduleRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNECalls);
+  const formattedDate = moment(date).format('YYYY-MM-DD');
+  const query = `SELECT * FROM calls_tbl WHERE DATE(created_at) = ?`;
+  try {
+    const result = await db.getAllAsync(query , [formattedDate]);
+    const existingRows = result as ScheduleRecord[];
+    // const testRecords = await db.getAllAsync('SELECT * FROM calls_tbl');
+    // console.log(testRecords,existingRows,'asdasd asdasdas');
+
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching schedule records data3:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getAllSchedulesFilterLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNEscheduleAPI);
+  const query = `SELECT * FROM schedule_API_tbl`;
+  try {
+    const result = await db.getAllAsync(query);
+    const existingRows = result as ScheduleAPIRecord[];
+    // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
+    // console.log(testRecords,existingRows,'asdasd asdasdas');
 
     return existingRows;
   } catch (error) {
@@ -1024,68 +968,77 @@ export const getDatesAndTypeForCalendarView = async (): Promise<CalendarRecord[]
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      schedule_id TEXT, 
-      address TEXT, 
-      date TEXT, 
-      doctors_id TEXT, 
-      full_name TEXT, 
-      municipality_city TEXT, 
-      province TEXT
-    );
+  // await db.execAsync(`
+  //   PRAGMA journal_mode = WAL;
+  //   CREATE TABLE IF NOT EXISTS schedule_API_tbl (
+  //     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  //     schedule_id TEXT, 
+  //     address TEXT, 
+  //     date TEXT, 
+  //     doctors_id TEXT, 
+  //     full_name TEXT, 
+  //     municipality_city TEXT, 
+  //     province TEXT
+  //   );
 
-    CREATE TABLE IF NOT EXISTS calls_tbl (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-      schedule_id TEXT, 
-      address TEXT, 
-      call_start TEXT, 
-      call_end TEXT, 
-      date TEXT, 
-      doctor_name TEXT, 
-      municipality_city TEXT, 
-      photo TEXT, 
-      photo_location TEXT, 
-      province TEXT, 
-      signature TEXT, 
-      signature_location TEXT,
-      signature_attempts TEXT,
-      created_at TEXT,
-      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
+  //   CREATE TABLE IF NOT EXISTS calls_tbl (
+  //   id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
+  //     schedule_id TEXT, 
+  //     ts_name TEXT, 
+  //     call_start TEXT, 
+  //     call_end TEXT, 
+  //     date TEXT, 
+  //     doctors_name TEXT, 
+  //     municipality_city TEXT, 
+  //     photo TEXT, 
+  //     photo_location TEXT, 
+  //     province TEXT, 
+  //     signature TEXT, 
+  //     signature_location TEXT,
+  //     signature_attempts TEXT,
+  //     created_at TEXT,
+  //     created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  //   );
 
-    CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      request_id TEXT,
-      schedule_id TEXT,
-      sales_portal_id TEXT,
-      doctors_id TEXT,
-      date_from TEXT,
-      date_to TEXT,
-      status TEXT,
-      type TEXT,
-      created_at TEXT,
-      full_name TEXT,
-      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-      );
-  `);
+  //   CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
+  //     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  //     request_id TEXT,
+  //     schedule_id TEXT,
+  //     sales_portal_id TEXT,
+  //     doctors_id TEXT,
+  //     date_from TEXT,
+  //     date_to TEXT,
+  //     status TEXT,
+  //     type TEXT,
+  //     created_at TEXT,
+  //     full_name TEXT,
+  //     date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  //     );
+  // `);
+
+  await db.execAsync(createIfNEscheduleAPI);
+  await db.execAsync(createIfNECalls);
+  await db.execAsync(createIfNERescheduleReq);
 
   const qMakeup = `SELECT date_to FROM reschedule_req_tbl WHERE type = ? AND status = ?`;
   const qAdvance = `SELECT date_to FROM reschedule_req_tbl WHERE type = ? AND status = ?`;
 
   try {
     const qMakeupResult: { date_to: string }[] = await db.getAllAsync(qMakeup, ['Makeup', '1']);
-    const qAdvanceResult: { date_to: string }[] = await db.getAllAsync(qAdvance, ['Advance', '1']);
+    const qAdvanceResult: { date_to: string}[] = await db.getAllAsync(qAdvance, ['Advance', '1']);
     const qSched: { date: string }[] = await db.getAllAsync(`SELECT date FROM schedule_API_tbl`);
-    const qCalls: { date: string }[] = await db.getAllAsync(`SELECT date, created_at FROM calls_tbl`);
+    const qCalls: { date: string , created_at: string  }[] = await db.getAllAsync(`SELECT date, created_at FROM calls_tbl`);
     
     const data: CalendarRecord = {
       plotData: Array.from(new Set(qSched.map(record => parseInt((record.date || '0000-00-00').split('-')[2])))).map(String),
-      advanceData: Array.from(new Set(qAdvanceResult.map(record => parseInt((record.date_to || '0000-00-00').split('-')[2])))).map(String),
+      advanceData: Array.from(new Set([
+        ...qAdvanceResult.map(record => parseInt((record.date_to || '0000-00-00').split('-')[2])),
+        ...qCalls
+          .filter(record => new Date(record.created_at) < new Date(record.date || '0000-00-00'))
+          .map(record => parseInt((record.created_at || '0000-00-00').split('-')[2]))
+      ])).map(String),
       makeupData: Array.from(new Set(qMakeupResult.map(record => parseInt((record.date_to || '0000-00-00').split('-')[2])))).map(String),
-      actualData: Array.from(new Set(qCalls.map(record => parseInt((record.date || '0000-00-00').split('-')[2])))).map(String)
+      actualData: Array.from(new Set(qCalls.filter(record => new Date(record.created_at) > new Date(record.date || '0000-00-00')).map(record => parseInt((record.created_at || '0000-00-00').split('-')[2])))).map(String)
     };
 
     return [data];
@@ -1102,19 +1055,7 @@ export const getDoctorsTodaySchedLocalDb = async (): Promise<ScheduleAPIRecord[]
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      schedule_id TEXT, 
-      address TEXT, 
-      date TEXT, 
-      doctors_id TEXT, 
-      full_name TEXT, 
-      municipality_city TEXT, 
-      province TEXT
-    );
-  `);
+  await db.execAsync(createIfNEscheduleAPI);
 
   const currentDate = await getCurrentDatePH();
   const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) = ?`;
@@ -1137,19 +1078,7 @@ export const getDoctorsSchedLocalDb = async (): Promise<ScheduleAPIRecord[]> => 
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      schedule_id TEXT, 
-      address TEXT, 
-      date TEXT, 
-      doctors_id TEXT, 
-      full_name TEXT, 
-      municipality_city TEXT, 
-      province TEXT
-    );
-  `);
+  await db.execAsync(createIfNEscheduleAPI);
 
   const query = `SELECT * FROM schedule_API_tbl`;
 
@@ -1171,19 +1100,7 @@ export const getDoctorsWeekSchedLocalDb = async (): Promise<ScheduleAPIRecord[]>
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS schedule_API_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-      schedule_id TEXT, 
-      address TEXT, 
-      date TEXT, 
-      doctors_id TEXT, 
-      full_name TEXT, 
-      municipality_city TEXT, 
-      province TEXT
-    );
-  `);
+  await db.execAsync(createIfNEscheduleAPI);
 
   const weekDates = await getWeekdaysRange();
   const placeholders = weekDates.map(() => '?').join(', ');
@@ -1207,27 +1124,29 @@ export const getCallsLocalDb = async (): Promise<ScheduleRecord[]> => {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS calls_tbl (
-      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-      schedule_id TEXT, 
-      address TEXT, 
-      call_start TEXT, 
-      call_end TEXT, 
-      date TEXT, 
-      doctor_name TEXT, 
-      municipality_city TEXT, 
-      photo TEXT, 
-      photo_location TEXT, 
-      province TEXT, 
-      signature TEXT, 
-      signature_location TEXT,
-      signature_attempts TEXT,
-      created_at TEXT,
-      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNECalls);
+
+  const query = `SELECT * FROM calls_tbl`;
+
+  try {
+    const result = await db.getAllAsync(query);
+    const existingRows = result as ScheduleRecord[];
+    // console.log(existingRows,'getCallsLocaldb');
+    return existingRows;
+  } catch (error) {
+    console.error('Error fetching data for getCallsLocalDb:', error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getAllActualDatesFilter = async (): Promise<ScheduleRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNECalls);
 
   const query = `SELECT * FROM calls_tbl`;
 
@@ -1249,27 +1168,7 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
     useNewConnection: true,
   });
 
-  await db.execAsync(`
-    PRAGMA journal_mode = WAL;
-    CREATE TABLE IF NOT EXISTS calls_tbl (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-      schedule_id TEXT, 
-      address TEXT, 
-      call_start TEXT, 
-      call_end TEXT, 
-      date TEXT, 
-      doctor_name TEXT, 
-      municipality_city TEXT, 
-      photo TEXT, 
-      photo_location TEXT, 
-      province TEXT, 
-      signature TEXT, 
-      signature_location TEXT,
-      signature_attempts TEXT,
-      created_at TEXT,
-      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
+  await db.execAsync(createIfNECalls);
 
   const currentDate = await getCurrentDatePH();
   const query = `SELECT * FROM calls_tbl WHERE DATE(created_date) = ?`;
@@ -1449,34 +1348,18 @@ export const fetchAllDetailers = async (): Promise<DetailerRecord[]> => {
 };
 
 export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails: SchedToCall): Promise<string> => {
+  console.log(callDetails,'alksdjlaksjdas');
   const db = await SQLite.openDatabaseAsync('cmms', { useNewConnection: true });
 
   try {
-    await db.execAsync(`
-      PRAGMA journal_mode = WAL;
-      CREATE TABLE IF NOT EXISTS calls_tbl (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-        schedule_id TEXT, 
-        call_start TEXT, 
-        call_end TEXT, 
-        municipality_city TEXT, 
-        photo TEXT, 
-        photo_location TEXT,
-        signature TEXT, 
-        signature_location TEXT,
-        signature_attempts TEXT,
-        doctor_name TEXT,
-        created_at TEXT,
-        created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
-      );
-    `);
+    await db.execAsync(createIfNECalls);
 
     await db.runAsync(
       `INSERT INTO calls_tbl (
         schedule_id, call_start, call_end,
         signature, signature_attempts, signature_location,
-        photo, photo_location
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        photo, photo_location, doctors_name, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         callDetails.schedule_id,
         callDetails.call_start,
@@ -1485,7 +1368,9 @@ export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails
         callDetails.signature_attempts,
         callDetails.signature_location,
         callDetails.photo,
-        callDetails.photo_location
+        callDetails.photo_location,
+        callDetails.doctors_name,
+        callDetails.created_at
       ]
     );
 
@@ -1509,23 +1394,7 @@ export const insertRescheduleRequest =  async (request: RescheduleRecord): Promi
     const existingRow = await db.getFirstAsync(`SELECT id FROM reschedule_req_tbl WHERE doctors_id = ? AND date_from = ?`,[request.doctors_id, request.date_from]);
 
     if(!existingRow){
-      await db.execAsync(`
-        PRAGMA journal_mode = WAL;
-        CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
-        id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-        request_id TEXT,
-        schedule_id TEXT,
-        sales_portal_id TEXT,
-        doctors_id TEXT,
-        date_from TEXT,
-        date_to TEXT,
-        status TEXT,
-        type TEXT,
-        created_at TEXT,
-        full_name TEXT,
-        date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        );
-      `);
+      await db.execAsync(createIfNERescheduleReq);
   
       await db.runAsync(
         `INSERT INTO reschedule_req_tbl (
@@ -1699,7 +1568,6 @@ export const deleteDoctorNotes = async (doctorsNotes: UpdateDoctorsNotes): Promi
   }
 };
 
-
 export const addDoctorNotes = async (doctorsNotes: UpdateDoctorsNotes): Promise<string> => {
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -1742,7 +1610,6 @@ export const addDoctorNotes = async (doctorsNotes: UpdateDoctorsNotes): Promise<
   }
 };
 
-
 export const uploadImage = async ({ base64Images, category }: UploadImageProps) => {
   if (base64Images.length > 0) {
     try {
@@ -1750,13 +1617,7 @@ export const uploadImage = async ({ base64Images, category }: UploadImageProps) 
         useNewConnection: true,
       });
 
-      await db.execAsync(`
-        CREATE TABLE IF NOT EXISTS detailers_tbl (
-          id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-          category TEXT NOT NULL, 
-          image TEXT NOT NULL
-        );
-      `);
+      await db.execAsync(createIfNEDetailers);
 
       await db.runAsync(`DELETE FROM detailers_tbl WHERE category = ?`, [category]);
 

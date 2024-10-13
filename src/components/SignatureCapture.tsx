@@ -13,12 +13,16 @@ import { captureRef } from "react-native-view-shot";
 import Svg, { Path } from "react-native-svg";
 import { getLocation } from "../utils/currentLocation";
 import { updateCallSignature } from "../utils/quickCallUtil";
+import { getStyleUtil } from "../utils/styleUtil";
+import Loading from "./Loading";
+const dynamicStyle = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
 const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   callId,
   onSignatureUpdate,
 }) => {
+  const [isSignatureLoading, setIsSignatureLoading] = useState<boolean>(false);
   const [signature, setSignature] = useState<string | null>(null);
   const [paths, setPaths] = useState<Array<Array<{ x: number; y: number }>>>(
     []
@@ -27,6 +31,14 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   const viewRef = useRef<View>(null);
   const canvasWidth = width - 40;
   const canvasHeight = 300;
+
+  const SpacerW = ({ size }: { size: number }) => (
+    <View style={{ width: size }} />
+  );
+
+  const SpacerH = ({ size }: { size: number }) => (
+    <View style={{ height: size }} />
+  );
 
   const panResponder = useRef(
     PanResponder.create({
@@ -71,6 +83,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
 
   const captureSignature = async () => {
     if (viewRef.current) {
+      setIsSignatureLoading(true);
       try {
         const uri = await captureRef(viewRef.current, {
           format: "png",
@@ -113,6 +126,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
         transparent={true}
         onRequestClose={() => setIsModalVisible(false)}>
         <View style={styles.modalContainer}>
+          <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
           <View
             ref={viewRef}
             style={[
@@ -136,24 +150,27 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
             </Svg>
           </View>
 
-          <TouchableOpacity style={styles.clearButton} onPress={clearSignature}>
-            <Text style={styles.buttonText}>Clear Signature</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={captureSignature}>
-            <Text style={styles.buttonText}>Capture Signature</Text>
-          </TouchableOpacity>
+          <View style={dynamicStyle.centerItems}>
+            <TouchableOpacity
+              style={styles.buttonContainer1}
+              onPress={clearSignature}>
+              <Text style={styles.buttonText}>Clear Signature</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.buttonContainer1}
+              onPress={captureSignature}>
+              <Text style={styles.buttonText}>Capture Signature</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setIsModalVisible(false)}>
-            <Text style={styles.buttonText}>Close</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.buttonContainer1}
+              onPress={() => setIsModalVisible(false)}>
+              <Text style={styles.buttonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </Modal>
 
-      {/* Captured Signature Preview Modal */}
       <Modal
         visible={signature !== null}
         animationType="slide"
@@ -163,11 +180,8 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
           {signature && (
             <Image source={{ uri: signature }} style={styles.signatureImage} />
           )}
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setSignature(null)}>
-            <Text style={styles.buttonText}>Close Signature</Text>
-          </TouchableOpacity>
+          <SpacerH size={30} />
+          {isSignatureLoading ? <Loading /> : null}
         </View>
       </Modal>
     </View>
@@ -178,12 +192,21 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
   },
-  openModalButton: {
-    width: 200,
-    alignItems: "center",
-    padding: 10,
-    backgroundColor: "#007BFF",
+  buttonContainer1: {
+    backgroundColor: "#046E37",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 5,
+    elevation: 5,
+    maxWidth: 200,
+    minWidth: 200,
+    marginBottom: 2,
+    alignItems: "center",
+  },
+  buttonText1: {
+    color: "#FFF",
+    fontWeight: "bold",
+    alignSelf: "center",
   },
   buttonText: {
     color: "#FFF",
@@ -195,7 +218,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backgroundColor: "rgba(255, 255, 255,1)",
     padding: 20,
   },
   canvas: {

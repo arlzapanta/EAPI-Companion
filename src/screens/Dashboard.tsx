@@ -120,7 +120,7 @@ const Dashboard = () => {
                         centerLabelComponent={() => (
                           <View style={styles.centerLabelContainer}>
                             <Text style={styles.centerLabelText}>
-                              {dailyDataCompletion[0].value}%
+                              {dailyDataCompletion[0].value.toFixed(2)}%
                             </Text>
                             <View
                               style={{
@@ -134,7 +134,6 @@ const Dashboard = () => {
                         )}
                       />
                     )}
-                    <SpacerH size={30} />
                   </View>
                   <View style={styles.dailyPieCharts2}>
                     {!dailyData && <Text>No data available</Text>}

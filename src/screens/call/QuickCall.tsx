@@ -29,10 +29,23 @@ import {
   getDoctorsTodaySchedLocalDb,
   saveCallsDoneFromSchedules,
 } from "../../utils/localDbUtils";
+import { useDataContext } from "../../context/DataContext";
+import Loading from "../../components/Loading";
+import { getStyleUtil } from "../../utils/styleUtil";
+const dynamicStyles = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
-
+// todo : add to data context
+// todo : backsheet
 const QuickCall = () => {
+  const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
+  const { isQuickLoading } = useDataContext();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeOutLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
   const [currentDate, setCurrentDate] = useState("");
   const [callData, setCallData] = useState<Call[]>([]);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
@@ -234,7 +247,7 @@ const QuickCall = () => {
           signature_location: call.signature_location,
           photo: call.photo,
           photo_location: call.photo_location,
-          doctor_name: call.full_name,
+          doctors_name: call.full_name,
         };
 
         // const result = await saveCallsDoneFromSchedules(
@@ -340,37 +353,43 @@ const QuickCall = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.row}>
-        <View style={styles.column1}>
-          <View style={styles.innerCard}>
-            <Text style={styles.columnTitle}>Quick Calls</Text>
-            <Text style={styles.columnSubTitle}>{currentDate}</Text>
-            <TouchableOpacity style={styles.addButton} onPress={handleAddCall}>
-              <Text style={styles.addButtonText}>+</Text>
-            </TouchableOpacity>
-            <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-              {Array.isArray(callData) && callData.length > 0 ? (
-                callData.map((call) => <CallItem key={call.id} call={call} />)
-              ) : (
-                <Text>No calls available</Text>
-              )}
-            </ScrollView>
+      {isQuickLoading || timeOutLoading ? (
+        <Loading />
+      ) : (
+        <View style={styles.row}>
+          <View style={styles.column1}>
+            <View style={dynamicStyles.card1Col}>
+              <Text style={styles.columnTitle}>Quick Calls</Text>
+              <Text style={styles.columnSubTitle}>{currentDate}</Text>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={handleAddCall}>
+                <Text style={styles.addButtonText}>+</Text>
+              </TouchableOpacity>
+              <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+                {Array.isArray(callData) && callData.length > 0 ? (
+                  callData.map((call) => <CallItem key={call.id} call={call} />)
+                ) : (
+                  <Text>No calls available</Text>
+                )}
+              </ScrollView>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.column2}>
-          <View style={styles.innerCard}>
-            {selectedCall ? (
-              <CallDetails
-                call={selectedCall}
-                onSignatureUpdate={handleSignatureUpdate}
-              />
-            ) : (
-              <NoCallSelected />
-            )}
+          <View style={styles.column2}>
+            <View style={dynamicStyles.card2Col}>
+              {selectedCall ? (
+                <CallDetails
+                  call={selectedCall}
+                  onSignatureUpdate={handleSignatureUpdate}
+                />
+              ) : (
+                <NoCallSelected />
+              )}
+            </View>
           </View>
         </View>
-      </View>
+      )}
     </View>
   );
 };

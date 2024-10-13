@@ -16,6 +16,7 @@ import {
 import { getStatusText, showConfirmAlert } from "../../utils/commonUtil";
 import { Ionicons } from "@expo/vector-icons";
 import { customToast } from "../../utils/customToast";
+import { AntDesign } from "@expo/vector-icons";
 
 const RescheduleTable: React.FC<
   RescheduleTableProps & {
@@ -225,27 +226,25 @@ const RescheduleTable: React.FC<
             </Card>
             <View style={styles.paginationContainer}>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 style={[
                   styles.paginationButton,
                   currentPage === 1 && styles.disabledButton,
                 ]}>
-                Previous
+                <AntDesign name="leftcircle" size={20} color="#046E37" />
               </Button>
               <Text style={styles.paginationText}>
                 Page {currentPage} of {totalPages}
               </Text>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 style={[
                   styles.paginationButton,
                   currentPage === totalPages && styles.disabledButton,
                 ]}>
-                Next
+                <AntDesign name="rightcircle" size={20} color="#046E37" />
               </Button>
             </View>
           </>
@@ -315,7 +314,7 @@ const styles = StyleSheet.create({
   paginationText: {
     flex: 2,
     textAlign: "center",
-    color: "#046E37",
+    color: "black",
   },
   disabledButton: {
     borderColor: "gray",

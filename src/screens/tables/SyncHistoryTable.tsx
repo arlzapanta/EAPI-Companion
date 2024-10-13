@@ -3,7 +3,7 @@ import { View, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
-import { dropLocalTablesDb } from "../../utils/localDbUtils";
+import { AntDesign } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/Ionicons";
 
 const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
@@ -116,7 +116,6 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
             </Card>
             <View style={styles.paginationContainer}>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 style={[
@@ -128,14 +127,13 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
                     styles.paginationText,
                     currentPage === 1 && styles.disabledText,
                   ]}>
-                  Previous
+                  <AntDesign name="leftcircle" size={20} color="#046E37" />
                 </Text>
               </Button>
               <Text style={styles.paginationText}>
                 Page {currentPage} of {totalPages}
               </Text>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 style={[
@@ -147,7 +145,7 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
                     styles.paginationText,
                     currentPage === totalPages && styles.disabledText,
                   ]}>
-                  Next
+                  <AntDesign name="rightcircle" size={20} color="#046E37" />
                 </Text>
               </Button>
             </View>
@@ -220,7 +218,7 @@ const styles = StyleSheet.create({
   paginationText: {
     flex: 2,
     textAlign: "center",
-    color: "#046E37",
+    color: "black",
   },
   disabledButton: {
     borderColor: "gray",

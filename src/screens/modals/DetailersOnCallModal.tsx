@@ -14,7 +14,7 @@ import {
 import { createShimmerPlaceHolder } from "expo-shimmer-placeholder";
 import { LinearGradient } from "expo-linear-gradient";
 import { fetchAllDetailers } from "../../utils/localDbUtils";
-
+// todo : fix on detailers design and API
 const ShimmerPlaceHolder = createShimmerPlaceHolder(LinearGradient);
 interface DetailerModalProps {
   isVisible: boolean;

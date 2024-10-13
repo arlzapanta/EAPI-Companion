@@ -16,7 +16,11 @@ import { RootStackParamList } from "../../type/navigation";
 import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
 import { saveCallsDoneFromSchedules } from "../../utils/localDbUtils";
 import Detailers from "../modals/DetailersOnCallModal";
-import { formatTimeHoursMinutes } from "../../utils/dateUtils";
+import {
+  formatDate,
+  formatTimeHoursMinutes,
+  getFormattedDateToday,
+} from "../../utils/dateUtils";
 import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
 import { getLocation } from "../../utils/currentLocation";
@@ -73,6 +77,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const [callsData, setCallsData] = useState({});
 
+  // todo : fix on call design
   const endCall = async () => {
     setCallEndTime(formatTimeHoursMinutes(new Date()));
     stopTimer();
@@ -88,10 +93,11 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         signature_location: signatureLocation,
         photo: photoValue,
         photo_location: photoLocation,
-        doctor_name: docName,
+        doctors_name: docName,
+        created_at: await getFormattedDateToday(),
       };
 
-      setCallsData(callDetails); // This sets the callDetails to your state
+      setCallsData(callDetails);
 
       const result = await saveCallsDoneFromSchedules(
         scheduleIdValue,

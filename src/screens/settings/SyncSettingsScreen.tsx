@@ -13,6 +13,9 @@ import { SyncScreenNavigationProp } from "../../type/navigation";
 import Icon from "react-native-vector-icons/Ionicons";
 import { getSyncHistoryRecordsLocalDb } from "../../utils/localDbUtils";
 import SyncTable from "../tables/SyncHistoryTable";
+import { AntDesign } from "@expo/vector-icons";
+import { getStyleUtil } from "../../utils/styleUtil";
+const dynamicStyles = getStyleUtil({});
 
 const SyncSettingsScreen: React.FC = () => {
   const navigation = useNavigation<SyncScreenNavigationProp>();
@@ -89,9 +92,9 @@ const SyncSettingsScreen: React.FC = () => {
       </ScrollView>
       <TouchableOpacity
         onPress={handleBack}
-        style={styles.floatingButtonContainer}>
-        <View style={styles.floatingButton}>
-          <Icon name="arrow-back" size={20} color="#fff" />
+        style={dynamicStyles.floatingButtonContainer}>
+        <View style={dynamicStyles.floatingButton}>
+          <AntDesign name="back" size={24} color="white" />
         </View>
       </TouchableOpacity>
     </View>

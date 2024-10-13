@@ -16,6 +16,7 @@ import { createShimmerPlaceHolder } from "expo-shimmer-placeholder";
 import { LinearGradient } from "expo-linear-gradient";
 import { fetchDetailerImages } from "../../utils/localDbUtils";
 
+// todo : fix on detailers design and API
 const ShimmerPlaceHolder = createShimmerPlaceHolder(LinearGradient);
 
 const DetailerModal: React.FC<DetailerModalProps> = ({

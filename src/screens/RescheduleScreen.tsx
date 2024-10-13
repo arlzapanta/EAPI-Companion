@@ -23,6 +23,7 @@ import { Picker } from "@react-native-picker/picker";
 import { generateFutureDates, isWithinWeekOrAdvance } from "../utils/dateUtils";
 import { customToast } from "../utils/customToast";
 import RescheduleTable from "../screens/tables/RescheduleTable";
+import { AntDesign } from "@expo/vector-icons";
 import { getStyleUtil } from "../utils/styleUtil";
 import { lightTheme, darkTheme } from "../utils/themes";
 const dynamicStyles = getStyleUtil({ theme: "light" });
@@ -136,6 +137,7 @@ const RescheduleScreen: React.FC = () => {
     }
   };
 
+  // todo : filter doctors from reschedule (approved) and from schedules within the week.
   const fetchDoctorSchedules = async () => {
     try {
       const schedules = await getDoctorsSchedLocalDb();
@@ -304,9 +306,9 @@ const RescheduleScreen: React.FC = () => {
       </ScrollView>
       <TouchableOpacity
         onPress={handleBack}
-        style={styles.floatingButtonContainer}>
-        <View style={styles.floatingButton}>
-          <Icon name="arrow-back" size={20} color="#fff" />
+        style={dynamicStyles.floatingButtonContainer}>
+        <View style={dynamicStyles.floatingButton}>
+          <AntDesign name="back" size={24} color="white" />
         </View>
       </TouchableOpacity>
     </View>

@@ -3,6 +3,7 @@ import { View, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
+import { AntDesign } from "@expo/vector-icons";
 
 const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
@@ -101,27 +102,25 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
             </Card>
             <View style={styles.paginationContainer}>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 style={[
                   styles.paginationButton,
                   currentPage === 1 && styles.disabledButton,
                 ]}>
-                Previous
+                <AntDesign name="leftcircle" size={20} color="#046E37" />
               </Button>
               <Text style={styles.paginationText}>
                 Page {currentPage} of {totalPages}
               </Text>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 style={[
                   styles.paginationButton,
                   currentPage === totalPages && styles.disabledButton,
                 ]}>
-                Next
+                <AntDesign name="rightcircle" size={20} color="#046E37" />
               </Button>
             </View>
           </>
@@ -177,18 +176,17 @@ const styles = StyleSheet.create({
   paginationContainer: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     marginTop: 15,
   },
   paginationButton: {
     flex: 1,
     marginHorizontal: 5,
-    borderColor: "#046E37",
+    marginVertical: 5,
   },
   paginationText: {
     flex: 2,
     textAlign: "center",
-    color: "#046E37",
+    color: "black",
   },
   disabledButton: {
     borderColor: "gray",

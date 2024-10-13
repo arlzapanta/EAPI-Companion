@@ -22,8 +22,19 @@ import {
 import { showConfirmAlert } from "../utils/commonUtil";
 import { customToast } from "../utils/customToast";
 import { getStyleUtil } from "../utils/styleUtil";
+import Loading from "../components/Loading";
+import { useDataContext } from "../context/DataContext";
 
 const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
+  const { isDoctorLoading } = useDataContext();
+  const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeOutLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const { authState } = useAuth();
   const dynamicStyles = getStyleUtil({});
   const [currentDate, setCurrentDate] = useState("");
@@ -324,40 +335,44 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
 
   return (
     <View style={dynamicStyles.container}>
-      <View style={styles.row}>
-        <View style={styles.column1}>
-          <View style={dynamicStyles.card1Col}>
-            <Text style={styles.columnTitle}>Doctors</Text>
-            <Text style={styles.columnSubTitle}>{currentDate}</Text>
-            <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-              {doctorList.length > 0 ? (
-                doctorList.map((doc) => (
-                  <TouchableOpacity
-                    key={`${doc.doctors_id}`}
-                    onPress={() => handleCallClick(doc)}
-                    style={styles.callItem}>
-                    <Text
-                      style={
-                        styles.callText
-                      }>{`${doc.first_name} ${doc.last_name} - ${doc.specialization}`}</Text>
-                  </TouchableOpacity>
-                ))
+      {isDoctorLoading || timeOutLoading ? (
+        <Loading />
+      ) : (
+        <View style={styles.row}>
+          <View style={styles.column1}>
+            <View style={dynamicStyles.card1Col}>
+              <Text style={styles.columnTitle}>Doctors</Text>
+              <Text style={styles.columnSubTitle}>{currentDate}</Text>
+              <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+                {doctorList.length > 0 ? (
+                  doctorList.map((doc) => (
+                    <TouchableOpacity
+                      key={`${doc.doctors_id}`}
+                      onPress={() => handleCallClick(doc)}
+                      style={styles.callItem}>
+                      <Text
+                        style={
+                          styles.callText
+                        }>{`${doc.first_name} ${doc.last_name} - ${doc.specialization}`}</Text>
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <Text>No doctors available</Text>
+                )}
+              </ScrollView>
+            </View>
+          </View>
+          <View style={styles.column2}>
+            <View style={dynamicStyles.card2Col}>
+              {selectedDoctor ? (
+                <DoctorDetails doc={selectedDoctor} />
               ) : (
-                <Text>No doctors available</Text>
+                <NoDoctorSelected />
               )}
-            </ScrollView>
+            </View>
           </View>
         </View>
-        <View style={styles.column2}>
-          <View style={dynamicStyles.card2Col}>
-            {selectedDoctor ? (
-              <DoctorDetails doc={selectedDoctor} />
-            ) : (
-              <NoDoctorSelected />
-            )}
-          </View>
-        </View>
-      </View>
+      )}
     </View>
   );
 };
