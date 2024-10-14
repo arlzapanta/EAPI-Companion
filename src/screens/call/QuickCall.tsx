@@ -11,7 +11,7 @@ import {
   Alert,
 } from "react-native";
 import moment from "moment";
-import { getCurrentDatePH } from "../../utils/dateUtils";
+import { getCurrentDatePH, getFormattedDateToday } from "../../utils/dateUtils";
 import {
   addQuickCall,
   getQuickCalls,
@@ -32,6 +32,7 @@ import {
 } from "../../utils/localDbUtils";
 import { useDataContext } from "../../context/DataContext";
 import Loading from "../../components/Loading";
+import Octicons from "@expo/vector-icons/Octicons";
 import { getStyleUtil } from "../../utils/styleUtil";
 const dynamicStyles = getStyleUtil({});
 
@@ -40,14 +41,13 @@ const { width, height } = Dimensions.get("window");
 // todo : backsheet
 const QuickCall = () => {
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
-  const { isQuickLoading } = useDataContext();
+  const { isQuickLoading, currentDate, quickCallData } = useDataContext();
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeOutLoading(false);
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
-  const [currentDate, setCurrentDate] = useState("");
   const [callData, setCallData] = useState<Call[]>([]);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [selectedCallIdValue, setSelectedCallIdValue] = useState<number>(0);
@@ -59,8 +59,6 @@ const QuickCall = () => {
 
   const fetchCallsData = async () => {
     try {
-      const getDate = await getCurrentDatePH();
-      setCurrentDate(moment(getDate).format("MMMM DD, dddd"));
       const data = await getQuickCalls();
       if (Array.isArray(data)) {
         setCallData(data);
@@ -248,17 +246,18 @@ const QuickCall = () => {
           signature_location: call.signature_location,
           photo: call.photo,
           photo_location: call.photo_location,
-          doctors_name: call.full_name,
+          doctors_name: selectedDoctor.full_name,
+          created_at: await getFormattedDateToday(),
         };
 
-        // const result = await saveCallsDoneFromSchedules(
-        //   selectedDoctor.schedule_id,
-        //   callDetails
-        // );
-        // if (result == "Success") {
-        //   await removeCallFromLocalDb(call.id);
-        //   await fetchCallsData();
-        // }
+        const result = await saveCallsDoneFromSchedules(
+          selectedDoctor.schedule_id,
+          callDetails
+        );
+        if (result == "Success") {
+          await removeCallFromLocalDb(call.id);
+          await fetchCallsData();
+        }
       } else {
         console.log("No doctor selected");
       }
@@ -266,18 +265,17 @@ const QuickCall = () => {
 
     return (
       <View style={styles.callDetailsContainer}>
-        <Text>{`Call ID: ${call.id}`}</Text>
-        <View style={styles.noteContainer}>
+        <View style={[styles.noteContainer, dynamicStyles.centerItems]}>
           <TextInput
             style={styles.noteInput}
             value={note}
             onChangeText={setNote}
-            placeholder="Enter a note..."
+            placeholder="Enter doctor's name or any note ..."
           />
           <TouchableOpacity
             style={styles.updateButton}
             onPress={handleUpdateNote}>
-            <Text style={styles.updateButtonText}>Update</Text>
+            <Text style={styles.updateButtonText}>Save Note</Text>
           </TouchableOpacity>
         </View>
         <Text style={styles.signatureLabel}>Signature Capture</Text>
@@ -294,8 +292,9 @@ const QuickCall = () => {
         )}
         {!call.photo ? (
           <TouchableOpacity
-            style={styles.takePhotoButton}
+            style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
             onPress={handleImagePicker}>
+            <Octicons name="device-camera" size={30} color="white" />
             <Text style={styles.buttonText}>Take a photo</Text>
           </TouchableOpacity>
         ) : (
@@ -319,10 +318,10 @@ const QuickCall = () => {
                 if (itemValue !== selectedDoctor) {
                   setSelectedDoctor(itemValue);
                   if (itemValue && itemValue.date) {
+                    console.log(selectedDoctor);
                   }
                 } else {
                   if (itemValue && itemValue.date) {
-                    console.log("laskdlakd");
                   }
                 }
               }}>
@@ -345,7 +344,7 @@ const QuickCall = () => {
           <TouchableOpacity
             style={styles.saveButton}
             onLongPress={handleSaveQuickCall}>
-            <Text style={styles.buttonText}>Save</Text>
+            <Text style={styles.buttonText}>Save (hold)</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -353,7 +352,7 @@ const QuickCall = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       {isQuickLoading || timeOutLoading ? (
         <Loading />
       ) : (
@@ -361,7 +360,9 @@ const QuickCall = () => {
           <View style={styles.column1}>
             <View style={dynamicStyles.card1Col}>
               <Text style={styles.columnTitle}>Quick Calls</Text>
-              <Text style={styles.columnSubTitle}>{currentDate}</Text>
+              <Text style={styles.columnSubTitle}>
+                {moment(currentDate).format("MMMM DD, dddd")}
+              </Text>
               <TouchableOpacity
                 style={styles.addButton}
                 onPress={handleAddCall}>
@@ -403,7 +404,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     flex: 1,
-    marginVertical: 10,
     marginStart: 20,
     marginEnd: 20,
   },
@@ -440,9 +440,14 @@ const styles = StyleSheet.create({
     color: "#6c757d",
   },
   callItem: {
-    backgroundColor: "rgba(0,0,0,0.2)",
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    elevation: 1,
+    marginVertical: 5,
+    width: "80%",
   },
   signImage: {
     marginVertical: 15,
@@ -467,18 +472,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   callItemContainer: {
+    marginTop: 15,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: 4,
-    paddingHorizontal: 14,
-    backgroundColor: "#f1f1f1",
+    backgroundColor: "white",
     borderRadius: 5,
   },
   callText: {
-    fontSize: 18,
-    color: "#fff",
-    fontWeight: "bold",
+    fontSize: 14,
+    color: "black",
     // color: "#495057",
   },
   containerNoCallData: {
@@ -553,7 +556,8 @@ const styles = StyleSheet.create({
   signatureLabel: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#007bff",
+    color: "#046E37",
+    marginTop: 30,
   },
   imageContainer: {
     marginTop: 20,
@@ -585,7 +589,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   updateButton: {
-    backgroundColor: "#007BFF",
+    // backgroundColor: "#007BFF",
+    backgroundColor: "lightgray",
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderRadius: 5,
@@ -599,12 +604,12 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     width: 400,
-    padding: 20,
+    padding: 60,
   },
   saveButton: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#007BFF",
+    backgroundColor: "#046E37",
     padding: 10,
     borderRadius: 5,
     marginTop: 10,

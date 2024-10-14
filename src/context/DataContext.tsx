@@ -10,6 +10,7 @@ import {
   getDatesAndTypeForCalendarView,
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
+import { getQuickCalls } from "../utils/quickCallUtil";
 // todo : add necessary states from components
 interface DataContextProps {
   currentDate: string;
@@ -26,6 +27,7 @@ interface DataContextProps {
   isActualLoading: boolean;
   isDoctorLoading: boolean;
   isQuickLoading: boolean;
+  quickCallData: Call[];
   ytdDataMonthValues: Array<{
     value: number;
     frontColor: string;
@@ -348,7 +350,23 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // ***************************************************************************
   // ***************************************************************************
   const [isQuickLoading, setIsQuickLoading] = useState<boolean>(false);
-  // ADD QUICK DATA HERE
+  const [quickCallData, setQuickCallData] = useState<Call[]>([]);
+  const fetchQuickCallsData = async () => {
+    try {
+      const data = await getQuickCalls();
+      if (Array.isArray(data)) {
+        setQuickCallData(data);
+      } else {
+        console.warn("Fetched data is not an array:", data);
+        setQuickCallData([]);
+      }
+    } catch (error) {
+      console.log("fetchCallsData error", error);
+    }
+  };
+  useEffect(() => {
+    fetchQuickCallsData();
+  }, []);
   // ***************************************************************************
   // ***************************************************************************
   // QUICK DATA END
@@ -403,6 +421,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         // QUICK DATA START
         // ***************************************************************************
         isQuickLoading,
+        quickCallData,
         // ***************************************************************************
         // QUICK DATA END
         // ***************************************************************************

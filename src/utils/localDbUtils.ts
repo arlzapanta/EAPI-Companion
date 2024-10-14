@@ -455,9 +455,9 @@ export const saveCallsAPILocalDb = async (calls: CallAPIRecord[]): Promise<strin
 
   try {
     await Promise.all(insertPromises);
-      const testRecords = await db.getAllAsync('SELECT * FROM calls_tbl');
-      console.log(calls,'callscallscallscallscalls');
-      console.log(testRecords,'saveCallsAPILocalDb saveCallsAPILocalDb');
+      // const testRecords = await db.getAllAsync('SELECT * FROM calls_tbl');
+      // console.log(calls,'callscallscallscallscalls');
+      // console.log(testRecords,'saveCallsAPILocalDb saveCallsAPILocalDb');
     return 'Success';
   } catch (error) {
     console.error('Error saving data: saveCallsAPILocalDb', error);
@@ -1759,7 +1759,7 @@ export const dropLocalTablesDb = async () => {
     useNewConnection: true,
   });
 
-  const tableNames = ['reschedule_history_tbl','reschedule_req_tbl','user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','quick_call_tbl','doctors_tbl','pre_call_notes_tbl','post_call_notes_tbl'];
+  const tableNames = ['quick_call_tbl','reschedule_history_tbl','reschedule_req_tbl','user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','doctors_tbl','pre_call_notes_tbl','post_call_notes_tbl'];
   // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
   // const tableNames = ['quick_call_tbl'];
   for (const tableName of tableNames) {

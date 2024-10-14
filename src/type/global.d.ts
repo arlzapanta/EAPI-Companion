@@ -368,6 +368,9 @@ declare global {
     makeupData: string [];
     actualData: string [];
   }
+  export interface QuickCallBottomSheetProps {
+    closeSheet: () => void;
+  }
 }
   
   export {};

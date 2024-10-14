@@ -14,6 +14,7 @@ import Svg, { Path } from "react-native-svg";
 import { getLocation } from "../utils/currentLocation";
 import { updateCallSignature } from "../utils/quickCallUtil";
 import { getStyleUtil } from "../utils/styleUtil";
+import Foundation from "@expo/vector-icons/Foundation";
 import Loading from "./Loading";
 const dynamicStyle = getStyleUtil({});
 
@@ -29,8 +30,8 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   );
   const [isModalVisible, setIsModalVisible] = useState(false);
   const viewRef = useRef<View>(null);
-  const canvasWidth = width - 40;
-  const canvasHeight = 300;
+  const canvasWidth = width - 50;
+  const canvasHeight = 350;
 
   const SpacerW = ({ size }: { size: number }) => (
     <View style={{ width: size }} />
@@ -114,63 +115,35 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        style={styles.buttonContainer}
-        onPress={() => setIsModalVisible(true)}>
-        <Text style={styles.buttonText}>Open Signature Pad</Text>
+      <View
+        ref={viewRef}
+        style={[styles.canvas, { width: canvasWidth, height: canvasHeight }]}
+        {...panResponder.panHandlers}>
+        <Svg
+          width={canvasWidth}
+          height={canvasHeight}
+          style={{ position: "absolute", top: 0, left: 0 }}>
+          {paths.map((path, index) => (
+            <Path
+              key={index}
+              d={createPathString(path)}
+              stroke="black"
+              strokeWidth="2"
+              fill="none"
+            />
+          ))}
+        </Svg>
+      </View>
+      <View style={dynamicStyle.centerItems}>
+        <TouchableOpacity
+          style={styles.buttonContainer1}
+          onPress={clearSignature}>
+          <Text style={styles.buttonText}>Clear Signature</Text>
+        </TouchableOpacity>
+      </View>
+      <TouchableOpacity style={styles.newCallBtn} onPress={captureSignature}>
+        <Text style={styles.buttonText}>Save</Text>
       </TouchableOpacity>
-
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
-          <View
-            ref={viewRef}
-            style={[
-              styles.canvas,
-              { width: canvasWidth, height: canvasHeight },
-            ]}
-            {...panResponder.panHandlers}>
-            <Svg
-              width={canvasWidth}
-              height={canvasHeight}
-              style={{ position: "absolute", top: 0, left: 0 }}>
-              {paths.map((path, index) => (
-                <Path
-                  key={index}
-                  d={createPathString(path)}
-                  stroke="black"
-                  strokeWidth="2"
-                  fill="none"
-                />
-              ))}
-            </Svg>
-          </View>
-
-          <View style={dynamicStyle.centerItems}>
-            <TouchableOpacity
-              style={styles.buttonContainer1}
-              onPress={clearSignature}>
-              <Text style={styles.buttonText}>Clear Signature</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.buttonContainer1}
-              onPress={captureSignature}>
-              <Text style={styles.buttonText}>Capture Signature</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.buttonContainer1}
-              onPress={() => setIsModalVisible(false)}>
-              <Text style={styles.buttonText}>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
       <Modal
         visible={signature !== null}
         animationType="slide"
@@ -190,16 +163,31 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
+    margin: 5,
+  },
+  margEnd: {
+    marginEnd: 10,
+  },
+  newCallBtn: {
+    backgroundColor: "#046E37",
+    paddingVertical: 20,
+    paddingHorizontal: 60,
+    minWidth: "51%",
+    alignItems: "center",
+    position: "absolute",
+    bottom: -354,
+    left: -30,
   },
   buttonContainer1: {
-    backgroundColor: "#046E37",
+    // backgroundColor: "#046E37",
+    backgroundColor: "lightgray",
     paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingHorizontal: 5,
     borderRadius: 5,
     elevation: 5,
     maxWidth: 200,
     minWidth: 200,
+    maxHeight: 40,
     marginBottom: 2,
     alignItems: "center",
   },
@@ -209,8 +197,9 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   buttonText: {
-    color: "#FFF",
+    color: "white",
     fontWeight: "bold",
+    marginTop: 1,
   },
   modalContainer: {
     position: "absolute",
@@ -220,6 +209,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     backgroundColor: "rgba(255, 255, 255,1)",
     padding: 20,
+    zIndex: -10,
   },
   canvas: {
     borderWidth: 1,
@@ -262,8 +252,8 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     backgroundColor: "#046E37",
-    paddingVertical: 20,
-    paddingHorizontal: 40,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     borderRadius: 5,
     elevation: 5,
   },

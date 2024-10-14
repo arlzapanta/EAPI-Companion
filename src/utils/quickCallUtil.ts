@@ -316,3 +316,46 @@ export const addQuickCall = async (call: Call): Promise<string> => {
     throw new Error('Failed to add quick call');
   }
 };
+
+export const addQuickCallBottomSheet = async (call: Call): Promise<string> => {
+  try {
+    const db = await SQLite.openDatabaseAsync('cmms', { useNewConnection: true });
+
+    // Create table if not exists
+    await db.execAsync(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS quick_call_tbl (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        location TEXT,
+        doctors_id TEXT,
+        photo TEXT,
+        photo_location TEXT,
+        signature TEXT,
+        signature_location TEXT,
+        notes TEXT,
+        created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Insert data
+    const insert = await db.runAsync(
+      `INSERT INTO quick_call_tbl (location, doctors_id, photo, photo_location, signature, signature_location, notes) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        call.location,
+        call.doctors_id,
+        call.photo,
+        call.photo_location,
+        call.signature,
+        call.signature_location,
+        call.notes,
+      ]
+    );
+    await db.closeAsync();
+
+    return insert.lastInsertRowId.toString();
+  } catch (error) {
+    console.error("Error adding quick call:", error);
+    throw new Error('Failed to add quick call');
+  }
+};

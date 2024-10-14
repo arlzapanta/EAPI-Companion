@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Animated, ScrollView } from "react-native";
+import React, { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  Animated,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import Dashboard from "./Dashboard";
 import SettingsScreen from "./SettingsScreen";
 import Schedules from "./Schedules";
@@ -7,8 +13,11 @@ import ActualCalls from "./ActualCalls";
 import QuickCall from "./call/QuickCall";
 import DoctorScreen from "./DoctorScreen";
 import NavLinkComponent from "../components/NavLink";
+import RBSheet from "react-native-raw-bottom-sheet";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 
 import { getStyleUtil } from "../utils/styleUtil";
+import QuickCallBottomSheet from "./call/QuickCallBottomSheet";
 
 const defaultDoctor: DoctorRecord = {
   doctors_id: "",
@@ -30,6 +39,7 @@ const defaultDoctor: DoctorRecord = {
 };
 
 const Home = () => {
+  const refRBSheet = useRef<RBSheet>(null);
   const [selectedScreen, setSelectedScreen] = useState<
     | "dashboard"
     | "settings"
@@ -60,6 +70,9 @@ const Home = () => {
         return <Dashboard />;
     }
   };
+
+  const openSheet = () => refRBSheet.current?.open();
+  const closeSheet = () => refRBSheet.current?.close();
 
   return (
     <View style={dynamicStyles.homeContainer_home}>
@@ -99,6 +112,37 @@ const Home = () => {
         />
       </View>
       <ScrollView>{renderContent()}</ScrollView>
+      <TouchableOpacity
+        onLongPress={() => {
+          setSelectedScreen("dashboard");
+          openSheet();
+        }}
+        style={dynamicStyles.floatingButtonContainer}>
+        <View style={dynamicStyles.floatingButton}>
+          <MaterialIcons name="add-call" size={24} color="white" />
+          <Text>(hold)</Text>
+        </View>
+      </TouchableOpacity>
+      <RBSheet
+        ref={refRBSheet}
+        height={900}
+        closeOnPressBack={true}
+        draggable={true}
+        closeOnPressMask={true}
+        customStyles={{
+          wrapper: {
+            backgroundColor: "rgba(0, 0, 0, .5)",
+          },
+          draggableIcon: {
+            backgroundColor: "#046E37",
+          },
+        }}
+        customModalProps={{
+          animationType: "slide",
+          statusBarTranslucent: true,
+        }}>
+        <QuickCallBottomSheet closeSheet={closeSheet} />
+      </RBSheet>
     </View>
   );
 };
