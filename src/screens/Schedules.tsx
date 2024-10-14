@@ -233,7 +233,7 @@ const Schedules = () => {
                   {accordionFilterExpanded && (
                     <View style={styles1.accordionContent}>
                       {scheduleFilterData.length === 0 ? (
-                        <Text>No schedules found for this date.</Text>
+                        <Text>No schedules found or select date first.</Text>
                       ) : (
                         scheduleFilterData.map((scheduleFilter) => (
                           <TouchableOpacity

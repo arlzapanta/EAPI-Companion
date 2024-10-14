@@ -27,6 +27,7 @@ import { customToast } from "../../utils/customToast";
 import { Picker } from "@react-native-picker/picker";
 import {
   getDoctorsTodaySchedLocalDb,
+  getDoctorsWeekSchedLocalDb,
   saveCallsDoneFromSchedules,
 } from "../../utils/localDbUtils";
 import { useDataContext } from "../../context/DataContext";
@@ -80,7 +81,7 @@ const QuickCall = () => {
 
   const fetchDoctorSchedules = async () => {
     try {
-      const schedules = await getDoctorsTodaySchedLocalDb();
+      const schedules = await getDoctorsWeekSchedLocalDb();
       setDoctorScheduleList(schedules);
     } catch (error) {
       console.error("Error fetching doctor schedules:", error);
@@ -331,11 +332,11 @@ const QuickCall = () => {
                 style={styles.pickerInitialLabel}
               />
               {doctorScheduleList
-                .filter((schedule) => schedule.full_name !== null) // Filter out null names
+                .filter((schedule) => schedule.full_name !== null)
                 .map((schedule) => (
                   <Picker.Item
                     key={schedule.id}
-                    label={schedule.full_name || "Unknown Name"} // Provide a default value
+                    label={schedule.full_name || "Unknown Name"}
                     value={schedule}
                   />
                 ))}

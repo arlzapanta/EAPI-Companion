@@ -129,124 +129,112 @@ const ActualCalls = () => {
     customToast("Post call updated");
   };
 
-  const NoActualCallSelected = () => (
-    <View style={styles1.containerNoCallData}>
-      <Ionicons
-        name="information-circle"
-        size={24}
-        color="#007BFF"
-        style={styles1.iconNoCallData}
-      />
-      <Text style={styles1.messageNoCallData}>
-        Select a call to view details
-      </Text>
-    </View>
-  );
+  const NoActualCallSelected = () => {
+    return (
+      <View style={styles1.containerNoCallData}>
+        <Ionicons
+          name="information-circle"
+          size={24}
+          color="#007BFF"
+          style={styles1.iconNoCallData}
+        />
+        <Text style={styles1.messageNoCallData}>
+          Select a call to view details
+        </Text>
+      </View>
+    );
+  };
 
   const CallDetails = ({ call }: { call: any }) => (
     <ScrollView>
-      <View style={styles1.detailsCard}>
-        <Text style={styles1.detailsTitle}>Call Details</Text>
-        <View style={styles1.detailRow}>
-          <Text style={styles1.detailLabel}>Call Start:</Text>
-          <Text style={styles1.detailValue}>{call.call_start}</Text>
-        </View>
-        <View style={styles1.detailRow}>
-          <Text style={styles1.detailLabel}>Call End:</Text>
-          <Text style={styles1.detailValue}>{call.call_end}</Text>
-        </View>
-        <View style={styles1.detailRow}>
-          <Text style={styles1.detailLabel}>Created Date:</Text>
-          <Text style={styles1.detailValue}>
-            {moment(call.created_date).format("MMMM DD, YYYY, HH:mm:ss")}
-          </Text>
-        </View>
-        <View style={styles1.detailRow}>
-          <Text style={styles1.detailLabel}>Schedules ID:</Text>
-          <Text style={styles1.detailValue}>{call.schedule_id}</Text>
-        </View>
-        {/* <View style={styles1.detailRow}>
+      <Text style={styles1.detailsTitle}>Call Details</Text>
+      <View style={styles1.detailRow}>
+        <Text style={styles1.detailLabel}>Call Start:</Text>
+        <Text style={styles1.detailValue}>{call.call_start}</Text>
+      </View>
+      <View style={styles1.detailRow}>
+        <Text style={styles1.detailLabel}>Call End:</Text>
+        <Text style={styles1.detailValue}>{call.call_end}</Text>
+      </View>
+      <View style={styles1.detailRow}>
+        <Text style={styles1.detailLabel}>Created Date:</Text>
+        <Text style={styles1.detailValue}>
+          {moment(call.created_date).format("MMMM DD, YYYY, HH:mm:ss")}
+        </Text>
+      </View>
+      <View style={styles1.detailRow}>
+        <Text style={styles1.detailLabel}>Schedules ID:</Text>
+        <Text style={styles1.detailValue}>{call.schedule_id}</Text>
+      </View>
+      {/* <View style={styles1.detailRow}>
         <Text style={styles1.detailLabel}>Signature Attempts:</Text>
         <Text style={styles1.detailValue}>{call.signature_attempts}</Text>
       </View> */}
-        <View style={styles1.detailRow}>
-          <Text style={styles1.detailLabel}>Photo:</Text>
-          {call.photo && (
-            <Image
-              source={{ uri: `data:image/jpeg;base64,${call.photo}` }}
-              style={styles1.photo}
-            />
-          )}
-        </View>
-        <View style={styles1.detailRow}>
-          <Text style={styles1.detailLabel}>Signature:</Text>
-          {call.signature && (
-            <>
-              <Image
-                source={{
-                  uri: call.signature,
-                }}
-                style={styles1.signature}
-              />
-            </>
-          )}
-        </View>
-        {/* <View style={styles1.mapContainer}>
-        {call.photo_location && (
-          <MapComponent
-            latitude={14.603977037849905}
-            longitude={121.01772589899825}
-            containerStyle={styles1.mapWrapper}
-            mapStyle={styles1.map}
+      <View style={styles1.detailRow}>
+        <Text style={styles1.detailLabel}>Photo:</Text>
+        {call.photo && (
+          <Image
+            source={{ uri: `data:image/jpeg;base64,${call.photo}` }}
+            style={styles1.photo}
           />
         )}
-      </View> */}
-        <View style={styles1.cardContainer}>
-          <View style={styles1.headerRow}>
-            <Text style={styles1.sectionTitle}>Edit Post Call</Text>
-            <TouchableOpacity
-              onPress={savePostCallData}
-              style={styles1.buttonPostCallSave}>
-              <Text style={styles1.buttonText}>Save</Text>
-            </TouchableOpacity>
-          </View>
+      </View>
+      <View style={styles1.detailRow}>
+        <Text style={styles1.detailLabel}>Signature:</Text>
+        {call.signature && (
+          <>
+            <Image
+              source={{
+                uri: call.signature,
+              }}
+              style={styles1.signature}
+            />
+          </>
+        )}
+      </View>
+      <View style={styles1.headerRow}>
+        <Text style={styles1.sectionTitle}>Edit Post Call</Text>
+        <TouchableOpacity
+          onPress={savePostCallData}
+          style={styles1.buttonPostCallSave}>
+          <Text style={styles1.buttonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
 
-          <Text>Feedback</Text>
-          <TextInput
-            style={styles1.input}
-            placeholder="Enter feedback"
-            value={feedback}
-            onChangeText={setFeedback}
-            multiline
-            numberOfLines={3}
-          />
-          <Text style={styles1.moodLabel}>Doctor's Mood:</Text>
-          <View style={styles1.radioGroup}>
-            {["cold", "warm", "hot"].map((mood) => (
-              <TouchableOpacity
-                key={mood}
-                style={[
-                  styles1.radioButtonContainer,
-                  selectedMood === mood && styles1.radioButtonSelected,
-                ]}
-                onPress={() => setSelectedMood(mood)}>
-                <Text
-                  style={[
-                    styles1.radioButtonText,
-                    selectedMood === mood && styles1.radioButtonTextSelected,
-                  ]}>
-                  {mood.charAt(0).toUpperCase() + mood.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
+      <Text>Feedback</Text>
+      <TextInput
+        style={styles1.input}
+        placeholder="Enter feedback"
+        value={feedback}
+        onChangeText={setFeedback}
+        multiline
+        numberOfLines={3}
+      />
+      <Text style={styles1.moodLabel}>Doctor's Mood:</Text>
+      <View style={styles1.radioGroup}>
+        {["cold", "warm", "hot"].map((mood) => (
+          <TouchableOpacity
+            key={mood}
+            style={[
+              styles1.radioButtonContainer,
+              selectedMood === mood && styles1.radioButtonSelected,
+            ]}
+            onPress={() => setSelectedMood(mood)}>
+            <Text
+              style={[
+                styles1.radioButtonText,
+                selectedMood === mood && styles1.radioButtonTextSelected,
+              ]}>
+              {mood.charAt(0).toUpperCase() + mood.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </ScrollView>
   );
 
   return (
-    <View style={styles1.container}>
+    <View style={dynamicStyles.container}>
       {isActualLoading || timeOutLoading ? (
         <Loading />
       ) : (
@@ -302,21 +290,24 @@ const ActualCalls = () => {
                     style={styles1.icon}
                   />
                 </TouchableOpacity>
-
                 {accordionExpandedFilter && (
                   <View style={styles1.accordionContent}>
-                    {actualFilterData.map((call) => (
-                      <TouchableOpacity
-                        key={call.id}
-                        onPress={() => handleCallClick(call)}
-                        style={styles1.callItem}>
-                        <Text style={styles1.callText}>{`${
-                          call.doctors_name
-                        } \n${moment(call.created_at).format(
-                          "MMMM DD YYYY"
-                        )}`}</Text>
-                      </TouchableOpacity>
-                    ))}
+                    {actualFilterData.length === 0 ? (
+                      <Text>No calls found or select date first.</Text>
+                    ) : (
+                      actualFilterData.map((actual) => (
+                        <TouchableOpacity
+                          key={actual.id}
+                          onPress={() => handleCallClick(actual)}
+                          style={styles1.callItem}>
+                          <Text style={styles1.callText}>{`${
+                            actual.doctors_name
+                          } \n${moment(actual.created_at).format(
+                            "MMMM DD YYYY"
+                          )}`}</Text>
+                        </TouchableOpacity>
+                      ))
+                    )}
                   </View>
                 )}
               </View>
@@ -358,13 +349,13 @@ const ActualCalls = () => {
 
           <View style={styles1.column2}>
             <View style={dynamicStyles.card2Col}>
-              {selectedCall ? (
-                <>
+              <View style={styles1.callDetailsContainer}>
+                {selectedCall ? (
                   <CallDetails call={selectedCall} />
-                </>
-              ) : (
-                <NoActualCallSelected />
-              )}
+                ) : (
+                  <NoActualCallSelected />
+                )}
+              </View>
             </View>
           </View>
         </View>
@@ -381,20 +372,16 @@ const styles1 = StyleSheet.create({
   row: {
     flexDirection: "row",
     flex: 1,
-    marginVertical: 10,
-    marginStart: 20,
-    marginEnd: 20,
   },
   column1: {
     width: "30%",
-    marginEnd: 10,
   },
   column2: {
     width: "70%",
   },
   innerCard: {
     height: "100%",
-    paddingHorizontal: 30,
+    paddingHorizontal: 20,
     paddingVertical: 40,
     backgroundColor: "#ffffff",
     borderRadius: 10,
@@ -441,6 +428,11 @@ const styles1 = StyleSheet.create({
     marginLeft: 10,
     color: "#046E37",
   },
+
+  callDetailsContainer: {
+    flex: 1,
+    borderRadius: 10,
+  },
   accordionContent: {
     backgroundColor: "#f8f9fa",
     borderRadius: 10,
@@ -457,10 +449,12 @@ const styles1 = StyleSheet.create({
     color: "#495057",
   },
   detailsCard: {
+    flexGrow: 1,
     backgroundColor: "#ffffff",
     borderRadius: 10,
-    padding: 20,
-    elevation: 2,
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+    elevation: 4,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,

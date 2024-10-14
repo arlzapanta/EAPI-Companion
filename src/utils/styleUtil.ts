@@ -63,17 +63,14 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     } as ViewStyle,
     card2Col: {
       height: 740,
-      padding: 40,
+      padding: 20,
+      paddingVertical: 20,
       backgroundColor: "#ffffff",
       borderRadius: 10,
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.2,
-      shadowRadius: 6,
       elevation: 5,
       marginVertical: 10,
       marginStart: 10,
-      marginEnd: 10,
+      marginEnd: 10, 
     } as ViewStyle,
     mainText: {
       color: currentTheme.containerBackgroundColor,
@@ -234,8 +231,8 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
     filterMainContainer: {
       padding: 20,
       marginVertical: 5,
-      borderRadius: 20,
-      borderWidth: 2.5,
+      borderRadius: 10,
+      borderWidth:1,
       borderColor: currentTheme.containerBackgroundColor
     } as ViewStyle,
     // ***************************************************************************************
