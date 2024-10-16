@@ -6,7 +6,9 @@ import React, {
   ReactNode,
 } from "react";
 import {
+  fetchAllDetailers,
   fetchChartDataLocalDb,
+  fetchDetailersDataLocalDb,
   getDatesAndTypeForCalendarView,
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
@@ -27,6 +29,7 @@ interface DataContextProps {
   isActualLoading: boolean;
   isDoctorLoading: boolean;
   isQuickLoading: boolean;
+  detailersRecord: DetailersRecord[];
   quickCallData: Call[];
   ytdDataMonthValues: Array<{
     value: number;
@@ -311,6 +314,15 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // ***************************************************************************
   // ***************************************************************************
   const [isScheduleLoading, setIsScheduleLoading] = useState<boolean>(false);
+  const [detailersRecord, setDetailersRecord] = useState<DetailersRecord[]>([]);
+  const fetchDetailersRecord = async () => {
+    try {
+      const data = await fetchAllDetailers();
+    } catch (error) {}
+  };
+  useEffect(() => {
+    fetchDetailersRecord();
+  }, []);
   // ADD SCHEDULE DATA HERE
   // ***************************************************************************
   // ***************************************************************************
@@ -397,6 +409,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         // SCHEDULE DATA START
         // ***************************************************************************
         isScheduleLoading,
+        detailersRecord,
         // ***************************************************************************
         // SCHEDULE DATA END
         // ***************************************************************************

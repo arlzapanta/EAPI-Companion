@@ -14,7 +14,11 @@ import {
 } from "react-native";
 import { createShimmerPlaceHolder } from "expo-shimmer-placeholder";
 import { LinearGradient } from "expo-linear-gradient";
-import { fetchDetailerImages } from "../../utils/localDbUtils";
+import {
+  fetchAllDetailers,
+  fetchDetailersDataLocalDb,
+} from "../../utils/localDbUtils";
+import { useDataContext } from "../../context/DataContext";
 
 // todo : fix on detailers design and API
 const ShimmerPlaceHolder = createShimmerPlaceHolder(LinearGradient);
@@ -27,6 +31,7 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
   const scaleAnim = React.useRef(new Animated.Value(0)).current;
   const [loadingStates, setLoadingStates] = useState<boolean[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const { detailersRecord } = useDataContext();
 
   const handleImageLoad = (index: number) => {
     setTimeout(() => {
@@ -45,15 +50,16 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
         useNativeDriver: true,
       }).start();
 
-      const fetchImages = async () => {
-        const fetchedImages = await fetchDetailerImages(
-          detailerNumber.toString()
-        );
-        setImageUrls(fetchedImages);
-        setLoadingStates(Array(fetchedImages.length).fill(true));
+      const fetchDetailers = async () => {
+        const detailersData = await fetchDetailersDataLocalDb();
+        const newImageUrls = detailersData.map((item) => item.detailers).flat();
+        if (newImageUrls.length === 0) {
+          console.log("No images found");
+        }
+        setImageUrls(newImageUrls);
       };
 
-      fetchImages();
+      fetchDetailers();
     } else {
       Animated.timing(scaleAnim, {
         toValue: 0,
@@ -86,7 +92,7 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
                     />
                   ) : null}
                   <Image
-                    source={{ uri: url }}
+                    source={{ uri: `data:image/png;base64,${url}` }}
                     style={styles.fullImage}
                     onLoadStart={() => handleImageLoad(index)}
                   />

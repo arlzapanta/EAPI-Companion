@@ -63,16 +63,12 @@ const QuickCallBottomSheet: React.FC<QuickCallBottomSheetProps> = ({
         };
         const insert = await addQuickCallBottomSheet(newCall);
         if (insert) setSelectedCallIdValue(Number(insert));
-        console.log(
-          insert,
-          "insert ID test @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-        );
       } catch (error) {
         console.log("Error adding new call:", error);
       }
     };
 
-    handleAutoAddCall(); // Automatically call the function on component mount
+    handleAutoAddCall();
   }, []);
 
   const handleAddCall = async () => {

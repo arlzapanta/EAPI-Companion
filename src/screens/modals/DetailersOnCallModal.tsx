@@ -14,6 +14,7 @@ import {
 import { createShimmerPlaceHolder } from "expo-shimmer-placeholder";
 import { LinearGradient } from "expo-linear-gradient";
 import { fetchAllDetailers } from "../../utils/localDbUtils";
+import { useDataContext } from "../../context/DataContext";
 // todo : fix on detailers design and API
 const ShimmerPlaceHolder = createShimmerPlaceHolder(LinearGradient);
 interface DetailerModalProps {
@@ -26,6 +27,7 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
   onClose,
 }) => {
   const scaleAnim = useRef(new Animated.Value(0)).current;
+  const { detailersRecord } = useDataContext();
   const [loadingStates, setLoadingStates] = useState<boolean[]>([]);
   const [categoryIndex, setCategoryIndex] = useState<number>(0);
   const [categories, setCategories] = useState<string[]>([]);
@@ -83,8 +85,10 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
         const fetchedData = await fetchAllDetailers();
         const allCategories = fetchedData.map((record) => record.category);
         setCategories(allCategories);
-        setImageUrls(fetchedData[0]?.images || []);
-        setLoadingStates(Array(fetchedData[0]?.images.length || 0).fill(true));
+        setImageUrls(fetchedData[0]?.detailers || []);
+        setLoadingStates(
+          Array(fetchedData[0]?.detailers.length || 0).fill(true)
+        );
         startTimer();
       };
 
@@ -106,9 +110,10 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
     const fetchImages = async () => {
       stopTimer();
       const fetchedData = await fetchAllDetailers();
-      const images = fetchedData[categoryIndex]?.images || [];
-      setImageUrls(images);
-      setLoadingStates(Array(images.length).fill(true));
+      console.log(fetchedData, "asdkljasjlkdjklasdjklsajklsd");
+      const detailers = fetchedData[categoryIndex]?.detailers || [];
+      setImageUrls(detailers);
+      setLoadingStates(Array(detailers.length).fill(true));
       startTimer();
     };
 

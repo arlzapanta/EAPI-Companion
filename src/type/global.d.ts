@@ -59,6 +59,13 @@ declare global {
       };
       created_at: string; 
   }
+    export interface DetailersDataRecord {
+      id: string; 
+      coreDetailers: string;
+      secondaryDetailers: string;
+      reminderDetailers: string;
+      created_date: string; 
+  }
   interface DailyTargetState {
     data: { callsCount: string, plotCount: string }[];
   }
@@ -343,11 +350,6 @@ declare global {
       created_at: string | null;
     }
 
-    export interface DetailerRecord{
-      category: string;
-      images: string[];
-  };
-
   export interface UploadImageProps {
     base64Images: string[];
     category: string;
@@ -370,6 +372,18 @@ declare global {
   }
   export interface QuickCallBottomSheetProps {
     closeSheet: () => void;
+  }
+
+  export interface DetailersRecord {
+    category: string;
+    detailers: string[]; 
+    created_date: string;
+    id: number;
+  }
+
+  export interface DetailerBase64List {
+    images : string [];
+    id: string;
   }
 }
   

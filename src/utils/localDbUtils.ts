@@ -104,6 +104,16 @@ const dropCreate_chartData = `
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `;
+const dropCreate_detailersData = `
+    DROP TABLE IF EXISTS detailers_tbl;
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE detailers_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      category TEXT,
+      detailers TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+`;
 const createIfNE_userAttendance = `
   PRAGMA journal_mode = WAL;
   CREATE TABLE IF NOT EXISTS user_attendance_tbl (
@@ -156,6 +166,15 @@ const createIfNEchartData = `
       ytd_calls_count TEXT, 
       ytd_target_count TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+`;
+const createIfNEdetailersData = `
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS detailers_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      category TEXT,
+      detailers TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `;
 const createIfNEDoctors = `
@@ -625,6 +644,53 @@ export const saveChartDataLocalDb = async (chartData: ChartDashboardRecord | Cha
   }
 };
 
+export const saveDetailersDataLocalDb = async (detailersData: DetailersDataRecord | DetailersDataRecord[]): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(dropCreate_detailersData);
+  const insertPromises = Array.isArray(detailersData) ? detailersData : [detailersData];
+
+  try {
+    await Promise.all(insertPromises.map(async (detail) => {
+      let coreDetailersJSON = Array.isArray(detail.coreDetailers) ? detail.coreDetailers : JSON.parse(detail.coreDetailers || '[]');
+      let secondaryDetailersJSON = Array.isArray(detail.secondaryDetailers) ? detail.secondaryDetailers : JSON.parse(detail.secondaryDetailers || '[]');
+      let reminderDetailersJSON = Array.isArray(detail.reminderDetailers) ? detail.reminderDetailers : JSON.parse(detail.reminderDetailers || '[]');
+
+      const coreDetailersValues = coreDetailersJSON.map((item: any) => item.detailer).join(',');
+      const secondaryDetailersValues = secondaryDetailersJSON.map((item: any) => item.detailer).join(',');
+      const reminderDetailersValues = reminderDetailersJSON.map((item: any) => item.detailer).join(',');
+
+      await db.runAsync(
+        `INSERT INTO detailers_tbl (category, detailers) VALUES (?, ?)`,
+        ['1', coreDetailersValues] 
+      );
+
+      await db.runAsync(
+        `INSERT INTO detailers_tbl (category, detailers) VALUES (?, ?)`,
+        ['2', secondaryDetailersValues] 
+      );
+
+      await db.runAsync(
+        `INSERT INTO detailers_tbl (category, detailers) VALUES (?, ?)`,
+        ['3', reminderDetailersValues]
+      );
+    }));
+
+    // const query = `SELECT * FROM detailers_tbl`;
+    // const existingRows = await db.getAllAsync(query);
+    // console.log('GUMANA:', existingRows);
+
+    return 'Success';
+  } catch (error) {
+    console.error('Error saving detailers data:', error);
+    return 'Error saving data';
+  }
+};
+
+
+
 export const fetchChartDataLocalDb = async (): Promise<ChartDashboardRecord[]> =>{
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
@@ -641,6 +707,23 @@ export const fetchChartDataLocalDb = async (): Promise<ChartDashboardRecord[]> =
     return existingRows as ChartDashboardRecord[];
   } catch (error) {
     console.error('Error fetching data from chart_data_tbl:', error);
+    throw new Error('Failed to fetch data');
+  }
+};
+
+export const fetchDetailersDataLocalDb = async (): Promise<DetailersRecord[]> => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+
+  try {
+    const query = `SELECT * FROM detailers_tbl`;
+    const existingRows = await db.getAllAsync(query);
+    // console.log('GUMANA123:', existingRows);
+
+    return existingRows as DetailersRecord[];
+  } catch (error) {
+    console.error('Error fetching data from detailers_tbl:', error);
     throw new Error('Failed to fetch data');
   }
 };
@@ -968,54 +1051,6 @@ export const getDatesAndTypeForCalendarView = async (): Promise<CalendarRecord[]
     useNewConnection: true,
   });
 
-  // await db.execAsync(`
-  //   PRAGMA journal_mode = WAL;
-  //   CREATE TABLE IF NOT EXISTS schedule_API_tbl (
-  //     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-  //     schedule_id TEXT, 
-  //     address TEXT, 
-  //     date TEXT, 
-  //     doctors_id TEXT, 
-  //     full_name TEXT, 
-  //     municipality_city TEXT, 
-  //     province TEXT
-  //   );
-
-  //   CREATE TABLE IF NOT EXISTS calls_tbl (
-  //   id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-  //     schedule_id TEXT, 
-  //     ts_name TEXT, 
-  //     call_start TEXT, 
-  //     call_end TEXT, 
-  //     date TEXT, 
-  //     doctors_name TEXT, 
-  //     municipality_city TEXT, 
-  //     photo TEXT, 
-  //     photo_location TEXT, 
-  //     province TEXT, 
-  //     signature TEXT, 
-  //     signature_location TEXT,
-  //     signature_attempts TEXT,
-  //     created_at TEXT,
-  //     created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  //   );
-
-  //   CREATE TABLE IF NOT EXISTS reschedule_req_tbl (
-  //     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-  //     request_id TEXT,
-  //     schedule_id TEXT,
-  //     sales_portal_id TEXT,
-  //     doctors_id TEXT,
-  //     date_from TEXT,
-  //     date_to TEXT,
-  //     status TEXT,
-  //     type TEXT,
-  //     created_at TEXT,
-  //     full_name TEXT,
-  //     date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-  //     );
-  // `);
-
   await db.execAsync(createIfNEscheduleAPI);
   await db.execAsync(createIfNECalls);
   await db.execAsync(createIfNERescheduleReq);
@@ -1289,63 +1324,25 @@ export const deleteRescheduleRequestLocalDb = async (): Promise<void> => {
   }
 };
 
-export const fetchDetailerImages = async (category: string): Promise<string[]> => {
+export const fetchAllDetailers = async (): Promise<DetailersRecord[]> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
 
   try {
-    const query = `SELECT image FROM detailers_tbl WHERE category = ?`;
-    const result = await db.getAllAsync(query, [`category${category}`]);
+    await db.execAsync(createIfNEdetailersData);
+    const query = `SELECT detailers, category, created_date, id FROM detailers_tbl`;
+    const result = await db.getAllAsync(query) as DetailersRecord[];
 
-    const rows: { image: string }[] = result as { image: string }[];
-    const imageUrls = rows.map(row => row.image);
-    // console.log(imageUrls.length , 'fetchDetailerImages > imageUrls.length');
-    return imageUrls;
+    return result;
   } catch (error) {
-    console.error("Error fetching detailer images:", error);
+    console.error("Error fetching detailer records: fetchAllDetailers", error);
     return [];
   } finally {
     await db.closeAsync();
   }
 };
 
-export const fetchAllDetailers = async (): Promise<DetailerRecord[]> => {
-  const db = await SQLite.openDatabaseAsync("cmms", {
-    useNewConnection: true,
-  });
-
-  try {
-    const query = `SELECT image, category FROM detailers_tbl`;
-    const result = await db.getAllAsync(query);
-
-    const rows: { image: string; category: string }[] = result as { image: string; category: string }[];
-
-    const detailerRecords: DetailerRecord[] = [];
-    const categoryMap: { [key: string]: string[] } = {};
-
-    rows.forEach((row) => {
-      if (!categoryMap[row.category]) {
-        categoryMap[row.category] = [];
-      }
-      categoryMap[row.category].push(row.image);
-    });
-
-    for (const category in categoryMap) {
-      detailerRecords.push({
-        category,
-        images: categoryMap[category],
-      });
-    }
-
-    return detailerRecords;
-  } catch (error) {0
-    console.error("Error fetching detailer images:", error);
-    return [];
-  } finally {
-    await db.closeAsync();
-  }
-};
 
 export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails: SchedToCall): Promise<string> => {
   console.log(callDetails,'alksdjlaksjdas');
@@ -1759,7 +1756,7 @@ export const dropLocalTablesDb = async () => {
     useNewConnection: true,
   });
 
-  const tableNames = ['quick_call_tbl','reschedule_history_tbl','reschedule_req_tbl','user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','doctors_tbl','pre_call_notes_tbl','post_call_notes_tbl'];
+  const tableNames = ['detailers_tbl','quick_call_tbl','reschedule_history_tbl','reschedule_req_tbl','user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','doctors_tbl','pre_call_notes_tbl','post_call_notes_tbl'];
   // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
   // const tableNames = ['quick_call_tbl'];
   for (const tableName of tableNames) {

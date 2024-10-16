@@ -11,7 +11,6 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 import { AttendanceScreenNavigationProp } from "../../type/navigation";
-import Icon from "react-native-vector-icons/Ionicons";
 import {
   saveUserAttendanceLocalDb,
   getUserAttendanceRecordsLocalDb,
@@ -25,6 +24,7 @@ import {
   doctorRecordsSync,
   getCallsAPI,
   getChartData,
+  getDetailersData,
   getDoctors,
   getReschedulesData,
   getSChedulesAPI,
@@ -33,7 +33,6 @@ import {
 } from "../../utils/apiUtility";
 import AttendanceTable from "../tables/AttendanceTable";
 import { getQuickCalls } from "../../utils/quickCallUtil";
-// added 10-5-24
 import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
 import { getLocation } from "../../utils/currentLocation";
@@ -41,6 +40,7 @@ import { showConfirmAlert } from "../../utils/commonUtil";
 import { AntDesign } from "@expo/vector-icons";
 import { getStyleUtil } from "../../utils/styleUtil";
 import Loading from "../../components/Loading";
+import { customToast } from "../../utils/customToast";
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const Attendance: React.FC = () => {
@@ -107,9 +107,9 @@ const Attendance: React.FC = () => {
         )) as AttendanceRecord[];
         setAttendanceData(data);
 
-        const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        const today = new Date().toISOString().split("T")[0];
         const recordsToday = data.filter((record) => {
-          const recordDate = record.date.split(" ")[0]; // Extract 'YYYY-MM-DD' from 'YYYY-MM-DD HH:MM:SS'
+          const recordDate = record.date.split(" ")[0];
           return recordDate === today;
         });
 
@@ -160,12 +160,14 @@ const Attendance: React.FC = () => {
       const timeInIsProceed = await apiTimeIn(userInfo);
       if (timeInIsProceed.isProceed) {
         const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
+        console.log(checkIfTimedIn);
         if (checkIfTimedIn === 1) {
           Alert.alert("Failed", "Already timed In today");
         } else {
           await getDoctors(userInfo);
           await getReschedulesData(userInfo);
           await getChartData(userInfo);
+          await getDetailersData();
           await fetchAttendanceData();
           const callData = await getCallsAPI(userInfo);
           const scheduleData = await getSChedulesAPI(userInfo);
@@ -185,8 +187,7 @@ const Attendance: React.FC = () => {
           }
         }
       } else if (!timeInIsProceed.isProceed) {
-        console.log("timeInIsProceed", timeInIsProceed);
-        console.log(timeInIsProceed);
+        customToast("Already timed in, please contact admin to reset");
       }
     } catch (error) {
       Alert.alert("Error", "Failed to time in.");

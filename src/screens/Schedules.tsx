@@ -27,7 +27,8 @@ import { useDataContext } from "../context/DataContext";
 import { Picker } from "@react-native-picker/picker";
 
 const Schedules = () => {
-  const { isScheduleLoading } = useDataContext();
+  const { isScheduleLoading, detailersRecord } = useDataContext();
+  // todo : detailersRecord
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
   useEffect(() => {
     const timer = setTimeout(() => {
