@@ -84,6 +84,11 @@ export const getStyleUtil = ({ theme = 'light' }: styleUtilProps) => {
       fontSize: 16,
       fontWeight: "bold",
     } as TextStyle,
+    mainTextRed: {
+      color: "red",
+      fontSize: 16,
+      fontWeight: "bold",
+    } as TextStyle,
     mainTextBig: {
       color: currentTheme.containerBackgroundColor,
       fontSize: 24,

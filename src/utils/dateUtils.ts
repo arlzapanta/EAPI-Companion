@@ -6,8 +6,7 @@ import { format, parseISO } from 'date-fns';
 const DATE_KEY ='current_date_ph';
 export const getCurrentDatePH = async (): Promise<string> => {
   const storedDate = await SecureStore.getItemAsync(DATE_KEY);
-  // const currentDate = moment().tz('Asia/Manila').format('YYYY-MM-DD');
-  const currentDate = moment(new Date('2024-11-04')).tz('Asia/Manila').format('YYYY-MM-DD');
+  const currentDate = moment().tz('Asia/Manila').format('YYYY-MM-DD');
 
   if (storedDate && storedDate === currentDate) {
     return storedDate;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Modal,
   View,
@@ -10,66 +10,38 @@ import {
   Image,
   ScrollView,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
-import { createShimmerPlaceHolder } from "expo-shimmer-placeholder";
-import { LinearGradient } from "expo-linear-gradient";
-import { fetchAllDetailers } from "../../utils/localDbUtils";
 import { useDataContext } from "../../context/DataContext";
-// todo : fix on detailers design and API
-const ShimmerPlaceHolder = createShimmerPlaceHolder(LinearGradient);
-interface DetailerModalProps {
-  isVisible: boolean;
-  onClose: () => void;
-}
+import { getStyleUtil } from "../../utils/styleUtil";
+const dynamicStyles = getStyleUtil({});
 
-const DetailerModal: React.FC<DetailerModalProps> = ({
+const CustomLoading = () => {
+  return (
+    <View style={styles.noImagesContainer}>
+      <ActivityIndicator size="large" color="#046E37" />
+      <Text style={styles.noImagesText}>
+        Image is loading or the{" "}
+        <Text style={dynamicStyles.mainTextRed}>image format is invalid</Text>.
+        Please contact your DSM or admin for assistance.
+      </Text>
+    </View>
+  );
+};
+
+const DetailerOnCallModal: React.FC<DetailerModalProps> = ({
   isVisible,
   onClose,
 }) => {
-  const scaleAnim = useRef(new Animated.Value(0)).current;
-  const { detailersRecord } = useDataContext();
+  const scaleAnim = React.useRef(new Animated.Value(0)).current;
   const [loadingStates, setLoadingStates] = useState<boolean[]>([]);
-  const [categoryIndex, setCategoryIndex] = useState<number>(0);
-  const [categories, setCategories] = useState<string[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [timeSpent, setTimeSpent] = useState<number[]>([0, 0, 0]); // For tracking time spent per category
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
-
-  const startTimer = () => {
-    const start = Date.now();
-    setTimer(
-      setInterval(() => {
-        const diff = Math.floor((Date.now() - start) / 1000);
-        setTimeSpent((prev) => {
-          const updated = [...prev];
-          updated[categoryIndex] = diff;
-          return updated;
-        });
-      }, 1000)
-    );
-  };
-
-  const stopTimer = () => {
-    if (timer) {
-      clearInterval(timer);
-      setTimer(null);
-    }
-  };
+  const { detailersRecord } = useDataContext();
 
   const handleImageLoad = (index: number) => {
     const updatedLoadingStates = [...loadingStates];
-    updatedLoadingStates[index] = false;
+    updatedLoadingStates[index] = true;
     setLoadingStates(updatedLoadingStates);
-  };
-
-  const handleNextCategory = () => {
-    stopTimer();
-    if (categoryIndex < categories.length - 1) {
-      setCategoryIndex(categoryIndex + 1);
-    } else {
-      console.log("Time spent per category:", timeSpent);
-      onClose();
-    }
   };
 
   useEffect(() => {
@@ -81,46 +53,38 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
         useNativeDriver: true,
       }).start();
 
-      const fetchImages = async () => {
-        const fetchedData = await fetchAllDetailers();
-        const allCategories = fetchedData.map((record) => record.category);
-        setCategories(allCategories);
-        setImageUrls(fetchedData[0]?.detailers || []);
-        setLoadingStates(
-          Array(fetchedData[0]?.detailers.length || 0).fill(true)
+      const fetchDetailers = async () => {
+        const matchingDetailers = detailersRecord.filter(
+          (detailer) => detailer.category !== "0"
         );
-        startTimer();
-      };
 
-      fetchImages();
+        if (matchingDetailers.length > 0) {
+          const detailersArray = matchingDetailers
+            .flatMap((detailer) => detailer.detailers.split(","))
+            .filter((url) => url.trim() !== "");
+
+          setImageUrls(detailersArray);
+        } else {
+          setImageUrls([]);
+        }
+      };
+      fetchDetailers();
     } else {
       Animated.timing(scaleAnim, {
         toValue: 0,
-        duration: 300,
+        duration: 2000,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start();
     }
-
-    return () => stopTimer(); // Clean up timer on unmount or close
   }, [isVisible]);
 
   useEffect(() => {
-    // Change images when category changes
-    const fetchImages = async () => {
-      stopTimer();
-      const fetchedData = await fetchAllDetailers();
-      console.log(fetchedData, "asdkljasjlkdjklasdjklsajklsd");
-      const detailers = fetchedData[categoryIndex]?.detailers || [];
-      setImageUrls(detailers);
-      setLoadingStates(Array(detailers.length).fill(true));
-      startTimer();
-    };
-
-    if (isVisible && categories.length > 0) {
-      fetchImages();
+    if (imageUrls.length > 0) {
+      const initialStates = new Array(imageUrls.length).fill(true);
+      setLoadingStates(initialStates);
     }
-  }, [categoryIndex]);
+  }, [imageUrls]);
 
   return (
     <Modal
@@ -137,16 +101,16 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
               contentContainerStyle={styles.imageGallery}>
               {imageUrls.map((url, index) => (
                 <View key={index} style={styles.imageContainer}>
-                  {loadingStates[index] ? (
-                    <ShimmerPlaceHolder
-                      visible={true}
-                      style={styles.shimmerPlaceholder}
-                    />
-                  ) : null}
+                  {loadingStates[index] && (
+                    <View style={styles.imageContainer}>
+                      <CustomLoading />
+                    </View>
+                  )}
                   <Image
-                    source={{ uri: url }}
+                    source={{ uri: `data:image/png;base64,${url}` }}
                     style={styles.fullImage}
                     onLoadStart={() => handleImageLoad(index)}
+                    onLoad={() => handleImageLoad(index)}
                   />
                 </View>
               ))}
@@ -154,17 +118,13 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
           ) : (
             <View style={styles.noImagesContainer}>
               <Text style={styles.noImagesText}>
-                No images available. Please contact your DSM for further
-                details.
+                No images available. Please contact your DSM or admin for
+                assistance.
               </Text>
             </View>
           )}
-          <TouchableOpacity
-            onPress={handleNextCategory}
-            style={styles.nextButton}>
-            <Text style={styles.nextButtonText}>
-              {categoryIndex < categories.length - 1 ? "Next" : "Finish"}
-            </Text>
+          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+            <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -201,13 +161,18 @@ const styles = StyleSheet.create({
   fullImage: {
     width: width,
     height: height,
-    resizeMode: "cover",
+    resizeMode: "stretch",
     position: "absolute",
   },
   shimmerPlaceholder: {
     width: width,
     height: height,
-    position: "absolute",
+    borderRadius: 8,
+  },
+  circularShimmer: {
+    height: 100,
+    width: 100,
+    borderRadius: 50, // Circular shimmer
   },
   noImagesContainer: {
     justifyContent: "center",
@@ -219,20 +184,25 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
   },
-  nextButton: {
-    backgroundColor: "#046E37",
+  closeButton: {
+    // backgroundColor: "#046E37",
+    backgroundColor: "red",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
+    elevation: 10,
+    minWidth: 100,
+    alignItems: "center",
+    justifyContent: "center",
     position: "absolute",
-    bottom: 60,
+    bottom: 20,
     left: "50%",
     transform: [{ translateX: -50 }],
   },
-  nextButtonText: {
+  closeButtonText: {
     color: "#fff",
     fontSize: 16,
   },
 });
 
-export default DetailerModal;
+export default DetailerOnCallModal;

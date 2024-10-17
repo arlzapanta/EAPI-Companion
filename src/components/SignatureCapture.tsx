@@ -95,7 +95,8 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
 
         const loc = await getLocation();
         const locationString = loc
-          ? `${loc.latitude}, ${loc.longitude}`
+          ? // ? `${loc.latitude}, ${loc.longitude}`
+            `${JSON.stringify(loc)}`
           : "Unknown Location";
 
         try {

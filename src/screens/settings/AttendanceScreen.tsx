@@ -202,13 +202,16 @@ const Attendance: React.FC = () => {
       Alert.alert("Error", "Please check quick calls.");
       return;
     }
+
+    // todo : check if post call exist
+
     if (!userInfo) {
       Alert.alert("Error", "User information is missing.");
       return;
     }
     setLoading(true);
-
     const timeOutIsProceed = await apiTimeOut(userInfo);
+    console.log(timeOutIsProceed);
     if (timeOutIsProceed.isProceed) {
       const checkIfTimedOut = await saveUserAttendanceLocalDb(userInfo, "out");
       if (checkIfTimedOut === 1) {

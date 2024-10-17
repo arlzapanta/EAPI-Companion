@@ -254,8 +254,9 @@ const createIfNECalls = `
 const createIfNEDetailers = `
   CREATE TABLE IF NOT EXISTS detailers_tbl (
     id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, 
-    category TEXT NOT NULL, 
-    image TEXT NOT NULL
+    category TEXT,
+    detailers TEXT,
+    created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 `;
 // ************************************************************
@@ -715,6 +716,8 @@ export const fetchDetailersDataLocalDb = async (): Promise<DetailersRecord[]> =>
   const db = await SQLite.openDatabaseAsync('cmms', {
     useNewConnection: true,
   });
+
+  await db.execAsync(createIfNEDetailers);
 
   try {
     const query = `SELECT * FROM detailers_tbl`;
@@ -1188,7 +1191,6 @@ export const getAllActualDatesFilter = async (): Promise<ScheduleRecord[]> => {
   try {
     const result = await db.getAllAsync(query);
     const existingRows = result as ScheduleRecord[];
-    // console.log(existingRows,'getCallsLocaldb');
     return existingRows;
   } catch (error) {
     console.error('Error fetching data for getCallsLocalDb:', error);
@@ -1206,11 +1208,15 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
   await db.execAsync(createIfNECalls);
 
   const currentDate = await getCurrentDatePH();
-  const query = `SELECT * FROM calls_tbl WHERE DATE(created_date) = ?`;
+  const query = `SELECT * FROM calls_tbl WHERE DATE(created_at) = ?`;
 
   try {
     const result = await db.getAllAsync(query, [currentDate]);
     const existingRows = result as ScheduleRecord[];
+
+        // const testRecords = await db.getAllAsync('SELECT schedule_id, created_date, created_at FROM calls_tbl');
+        // console.log('CHECK NEW CALL IN CALLS_TBL', testRecords);
+
     return existingRows;
   } catch (error) {
     console.error('Error fetching data for today: getCallsTodayLocalDb', error);
@@ -1345,7 +1351,6 @@ export const fetchAllDetailers = async (): Promise<DetailersRecord[]> => {
 
 
 export const saveCallsDoneFromSchedules = async (scheduleId: string, callDetails: SchedToCall): Promise<string> => {
-  console.log(callDetails,'alksdjlaksjdas');
   const db = await SQLite.openDatabaseAsync('cmms', { useNewConnection: true });
 
   try {
@@ -1757,7 +1762,7 @@ export const dropLocalTablesDb = async () => {
   });
 
   const tableNames = ['detailers_tbl','quick_call_tbl','reschedule_history_tbl','reschedule_req_tbl','user_attendance_tbl', 'schedule_API_tbl', 'calls_tbl', 'user_sync_history_tbl','doctors_tbl','pre_call_notes_tbl','post_call_notes_tbl'];
-  // const tableNames = ['user_attendance_tbl', 'schedule_API_tbl', 'user_sync_history_tbl'];
+  // const tableNames = ['user_attendance_tbl','user_sync_history_tbl'];
   // const tableNames = ['quick_call_tbl'];
   for (const tableName of tableNames) {
     const query = `DROP TABLE IF EXISTS ${tableName};`;

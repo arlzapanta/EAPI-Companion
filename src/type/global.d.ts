@@ -136,7 +136,7 @@ declare global {
       onPhotoCaptured?: (base64: string, location: { latitude: number; longitude: number }) => void;
     }
 
-    export interface DetailerModalProps {
+    export interface DetailerOnCallModalProps {
       isVisible: boolean;
       detailerNumber: number;
       onClose: () => void;
@@ -375,10 +375,10 @@ declare global {
   }
 
   export interface DetailersRecord {
-    category: string;
-    detailers: string[]; 
-    created_date: string;
-    id: number;
+category: string;
+  created_date: string;
+  detailers: string;
+  id: number;
   }
 
   export interface DetailerBase64List {

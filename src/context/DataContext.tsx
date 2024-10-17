@@ -315,13 +315,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // ***************************************************************************
   const [isScheduleLoading, setIsScheduleLoading] = useState<boolean>(false);
   const [detailersRecord, setDetailersRecord] = useState<DetailersRecord[]>([]);
-  const fetchDetailersRecord = async () => {
-    try {
-      const data = await fetchAllDetailers();
-    } catch (error) {}
+  const fetchDetailers = async () => {
+    const detailersData = await fetchDetailersDataLocalDb();
+    setDetailersRecord(detailersData);
   };
   useEffect(() => {
-    fetchDetailersRecord();
+    fetchDetailers();
   }, []);
   // ADD SCHEDULE DATA HERE
   // ***************************************************************************

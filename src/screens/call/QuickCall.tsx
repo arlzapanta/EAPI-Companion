@@ -99,7 +99,7 @@ const QuickCall = () => {
       await updateCallPhoto(
         selectedCallIdValue,
         base64,
-        `${location.latitude},${location.longitude}`
+        `${JSON.stringify(location)}`
       );
       await fetchCallsData();
     } catch (error) {
@@ -241,7 +241,7 @@ const QuickCall = () => {
           schedule_id: selectedDoctor.schedule_id,
           call_start: "quick",
           call_end: "quick",
-          signature: call.signature,
+          signature: `data:image/png;base64,${call.signature}`,
           signature_attempts: "0",
           signature_location: call.signature_location,
           photo: call.photo,
@@ -249,6 +249,8 @@ const QuickCall = () => {
           doctors_name: selectedDoctor.full_name,
           created_at: await getFormattedDateToday(),
         };
+
+        console.log(callDetails);
 
         const result = await saveCallsDoneFromSchedules(
           selectedDoctor.schedule_id,
@@ -264,90 +266,92 @@ const QuickCall = () => {
     };
 
     return (
-      <View style={styles.callDetailsContainer}>
-        <View style={[styles.noteContainer, dynamicStyles.centerItems]}>
-          <TextInput
-            style={styles.noteInput}
-            value={note}
-            onChangeText={setNote}
-            placeholder="Enter doctor's name or any note ..."
-          />
-          <TouchableOpacity
-            style={styles.updateButton}
-            onPress={handleUpdateNote}>
-            <Text style={styles.updateButtonText}>Save Note</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.signatureLabel}>Signature Capture</Text>
-        {call.signature ? (
-          <Image
-            source={{ uri: `data:image/png;base64,${call.signature}` }}
-            style={styles.signImage}
-          />
-        ) : (
-          <SignatureCapture
-            callId={call.id}
-            onSignatureUpdate={onSignatureUpdate}
-          />
-        )}
-        {!call.photo ? (
-          <TouchableOpacity
-            style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
-            onPress={handleImagePicker}>
-            <Octicons name="device-camera" size={30} color="white" />
-            <Text style={styles.buttonText}>Take a photo</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.imageContainer}>
-            <Text style={styles.signatureLabel}>Photo Capture</Text>
-            <Image
-              source={{ uri: `data:image/png;base64,${call.photo}` }}
-              style={styles.image}
+      <ScrollView>
+        <View style={styles.callDetailsContainer}>
+          <View style={[styles.noteContainer, dynamicStyles.centerItems]}>
+            <TextInput
+              style={styles.noteInput}
+              value={note}
+              onChangeText={setNote}
+              placeholder="Enter doctor's name or any note ..."
             />
+            <TouchableOpacity
+              style={styles.updateButton}
+              onPress={handleUpdateNote}>
+              <Text style={styles.updateButtonText}>Save Note</Text>
+            </TouchableOpacity>
           </View>
-        )}
-
-        <View style={styles.dropdownContainer}>
-          <Text style={styles.signatureLabel}>Select doctor</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              style={styles.picker}
-              selectedValue={selectedDoctor}
-              onValueChange={(itemValue: ScheduleAPIRecord | null) => {
-                setSelectedDoctor(null);
-                if (itemValue !== selectedDoctor) {
-                  setSelectedDoctor(itemValue);
-                  if (itemValue && itemValue.date) {
-                    console.log(selectedDoctor);
-                  }
-                } else {
-                  if (itemValue && itemValue.date) {
-                  }
-                }
-              }}>
-              <Picker.Item
-                label="Select doctor"
-                value="selectdoc"
-                style={styles.pickerInitialLabel}
+          <Text style={styles.signatureLabel}>Signature Capture</Text>
+          {call.signature ? (
+            <Image
+              source={{ uri: `data:image/png;base64,${call.signature}` }}
+              style={styles.signImage}
+            />
+          ) : (
+            <SignatureCapture
+              callId={call.id}
+              onSignatureUpdate={onSignatureUpdate}
+            />
+          )}
+          {!call.photo ? (
+            <TouchableOpacity
+              style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
+              onPress={handleImagePicker}>
+              <Octicons name="device-camera" size={30} color="white" />
+              <Text style={styles.buttonText}>Take a photo</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.imageContainer}>
+              <Text style={styles.signatureLabel}>Photo Capture</Text>
+              <Image
+                source={{ uri: `data:image/png;base64,${call.photo}` }}
+                style={styles.image}
               />
-              {doctorScheduleList
-                .filter((schedule) => schedule.full_name !== null)
-                .map((schedule) => (
-                  <Picker.Item
-                    key={schedule.id}
-                    label={schedule.full_name || "Unknown Name"}
-                    value={schedule}
-                  />
-                ))}
-            </Picker>
+            </View>
+          )}
+
+          <View style={styles.dropdownContainer}>
+            <Text style={styles.signatureLabel}>Select doctor</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                style={styles.picker}
+                selectedValue={selectedDoctor}
+                onValueChange={(itemValue: ScheduleAPIRecord | null) => {
+                  setSelectedDoctor(null);
+                  if (itemValue !== selectedDoctor) {
+                    setSelectedDoctor(itemValue);
+                    if (itemValue && itemValue.date) {
+                      console.log(selectedDoctor);
+                    }
+                  } else {
+                    if (itemValue && itemValue.date) {
+                    }
+                  }
+                }}>
+                <Picker.Item
+                  label="Select doctor"
+                  value="selectdoc"
+                  style={styles.pickerInitialLabel}
+                />
+                {doctorScheduleList
+                  .filter((schedule) => schedule.full_name !== null)
+                  .map((schedule) => (
+                    <Picker.Item
+                      key={schedule.id}
+                      label={schedule.full_name || "Unknown Name"}
+                      value={schedule}
+                    />
+                  ))}
+              </Picker>
+            </View>
+            <TouchableOpacity
+              style={styles.saveButton}
+              onLongPress={handleSaveQuickCall}>
+              <Text style={styles.buttonText}>Save (hold)</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.saveButton}
-            onLongPress={handleSaveQuickCall}>
-            <Text style={styles.buttonText}>Save (hold)</Text>
-          </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     );
   };
 
@@ -450,7 +454,6 @@ const styles = StyleSheet.create({
     width: "80%",
   },
   signImage: {
-    marginVertical: 15,
     width: "100%",
     height: 200,
     resizeMode: "contain",
@@ -560,14 +563,13 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   imageContainer: {
-    marginTop: 20,
     alignItems: "center",
   },
   image: {
-    width: 400,
-    height: 260,
+    width: 650,
+    height: 300,
     marginTop: 10,
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
   locationText: {
     marginTop: 10,

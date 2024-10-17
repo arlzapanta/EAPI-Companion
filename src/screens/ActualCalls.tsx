@@ -147,88 +147,78 @@ const ActualCalls = () => {
 
   const CallDetails = ({ call }: { call: any }) => (
     <ScrollView>
-      <Text style={styles1.detailsTitle}>Call Details</Text>
-      <View style={styles1.detailRow}>
-        <Text style={styles1.detailLabel}>Call Start:</Text>
-        <Text style={styles1.detailValue}>{call.call_start}</Text>
-      </View>
-      <View style={styles1.detailRow}>
-        <Text style={styles1.detailLabel}>Call End:</Text>
-        <Text style={styles1.detailValue}>{call.call_end}</Text>
-      </View>
-      <View style={styles1.detailRow}>
-        <Text style={styles1.detailLabel}>Created Date:</Text>
-        <Text style={styles1.detailValue}>
-          {moment(call.created_date).format("MMMM DD, YYYY, HH:mm:ss")}
-        </Text>
-      </View>
-      <View style={styles1.detailRow}>
-        <Text style={styles1.detailLabel}>Schedules ID:</Text>
-        <Text style={styles1.detailValue}>{call.schedule_id}</Text>
-      </View>
-      {/* <View style={styles1.detailRow}>
-        <Text style={styles1.detailLabel}>Signature Attempts:</Text>
-        <Text style={styles1.detailValue}>{call.signature_attempts}</Text>
-      </View> */}
-      <View style={styles1.detailRow}>
-        <Text style={styles1.detailLabel}>Photo:</Text>
-        {call.photo && (
-          <Image
-            source={{ uri: `data:image/jpeg;base64,${call.photo}` }}
-            style={styles1.photo}
-          />
-        )}
-      </View>
-      <View style={styles1.detailRow}>
-        <Text style={styles1.detailLabel}>Signature:</Text>
-        {call.signature && (
-          <>
+      <View style={dynamicStyles.filterMainContainer}>
+        <Text style={styles1.detailsTitle}>Call Details</Text>
+        <View style={styles1.detailRow}>
+          <Text style={styles1.detailLabel}>Scheduled date :</Text>
+          <Text style={styles1.columnSubTitle}>
+            {!moment(call.date).format("MMMM DD YYYY")
+              ? " " + moment(call.date).format("MMMM DD YYYY")
+              : " Unknown"}
+          </Text>
+        </View>
+        <View style={styles1.detailRow}>
+          <Text style={styles1.detailLabel}>Photo:</Text>
+          {call.photo && (
             <Image
-              source={{
-                uri: call.signature,
-              }}
-              style={styles1.signature}
+              source={{ uri: `data:image/png;base64,${call.photo}` }}
+              style={styles1.photo}
             />
-          </>
-        )}
+          )}
+        </View>
+        <View style={styles1.detailRow}>
+          <Text style={styles1.detailLabel}>Signature:</Text>
+          {call.signature && (
+            <>
+              <Image
+                source={{
+                  uri: call.signature,
+                }}
+                style={styles1.signature}
+              />
+            </>
+          )}
+        </View>
       </View>
-      <View style={styles1.headerRow}>
-        <Text style={styles1.sectionTitle}>Edit Post Call</Text>
-        <TouchableOpacity
-          onPress={savePostCallData}
-          style={styles1.buttonPostCallSave}>
-          <Text style={styles1.buttonText}>Save</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text>Feedback</Text>
-      <TextInput
-        style={styles1.input}
-        placeholder="Enter feedback"
-        value={feedback}
-        onChangeText={setFeedback}
-        multiline
-        numberOfLines={3}
-      />
-      <Text style={styles1.moodLabel}>Doctor's Mood:</Text>
-      <View style={styles1.radioGroup}>
-        {["cold", "warm", "hot"].map((mood) => (
+      <View style={dynamicStyles.filterMainContainer}>
+        <View style={styles1.headerRow}>
+          <Text style={styles1.sectionTitle}>Edit Post Call</Text>
           <TouchableOpacity
-            key={mood}
-            style={[
-              styles1.radioButtonContainer,
-              selectedMood === mood && styles1.radioButtonSelected,
-            ]}
-            onPress={() => setSelectedMood(mood)}>
-            <Text
-              style={[
-                styles1.radioButtonText,
-                selectedMood === mood && styles1.radioButtonTextSelected,
-              ]}>
-              {mood.charAt(0).toUpperCase() + mood.slice(1)}
-            </Text>
+            onPress={savePostCallData}
+            style={styles1.buttonPostCallSave}>
+            <Text style={styles1.buttonText}>Save</Text>
           </TouchableOpacity>
-        ))}
+        </View>
+
+        <Text>Feedback</Text>
+        <TextInput
+          style={styles1.input}
+          placeholder="Enter feedback"
+          value={feedback}
+          onChangeText={setFeedback}
+          multiline
+          numberOfLines={3}
+        />
+        <Text style={styles1.moodLabel}>Doctor's Mood:</Text>
+        <View style={styles1.radioGroup}>
+          {["cold", "warm", "hot"].map((mood) => (
+            <TouchableOpacity
+              key={mood}
+              style={[
+                styles1.radioButtonContainer,
+                selectedMood === mood && styles1.radioButtonSelected,
+              ]}
+              onPress={() => setSelectedMood(mood)}>
+              <Text
+                style={[
+                  styles1.radioButtonText,
+                  selectedMood === mood && styles1.radioButtonTextSelected,
+                ]}>
+                {mood.charAt(0).toUpperCase() + mood.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
     </ScrollView>
   );
@@ -243,107 +233,110 @@ const ActualCalls = () => {
             <View style={dynamicStyles.card1Col}>
               <Text style={styles1.columnTitle}>Actual Calls</Text>
               <Text style={styles1.columnSubTitle}>{currentDate}</Text>
-
-              <View style={dynamicStyles.filterMainContainer}>
-                <View style={dynamicStyles.filterContainer}>
-                  <Picker
-                    selectedValue={selectedDate}
-                    onValueChange={(itemValue: string) =>
-                      fetchFilterSchedule(itemValue)
-                    }
-                    style={dynamicStyles.picker1col}>
-                    <Picker.Item
-                      label="Select Date"
-                      value=""
-                      style={dynamicStyles.pickerInitialLabel}
-                    />
-
-                    {[
-                      ...new Map(
-                        actualDatesFilterData.map((item) => [
-                          moment(item.created_at).format("YYYY-MM-DD"),
-                          item,
-                        ])
-                      ).values(),
-                    ].map((item) => (
+              <ScrollView>
+                <View style={dynamicStyles.filterMainContainer}>
+                  <View style={dynamicStyles.filterContainer}>
+                    <Picker
+                      selectedValue={selectedDate}
+                      onValueChange={(itemValue: string) =>
+                        fetchFilterSchedule(itemValue)
+                      }
+                      style={dynamicStyles.picker1col}>
                       <Picker.Item
-                        label={moment(item.created_at).format("MMMM DD, dddd")}
-                        value={item.created_at}
-                        key={item.id}
-                        style={dynamicStyles.pickerLabel}
+                        label="Select Date"
+                        value=""
+                        style={dynamicStyles.pickerInitialLabel}
                       />
-                    ))}
-                  </Picker>
+
+                      {[
+                        ...new Map(
+                          actualDatesFilterData.map((item) => [
+                            moment(item.created_at).format("YYYY-MM-DD"),
+                            item,
+                          ])
+                        ).values(),
+                      ].map((item) => (
+                        <Picker.Item
+                          label={moment(item.created_at).format(
+                            "MMMM DD, dddd"
+                          )}
+                          value={item.created_at}
+                          key={item.id}
+                          style={dynamicStyles.pickerLabel}
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                  <TouchableOpacity
+                    onPress={toggleAccordionFilter}
+                    style={styles1.accordionButton}>
+                    <Text style={styles1.accordionTitle}>
+                      {accordionExpandedFilter ? "Hide Filter" : "View Filter"}
+                    </Text>
+                    <Ionicons
+                      name={
+                        accordionExpandedFilter ? "chevron-up" : "chevron-down"
+                      }
+                      size={20}
+                      color="#007BFF"
+                      style={styles1.icon}
+                    />
+                  </TouchableOpacity>
+                  {accordionExpandedFilter && (
+                    <View style={styles1.accordionContent}>
+                      {actualFilterData.length === 0 ? (
+                        <Text>No calls found or select date first.</Text>
+                      ) : (
+                        actualFilterData.map((actual) => (
+                          <TouchableOpacity
+                            key={actual.id}
+                            onPress={() => handleCallClick(actual)}
+                            style={styles1.callItem}>
+                            <Text style={styles1.callText}>{`${
+                              actual.doctors_name
+                            } \n${moment(actual.created_at).format(
+                              "MMMM DD YYYY"
+                            )}`}</Text>
+                          </TouchableOpacity>
+                        ))
+                      )}
+                    </View>
+                  )}
                 </View>
+
                 <TouchableOpacity
-                  onPress={toggleAccordionFilter}
+                  onPress={toggleAccordion}
                   style={styles1.accordionButton}>
                   <Text style={styles1.accordionTitle}>
-                    {accordionExpandedFilter ? "Hide Filter" : "View Filter"}
+                    {accordionExpanded
+                      ? "Hide Calls ( Today )"
+                      : "View Calls ( Today )"}
                   </Text>
                   <Ionicons
-                    name={
-                      accordionExpandedFilter ? "chevron-up" : "chevron-down"
-                    }
+                    name={accordionExpanded ? "chevron-up" : "chevron-down"}
                     size={20}
                     color="#007BFF"
                     style={styles1.icon}
                   />
                 </TouchableOpacity>
-                {accordionExpandedFilter && (
+
+                {accordionExpanded && (
                   <View style={styles1.accordionContent}>
-                    {actualFilterData.length === 0 ? (
-                      <Text>No calls found or select date first.</Text>
-                    ) : (
-                      actualFilterData.map((actual) => (
-                        <TouchableOpacity
-                          key={actual.id}
-                          onPress={() => handleCallClick(actual)}
-                          style={styles1.callItem}>
-                          <Text style={styles1.callText}>{`${
-                            actual.doctors_name
-                          } \n${moment(actual.created_at).format(
-                            "MMMM DD YYYY"
-                          )}`}</Text>
-                        </TouchableOpacity>
-                      ))
-                    )}
+                    {callData.map((call) => (
+                      <TouchableOpacity
+                        key={call.id}
+                        onPress={() => handleCallClick(call)}
+                        style={styles1.callItem}>
+                        <Text style={styles1.callText}>{`${
+                          call.doctors_name
+                        } \n${moment(call.created_date).format(
+                          "MMMM DD YYYY"
+                        )}`}</Text>
+                      </TouchableOpacity>
+                    ))}
                   </View>
                 )}
-              </View>
-
-              <TouchableOpacity
-                onPress={toggleAccordion}
-                style={styles1.accordionButton}>
-                <Text style={styles1.accordionTitle}>
-                  {accordionExpanded
-                    ? "Hide Calls ( Today )"
-                    : "View Calls ( Today )"}
-                </Text>
-                <Ionicons
-                  name={accordionExpanded ? "chevron-up" : "chevron-down"}
-                  size={20}
-                  color="#007BFF"
-                  style={styles1.icon}
-                />
-              </TouchableOpacity>
-
-              {accordionExpanded && (
-                <View style={styles1.accordionContent}>
-                  {callData.map((call) => (
-                    <TouchableOpacity
-                      key={call.id}
-                      onPress={() => handleCallClick(call)}
-                      style={styles1.callItem}>
-                      <Text style={styles1.callText}>{`${
-                        call.doctors_name
-                      } \n${moment(call.created_date).format(
-                        "MMMM DD YYYY"
-                      )}`}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
+              </ScrollView>
             </View>
           </View>
 
@@ -492,15 +485,17 @@ const styles1 = StyleSheet.create({
   },
   photo: {
     borderRadius: 10,
-    width: 400,
-    height: 200,
+    width: 600,
+    height: 300,
     marginTop: 10,
-    resizeMode: "contain",
+    marginHorizontal: 20,
+    resizeMode: "cover",
   },
   signature: {
-    width: 500,
-    height: 150,
-    marginTop: 10,
+    marginTop: -50,
+    marginBottom: -50,
+    width: 600,
+    height: 300,
     resizeMode: "contain",
   },
   containerNoCallData: {
