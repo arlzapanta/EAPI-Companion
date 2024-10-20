@@ -91,18 +91,13 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
           quality: 1.0,
           result: "base64",
         });
-        const base64Signature = `${getBase64StringFormat()}${uri}`;
+        const base64Signature = `${uri}`;
         setSignature(base64Signature);
 
         const loc = await getLocation();
-        const locationString = loc
-          ? // ? `${loc.latitude}, ${loc.longitude}`
-            `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
-          : "Unknown Location";
-
         try {
           if (callId !== 12340000) {
-            await updateCallSignature(callId, uri, locationString);
+            await updateCallSignature(callId, uri, loc);
           }
           onSignatureUpdate(base64Signature, "location");
         } catch (error) {

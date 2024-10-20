@@ -103,12 +103,8 @@ const QuickCallBottomSheet: React.FC<QuickCallBottomSheetProps> = ({
   ) => {
     try {
       const loc = await getLocation();
-      const locationString = loc
-        ? // ? `${loc.latitude}, ${loc.longitude}`
-          `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
-        : "Unknown Location";
 
-      await updateCallPhoto(selectedCallIdValue, base64, locationString);
+      await updateCallPhoto(selectedCallIdValue, base64, loc);
     } catch (error) {
       console.log("handlePhotoCaptured error", error);
     }

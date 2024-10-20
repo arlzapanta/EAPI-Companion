@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import { useDataContext } from "../../context/DataContext";
 import { getStyleUtil } from "../../utils/styleUtil";
+import { getBase64StringFormat } from "../../utils/commonUtil";
 const dynamicStyles = getStyleUtil({});
 
 const CustomLoading = () => {
@@ -109,7 +110,7 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
                     </View>
                   )}
                   <Image
-                    source={{ uri: `data:image/png;base64,${url}` }}
+                    source={{ uri: `${getBase64StringFormat()}${url}` }}
                     style={styles.fullImage}
                     onLoadStart={() => handleImageLoad(index)}
                     onLoad={() => handleImageLoad(index)}

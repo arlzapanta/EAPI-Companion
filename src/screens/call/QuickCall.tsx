@@ -35,6 +35,7 @@ import Loading from "../../components/Loading";
 import Octicons from "@expo/vector-icons/Octicons";
 import { getStyleUtil } from "../../utils/styleUtil";
 import { getLocation } from "../../utils/currentLocation";
+import { getBase64StringFormat } from "../../utils/commonUtil";
 const dynamicStyles = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
@@ -98,12 +99,8 @@ const QuickCall = () => {
   ) => {
     try {
       const loc = await getLocation();
-      const locationString = loc
-        ? // ? `${loc.latitude}, ${loc.longitude}`
-          `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
-        : "Unknown Location";
 
-      await updateCallPhoto(selectedCallIdValue, base64, locationString);
+      await updateCallPhoto(selectedCallIdValue, base64, loc);
       await fetchCallsData();
     } catch (error) {
       console.log("handlePhotoCaptured error", error);
@@ -244,7 +241,7 @@ const QuickCall = () => {
           schedule_id: selectedDoctor.schedule_id,
           call_start: "quick",
           call_end: "quick",
-          signature: `data:image/png;base64,${call.signature}`,
+          signature: call.signature,
           signature_attempts: "0",
           signature_location: call.signature_location,
           photo: call.photo,
@@ -252,8 +249,6 @@ const QuickCall = () => {
           doctors_name: selectedDoctor.full_name,
           created_at: await getFormattedDateToday(),
         };
-
-        console.log(callDetails);
 
         const result = await saveCallsDoneFromSchedules(
           selectedDoctor.schedule_id,
@@ -284,35 +279,6 @@ const QuickCall = () => {
               <Text style={styles.updateButtonText}>Save Note</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.signatureLabel}>Signature Capture</Text>
-          {call.signature ? (
-            <Image
-              source={{ uri: `data:image/png;base64,${call.signature}` }}
-              style={styles.signImage}
-            />
-          ) : (
-            <SignatureCapture
-              callId={call.id}
-              onSignatureUpdate={onSignatureUpdate}
-            />
-          )}
-          {!call.photo ? (
-            <TouchableOpacity
-              style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
-              onPress={handleImagePicker}>
-              <Octicons name="device-camera" size={30} color="white" />
-              <Text style={styles.buttonText}>Take a photo</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.imageContainer}>
-              <Text style={styles.signatureLabel}>Photo Capture</Text>
-              <Image
-                source={{ uri: `data:image/png;base64,${call.photo}` }}
-                style={styles.image}
-              />
-            </View>
-          )}
-
           <View style={styles.dropdownContainer}>
             <Text style={styles.signatureLabel}>Select doctor</Text>
             <View style={styles.pickerContainer}>
@@ -353,6 +319,34 @@ const QuickCall = () => {
               <Text style={styles.buttonText}>Save (hold)</Text>
             </TouchableOpacity>
           </View>
+          <Text style={styles.signatureLabel}>Signature Capture</Text>
+          {call.signature ? (
+            <Image
+              source={{ uri: `${getBase64StringFormat()}${call.signature}` }}
+              style={styles.signImage}
+            />
+          ) : (
+            <SignatureCapture
+              callId={call.id}
+              onSignatureUpdate={onSignatureUpdate}
+            />
+          )}
+          {!call.photo ? (
+            <TouchableOpacity
+              style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
+              onPress={handleImagePicker}>
+              <Octicons name="device-camera" size={30} color="white" />
+              <Text style={styles.buttonText}>Take a photo</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.imageContainer}>
+              <Text style={styles.signatureLabel}>Photo Capture</Text>
+              <Image
+                source={{ uri: `${getBase64StringFormat()}${call.photo}` }}
+                style={styles.image}
+              />
+            </View>
+          )}
         </View>
       </ScrollView>
     );

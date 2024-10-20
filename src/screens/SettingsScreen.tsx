@@ -171,7 +171,7 @@ const Settings = () => {
         <Loading />
       ) : (
         <>
-          <View style={dynamicStyle.card}>
+          <View style={styles.card}>
             <Text style={styles.title}>Settings</Text>
             <View style={styles.centerItems}>
               <TouchableOpacity
@@ -234,9 +234,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 5,
-    marginVertical: 10,
     marginStart: 20,
     marginEnd: 10,
+    marginBottom: 5,
   },
   title: {
     fontSize: 24,

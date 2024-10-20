@@ -138,12 +138,12 @@ declare global {
 
     export interface DetailerOnCallModalProps {
       isVisible: boolean;
-      detailerNumber: number;
       onClose: () => void;
     }
 
     export interface DetailerModalProps {
       isVisible: boolean;
+      detailerNumber: number;
       onClose: () => void;
     }
     export interface Props {

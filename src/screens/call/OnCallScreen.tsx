@@ -26,6 +26,7 @@ import { useImagePicker } from "../../hook/useImagePicker";
 import { getLocation } from "../../utils/currentLocation";
 import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
 import { getBase64StringFormat } from "../../utils/commonUtil";
+import DetailersOnCallModal from "../modals/DetailersOnCallModal";
 
 type OnCallScreenRouteProp = RouteProp<RootStackParamList, "OnCall">;
 type OnCallScreenNavigationProp = NativeStackNavigationProp<
@@ -138,12 +139,8 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
   ) => {
     try {
       const loc = await getLocation();
-      const locationString = loc
-        ? // ? `${loc.latitude}, ${loc.longitude}`
-          `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
-        : "Unknown Location";
       setPhotoValue(base64);
-      setPhotoLocation(locationString);
+      setPhotoLocation(loc);
     } catch (error) {
       console.log("handlePhotoCaptured error", error);
     }
@@ -156,11 +153,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
   const handleSignatureUpdate = async (base64Signature: string) => {
     setSignatureValue(base64Signature);
     const loc = await getLocation();
-    const locationString = loc
-      ? // ? `${loc.latitude}, ${loc.longitude}`
-        `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
-      : "Unknown Location";
-    setSignatureLocation(locationString);
+    setSignatureLocation(loc);
   };
 
   const handleSignatureClear = () => {
@@ -189,7 +182,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         </TouchableOpacity>
 
         {/* Render DetailerModal and pass isVisible and onClose */}
-        <Detailers isVisible={isModalVisible} onClose={closeModal} />
+        <DetailersOnCallModal isVisible={isModalVisible} onClose={closeModal} />
       </View>
 
       <View style={styles.cardContainer}>

@@ -30,6 +30,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import Loading from "../components/Loading";
 import { useDataContext } from "../context/DataContext";
 import { Picker } from "@react-native-picker/picker";
+import { getBase64StringFormat } from "../utils/commonUtil";
 const dynamicStyles = getStyleUtil({});
 // todo : add date filter to view actual details (whole month)
 // todo : fix design
@@ -161,7 +162,7 @@ const ActualCalls = () => {
           <Text style={styles1.detailLabel}>Photo:</Text>
           {call.photo && (
             <Image
-              source={{ uri: `data:image/png;base64,${call.photo}` }}
+              source={{ uri: `${getBase64StringFormat()}${call.photo}` }}
               style={styles1.photo}
             />
           )}

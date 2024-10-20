@@ -253,7 +253,7 @@ const Attendance: React.FC = () => {
     try {
       const loc = await getLocation();
       setSelfieVal(base64);
-      setSelfieLoc(JSON.stringify(location));
+      setSelfieLoc(loc);
     } catch (error) {
       console.log("handlePhotoCaptured error", error);
     }
@@ -267,7 +267,7 @@ const Attendance: React.FC = () => {
     if (base64Signature) {
       const loc = await getLocation();
       setSignatureVal(base64Signature);
-      setSignatureLoc(JSON.stringify(loc));
+      setSignatureLoc(loc);
     } else {
       console.error("Signature update failed: No base64 data");
     }
