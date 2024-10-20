@@ -24,9 +24,10 @@ export const getWeekdaysRange = async () => {
 
   for (let i = 0; i < 5; i++) {
     const day = monday.clone().add(i, 'days').format('YYYY-MM-DD');
-    if (day !== today) {
-      weekdays.push(day);
-    }
+    // if (day !== today) {
+    //   weekdays.push(day);
+    // }
+    weekdays.push(day);
   }
 
   return weekdays;

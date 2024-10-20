@@ -25,6 +25,7 @@ import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
 import { getLocation } from "../../utils/currentLocation";
 import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
+import { getBase64StringFormat } from "../../utils/commonUtil";
 
 type OnCallScreenRouteProp = RouteProp<RootStackParamList, "OnCall">;
 type OnCallScreenNavigationProp = NativeStackNavigationProp<
@@ -136,8 +137,13 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
     location: { latitude: number; longitude: number }
   ) => {
     try {
+      const loc = await getLocation();
+      const locationString = loc
+        ? // ? `${loc.latitude}, ${loc.longitude}`
+          `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
+        : "Unknown Location";
       setPhotoValue(base64);
-      setPhotoLocation(JSON.stringify(location));
+      setPhotoLocation(locationString);
     } catch (error) {
       console.log("handlePhotoCaptured error", error);
     }
@@ -150,7 +156,11 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
   const handleSignatureUpdate = async (base64Signature: string) => {
     setSignatureValue(base64Signature);
     const loc = await getLocation();
-    setSignatureLocation(JSON.stringify(loc));
+    const locationString = loc
+      ? // ? `${loc.latitude}, ${loc.longitude}`
+        `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
+      : "Unknown Location";
+    setSignatureLocation(locationString);
   };
 
   const handleSignatureClear = () => {
@@ -206,7 +216,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
             <View style={styles.imageContainer}>
               <Text style={styles.signatureLabel}>Photo Capture</Text>
               <Image
-                source={{ uri: `data:image/png;base64,${imageBase64}` }}
+                source={{ uri: `${getBase64StringFormat()}${imageBase64}` }}
                 style={styles.image}
               />
             </View>

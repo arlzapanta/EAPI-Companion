@@ -14,6 +14,7 @@ import {
 import { doctorRecordsSync, syncUser } from "../utils/apiUtility";
 import { getCurrentTimePH, isTimeBetween12and1PM } from "../utils/dateUtils";
 import Loading from "../components/Loading";
+import { getLocation } from "../utils/currentLocation";
 
 type SettingsScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -100,9 +101,7 @@ const Settings = () => {
       Alert.alert("Error", "User information is missing.");
       return;
     }
-
     const isValidMidSync = isTimeBetween12and1PM();
-
     setLoading(true);
     if (isValidMidSync) {
       try {

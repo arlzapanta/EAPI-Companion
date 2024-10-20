@@ -34,15 +34,16 @@ export const useImagePicker = ({ onPhotoCaptured }: UseImagePickerOptions = {}) 
       const base64Image = result.assets[0].base64 || null;
       setImageBase64(base64Image);
 
-      // Get current location
-      const locationResult = await Location.getCurrentPositionAsync({
+      const { coords } = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High, 
         timeInterval: 10000
       });
+      
       const currentLocation = {
-        latitude: locationResult.coords.latitude,
-        longitude: locationResult.coords.longitude,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       };
+      
       setLocation(currentLocation);
 
       // Execute the callback function if provided

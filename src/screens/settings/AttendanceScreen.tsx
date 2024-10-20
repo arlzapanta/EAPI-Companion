@@ -149,18 +149,17 @@ const Attendance: React.FC = () => {
   }, [userInfo]);
 
   const timeIn = async () => {
+    setLoading(true);
     if (!userInfo) {
       Alert.alert("Error", "User information is missing.");
       return;
     }
-    setLoading(true);
     // todo : add functionality to insert pre-approved advance calls (for tracking)
 
     try {
       const timeInIsProceed = await apiTimeIn(userInfo);
       if (timeInIsProceed.isProceed) {
         const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
-        console.log(checkIfTimedIn);
         if (checkIfTimedIn === 1) {
           Alert.alert("Failed", "Already timed In today");
         } else {
@@ -197,54 +196,50 @@ const Attendance: React.FC = () => {
   };
 
   const timeOut = async () => {
+    setLoading(true);
+    let msg = "";
     const checkQC = await getQuickCalls();
     if (checkQC.length > 0) {
-      Alert.alert("Error", "Please check quick calls.");
+      msg = "Error : Please check quick calls.";
       return;
     }
-
     // todo : check if post call exist
 
     if (!userInfo) {
-      Alert.alert("Error", "User information is missing.");
+      msg = "Error : User information is missing.";
       return;
     }
-    setLoading(true);
-    const timeOutIsProceed = await apiTimeOut(userInfo);
-    console.log(timeOutIsProceed);
-    if (timeOutIsProceed.isProceed) {
-      const checkIfTimedOut = await saveUserAttendanceLocalDb(userInfo, "out");
-      if (checkIfTimedOut === 1) {
-        Alert.alert("Failed", "Already timed out today");
-      } else {
-        await doctorRecordsSync(userInfo);
-        const reqRecordSync = await requestRecordSync(userInfo);
-        console.log(reqRecordSync, "reqRecordSync");
-        await fetchAttendanceData();
-        const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
-        {
-          res == "Success"
-            ? Alert.alert(
-                "Success time out!",
-                "Successfully synced data from server"
-              )
-            : Alert.alert("Failed", "Error syncing");
-        }
-        console.log(
-          "AttendanceScreen > timeOut > saveUserSyncHistoryLocalDb > res : ",
-          res
+
+    try {
+      const timeOutIsProceed = await apiTimeOut(userInfo);
+      if (timeOutIsProceed.isProceed) {
+        const checkIfTimedOut = await saveUserAttendanceLocalDb(
+          userInfo,
+          "out"
         );
-        const syncLocalToAPI = await syncUser(userInfo);
-        if (syncLocalToAPI != "No records to sync") {
-          Alert.alert("Success", "Successfully Sync data to server");
+        if (checkIfTimedOut === 1) {
+          msg = "Already timed out today";
         } else {
-          console.log(
-            "AttendanceScreen > timeOut > syncUser > res : No records to sync"
-          );
+          await doctorRecordsSync(userInfo);
+          const reqRecordSync = await requestRecordSync(userInfo);
+          await fetchAttendanceData();
+          const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
+          const syncLocalToAPI = await syncUser(userInfo);
+          if (syncLocalToAPI != "No records to sync") {
+            msg = "Successfully Sync data to server";
+          } else {
+            console.log(
+              "AttendanceScreen > timeOut > syncUser > res : No records to sync"
+            );
+          }
         }
       }
+    } catch (error) {
+      msg = "Failed to time out.";
+    } finally {
+      Alert.alert(msg);
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleBack = () => {
@@ -256,6 +251,7 @@ const Attendance: React.FC = () => {
     location: { latitude: number; longitude: number }
   ) => {
     try {
+      const loc = await getLocation();
       setSelfieVal(base64);
       setSelfieLoc(JSON.stringify(location));
     } catch (error) {
@@ -269,8 +265,8 @@ const Attendance: React.FC = () => {
 
   const handleSignatureUpdate = async (base64Signature: string) => {
     if (base64Signature) {
-      setSignatureVal(base64Signature);
       const loc = await getLocation();
+      setSignatureVal(base64Signature);
       setSignatureLoc(JSON.stringify(loc));
     } else {
       console.error("Signature update failed: No base64 data");

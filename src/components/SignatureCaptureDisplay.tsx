@@ -16,6 +16,7 @@ import { updateCallSignature } from "../utils/quickCallUtil";
 import { getStyleUtil } from "../utils/styleUtil";
 import Foundation from "@expo/vector-icons/Foundation";
 import Loading from "./Loading";
+import { getBase64StringFormat } from "../utils/commonUtil";
 const dynamicStyle = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
@@ -91,19 +92,20 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
           quality: 1.0,
           result: "base64",
         });
-        const base64Signature = `data:image/png;base64,${uri}`;
+        const base64Signature = `${getBase64StringFormat()}${uri}`;
         setSignature(base64Signature);
 
         const loc = await getLocation();
         const locationString = loc
-          ? `${loc.latitude}, ${loc.longitude}`
+          ? // ? `${loc.latitude}, ${loc.longitude}`
+            `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
           : "Unknown Location";
 
         try {
           if (callId !== 12340000) {
             await updateCallSignature(callId, uri, locationString);
           }
-          onSignatureUpdate(base64Signature);
+          onSignatureUpdate(base64Signature, "location");
         } catch (error) {
           console.error("Error updating signature:", error);
         }

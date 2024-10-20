@@ -34,6 +34,7 @@ import { useDataContext } from "../../context/DataContext";
 import Loading from "../../components/Loading";
 import Octicons from "@expo/vector-icons/Octicons";
 import { getStyleUtil } from "../../utils/styleUtil";
+import { getLocation } from "../../utils/currentLocation";
 const dynamicStyles = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
@@ -96,11 +97,13 @@ const QuickCall = () => {
     location: { latitude: number; longitude: number }
   ) => {
     try {
-      await updateCallPhoto(
-        selectedCallIdValue,
-        base64,
-        `${JSON.stringify(location)}`
-      );
+      const loc = await getLocation();
+      const locationString = loc
+        ? // ? `${loc.latitude}, ${loc.longitude}`
+          `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
+        : "Unknown Location";
+
+      await updateCallPhoto(selectedCallIdValue, base64, locationString);
       await fetchCallsData();
     } catch (error) {
       console.log("handlePhotoCaptured error", error);

@@ -1,5 +1,9 @@
 import { Alert } from "react-native";
 
+export const getBase64StringFormat = () => {
+  return 'data:image/png;base64,';
+}
+
 export const showConfirmAlert = (action: () => void, actionName: string) => {
     Alert.alert(
       `Confirm ${actionName}`,

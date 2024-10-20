@@ -33,6 +33,7 @@ import { getStyleUtil } from "../../utils/styleUtil";
 import SignatureCaptureDisplay from "../../components/SignatureCaptureDisplay";
 import { showConfirmAlert } from "../../utils/commonUtil";
 import Octicons from "@expo/vector-icons/Octicons";
+import { getLocation } from "../../utils/currentLocation";
 const dynamicStyles = getStyleUtil({});
 
 const QuickCallBottomSheet: React.FC<QuickCallBottomSheetProps> = ({
@@ -101,11 +102,13 @@ const QuickCallBottomSheet: React.FC<QuickCallBottomSheetProps> = ({
     location: { latitude: number; longitude: number }
   ) => {
     try {
-      await updateCallPhoto(
-        selectedCallIdValue,
-        base64,
-        `${location.latitude},${location.longitude}`
-      );
+      const loc = await getLocation();
+      const locationString = loc
+        ? // ? `${loc.latitude}, ${loc.longitude}`
+          `"{'latitude':${loc.latitude},'longitude':${loc.longitude}}"`
+        : "Unknown Location";
+
+      await updateCallPhoto(selectedCallIdValue, base64, locationString);
     } catch (error) {
       console.log("handlePhotoCaptured error", error);
     }
