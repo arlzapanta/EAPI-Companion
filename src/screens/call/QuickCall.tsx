@@ -62,6 +62,7 @@ const QuickCall = () => {
   const fetchCallsData = async () => {
     try {
       const data = await getQuickCalls();
+      console.log(data, "fetchcallsdata quickCall");
       if (Array.isArray(data)) {
         setCallData(data);
         if (selectedCallIdValue) {
@@ -125,6 +126,7 @@ const QuickCall = () => {
         photo_location: "",
         signature: "",
         signature_location: "",
+        signature_attempts: 0,
         notes: "",
         id: 0,
         full_name: "",
@@ -242,7 +244,7 @@ const QuickCall = () => {
           call_start: "quick",
           call_end: "quick",
           signature: call.signature,
-          signature_attempts: "0",
+          signature_attempts: call.signature_attempts.toString(),
           signature_location: call.signature_location,
           photo: call.photo,
           photo_location: call.photo_location,

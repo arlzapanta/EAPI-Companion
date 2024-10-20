@@ -19,6 +19,7 @@ import {
   removeCallFromLocalDb,
   updateCallNotes,
   updateCallPhoto,
+  updateCallSignature,
 } from "../../utils/quickCallUtil";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Ionicons } from "@expo/vector-icons";
@@ -58,6 +59,7 @@ const QuickCallBottomSheet: React.FC<QuickCallBottomSheetProps> = ({
           photo_location: "",
           signature: "",
           signature_location: "",
+          signature_attempts: 0,
           notes: "",
           id: 0,
           full_name: "",
@@ -81,6 +83,7 @@ const QuickCallBottomSheet: React.FC<QuickCallBottomSheetProps> = ({
         photo_location: "",
         signature: "",
         signature_location: "",
+        signature_attempts: 0,
         notes: "",
         id: 0,
         full_name: "",
@@ -114,12 +117,36 @@ const QuickCallBottomSheet: React.FC<QuickCallBottomSheetProps> = ({
     onPhotoCaptured: handlePhotoCaptured,
   });
 
-  const handleSignatureUpdate = async () => {
+  const handleSignatureUpdate = async (
+    base64Signature: string,
+    location: string,
+    attempts: string | number
+  ): Promise<void> => {
+    const attemptCount =
+      typeof attempts === "string" ? parseInt(attempts, 10) : attempts;
+
+    if (isNaN(attemptCount)) {
+      console.error(
+        "Invalid attempt count : handleSignatureUpdate > onCallScreen"
+      );
+      return;
+    }
+    const loc = await getLocation();
+
     try {
-      customToast("Signature saved!");
+      customToast("Quick call added");
       closeSheet();
+      updateCallSignature(
+        selectedCallIdValue,
+        base64Signature,
+        loc,
+        attemptCount
+      );
     } catch (error) {
-      console.log("Error in handleSignatureUpdate:", error);
+      console.log(
+        "Error in handleSignatureUpdate quickCallButtomSheet:",
+        error
+      );
     }
   };
 

@@ -150,14 +150,25 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
     onPhotoCaptured: handlePhotoCaptured,
   });
 
-  const handleSignatureUpdate = async (base64Signature: string) => {
+  const handleSignatureUpdate = async (
+    base64Signature: string,
+    location: string,
+    attempts: string | number
+  ): Promise<void> => {
+    const attemptCount =
+      typeof attempts === "string" ? parseInt(attempts, 10) : attempts;
+
+    if (isNaN(attemptCount)) {
+      console.error(
+        "Invalid attempt count : handleSignatureUpdate > onCallScreen"
+      );
+      return;
+    }
+
+    setSignatureAttempts(attemptCount);
     setSignatureValue(base64Signature);
     const loc = await getLocation();
     setSignatureLocation(loc);
-  };
-
-  const handleSignatureClear = () => {
-    setSignatureAttempts((prevAttempts) => prevAttempts + 1);
   };
 
   return (

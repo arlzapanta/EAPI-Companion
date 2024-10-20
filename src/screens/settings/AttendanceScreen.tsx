@@ -263,7 +263,21 @@ const Attendance: React.FC = () => {
     onPhotoCaptured: handlePhotoCaptured,
   });
 
-  const handleSignatureUpdate = async (base64Signature: string) => {
+  const handleSignatureUpdate = async (
+    base64Signature: string,
+    location: string,
+    attempts: string | number
+  ): Promise<void> => {
+    const attemptCount =
+      typeof attempts === "string" ? parseInt(attempts, 10) : attempts;
+
+    if (isNaN(attemptCount)) {
+      console.error(
+        "Invalid attempt count : handleSignatureUpdate > onCallScreen"
+      );
+      return;
+    }
+
     if (base64Signature) {
       const loc = await getLocation();
       setSignatureVal(base64Signature);

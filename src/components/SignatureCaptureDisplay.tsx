@@ -33,6 +33,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   const viewRef = useRef<View>(null);
   const canvasWidth = width - 50;
   const canvasHeight = 350;
+  const [attemptCount, setAttemptCount] = useState<number>(0);
 
   const SpacerW = ({ size }: { size: number }) => (
     <View style={{ width: size }} />
@@ -68,6 +69,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   ).current;
 
   const clearSignature = () => {
+    setAttemptCount((prevCount) => prevCount + 1);
     setPaths([]);
     setSignature(null);
   };
@@ -99,9 +101,9 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
 
         try {
           if (callId !== 12340000) {
-            await updateCallSignature(callId, uri, loc);
+            await updateCallSignature(callId, uri, loc, attemptCount);
           }
-          onSignatureUpdate(base64Signature, "location");
+          onSignatureUpdate(base64Signature, loc, attemptCount);
         } catch (error) {
           console.error("Error updating signature:", error);
         }

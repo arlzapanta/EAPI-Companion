@@ -97,7 +97,7 @@ declare global {
 
     export interface SignatureCaptureProps {
       callId: number;
-      onSignatureUpdate: (base64Signature: string, location : string) => void;
+      onSignatureUpdate: (base64Signature: string, location : string, attempts: number) => void;
     }
 
     export interface User {
@@ -169,6 +169,7 @@ declare global {
       photo_location: string;
       signature: string;
       signature_location: string;
+      signature_attempts: number;
       notes: string;
       full_name: string;
     }
