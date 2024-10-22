@@ -134,14 +134,12 @@ const RescheduleTable: React.FC<
                   <DataTable.Title style={{ flex: 1 }}>
                     Scheduled
                   </DataTable.Title>
-                  <DataTable.Title style={{ flex: 1 }}>
+                  <DataTable.Title style={{ flex: 1.5 }}>
                     Reschedule to
                   </DataTable.Title>
                   <DataTable.Title style={{ flex: 1 }}>Type</DataTable.Title>
                   <DataTable.Title style={{ flex: 1 }}>Status</DataTable.Title>
-                  <DataTable.Title style={{ flex: 1 }}>
-                    Date Created
-                  </DataTable.Title>
+                  <DataTable.Title style={{ flex: 1 }}>Created</DataTable.Title>
                   <DataTable.Title style={{ flex: 0.5 }}>
                     Action
                   </DataTable.Title>
@@ -156,7 +154,7 @@ const RescheduleTable: React.FC<
                     <DataTable.Cell style={{ flex: 1 }}>
                       {formatShortDate(data.date_from)}
                     </DataTable.Cell>
-                    <DataTable.Cell style={{ flex: 1 }}>
+                    <DataTable.Cell style={{ flex: 1.3 }}>
                       {formatShortDate(data.date_to)}
                     </DataTable.Cell>
                     <DataTable.Cell style={{ flex: 1 }}>

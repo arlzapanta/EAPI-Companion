@@ -300,23 +300,16 @@ const Dashboard = () => {
                               </View>
                               <View
                                 style={{
-                                  flexDirection: "row",
-                                  alignItems: "center",
-                                  marginEnd: 10,
-                                }}>
-                                <View
-                                  style={{
-                                    width: 15,
-                                    height: 15,
-                                    borderRadius: 7.5,
-                                    backgroundColor: "#lightgray",
-                                    marginRight: 5,
-                                  }}
-                                />
-                                <Text style={{ color: "black" }}>
-                                  Target: {monthlyData[2].value ?? 0}
-                                </Text>
-                              </View>
+                                  width: 15,
+                                  height: 15,
+                                  borderRadius: 7.5,
+                                  backgroundColor: "lightgray",
+                                  marginRight: 5,
+                                }}
+                              />
+                              <Text style={{ color: "black" }}>
+                                Target: {monthlyData[2].value ?? 0}
+                              </Text>
                             </View>
                           </View>
                         )}
@@ -398,22 +391,16 @@ const Dashboard = () => {
                               </View>
                               <View
                                 style={{
-                                  flexDirection: "row",
-                                  alignItems: "center",
-                                }}>
-                                <View
-                                  style={{
-                                    width: 15,
-                                    height: 15,
-                                    borderRadius: 7.5,
-                                    backgroundColor: "#lightgray",
-                                    marginRight: 5,
-                                  }}
-                                />
-                                <Text style={{ color: "black" }}>
-                                  Target: {yearlyData[2].value ?? 0}
-                                </Text>
-                              </View>
+                                  width: 15,
+                                  height: 15,
+                                  borderRadius: 7.5,
+                                  backgroundColor: "lightgray",
+                                  marginRight: 5,
+                                }}
+                              />
+                              <Text style={{ color: "black" }}>
+                                Target: {yearlyData[2].value ?? 0}
+                              </Text>
                             </View>
                           </View>
                         )}
@@ -434,7 +421,7 @@ const Dashboard = () => {
                     padding: 16,
                     borderRadius: 20,
                   }}>
-                  <View style={{ padding: 20, alignItems: "center" }}>
+                  <View style={{ padding: 5, alignItems: "center" }}>
                     <View style={{ marginBottom: 10 }}>
                       <View
                         style={{ flexDirection: "row", alignItems: "center" }}>
@@ -450,7 +437,7 @@ const Dashboard = () => {
                         <Text
                           style={{
                             width: 60,
-                            height: 16,
+                            height: 20,
                             color: "black",
                           }}>
                           Actual
@@ -467,7 +454,7 @@ const Dashboard = () => {
                         <Text
                           style={{
                             width: 60,
-                            height: 16,
+                            height: 20,
                             color: "black",
                           }}>
                           Plotted
@@ -484,7 +471,7 @@ const Dashboard = () => {
                         <Text
                           style={{
                             width: 60,
-                            height: 16,
+                            height: 20,
                             color: "red",
                           }}>
                           Target

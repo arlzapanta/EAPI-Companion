@@ -16,7 +16,7 @@ import { RootStackParamList } from "./src/type/navigation";
 import Home from "./src/screens/Home";
 import Login from "./src/screens/Login";
 import SyncSettingsScreen from "./src/screens/settings/SyncSettingsScreen";
-import RescheduleScreen from "./src/screens/RescheduleScreen";
+import RescheduleScreen from "./src/screens/settings/RescheduleScreen";
 import AttendanceScreen from "./src/screens/settings/AttendanceScreen";
 import OnCallScreen from "./src/screens/call/OnCallScreen";
 import { DataProvider } from "./src/context/DataContext";

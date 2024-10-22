@@ -77,6 +77,33 @@ export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<any |
   }
 };
 
+export const checkPostCallUnsetExist = async (): Promise<Boolean> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS post_call_notes_tbl (
+      id INTEGER PRIMARY KEY NOT NULL, 
+      mood TEXT, 
+      feedback TEXT, 
+      schedule_id TEXT NOT NULL, 
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  try {
+    const query = await db.getAllAsync(`SELECT * FROM post_call_notes_tbl WHERE mood = '' OR feedback = ''`);
+    return query.length > 0 ?  true : false;
+  } catch (error) {
+    console.error("Error fetching post-call notes:", error);
+    return false;
+  } finally {
+    await db.closeAsync();
+  }
+};
+
 
 
 export const savePreCallNotesLocalDb = async ({

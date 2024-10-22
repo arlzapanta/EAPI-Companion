@@ -24,12 +24,24 @@ export const getWeekdaysRange = async () => {
 
   for (let i = 0; i < 5; i++) {
     const day = monday.clone().add(i, 'days').format('YYYY-MM-DD');
-    // if (day !== today) {
-    //   weekdays.push(day);
-    // }
     weekdays.push(day);
   }
 
+  return weekdays;
+};
+
+export const getWeekdaysRangeExToday = async () => {
+  const currentMoment = moment(await getCurrentDatePH()).tz('Asia/Manila');
+  const monday = currentMoment.clone().startOf('week').add(1, 'days'); 
+  const today = currentMoment.format('YYYY-MM-DD');
+  const weekdays: string[] = [];
+
+  for (let i = 0; i < 5; i++) {
+    const day = monday.clone().add(i, 'days').format('YYYY-MM-DD');
+    if (day !== today) {
+      weekdays.push(day);
+    }
+  }
   return weekdays;
 };
 

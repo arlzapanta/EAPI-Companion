@@ -17,6 +17,8 @@ import {
   saveUserSyncHistoryLocalDb,
   saveSchedulesAPILocalDb,
   saveCallsAPILocalDb,
+  dropLocalTable,
+  dropLocalTables,
 } from "../../utils/localDbUtils";
 import {
   apiTimeIn,
@@ -41,6 +43,7 @@ import { AntDesign } from "@expo/vector-icons";
 import { getStyleUtil } from "../../utils/styleUtil";
 import Loading from "../../components/Loading";
 import { customToast } from "../../utils/customToast";
+import { checkPostCallUnsetExist } from "../../utils/callComponentsUtil";
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const Attendance: React.FC = () => {
@@ -154,90 +157,71 @@ const Attendance: React.FC = () => {
       Alert.alert("Error", "User information is missing.");
       return;
     }
-    // todo : add functionality to insert pre-approved advance calls (for tracking)
 
     try {
       const timeInIsProceed = await apiTimeIn(userInfo);
       if (timeInIsProceed.isProceed) {
-        const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
-        if (checkIfTimedIn === 1) {
-          Alert.alert("Failed", "Already timed In today");
-        } else {
-          await getDoctors(userInfo);
-          await getReschedulesData(userInfo);
-          await getChartData(userInfo);
-          await getDetailersData();
+        await getDoctors(userInfo);
+        await getReschedulesData(userInfo);
+        await getChartData(userInfo);
+        await getDetailersData();
+        const callData = await getCallsAPI(userInfo);
+        const scheduleData = await getSChedulesAPI(userInfo);
+        if (callData && scheduleData) {
+          await saveCallsAPILocalDb(callData);
+          await saveSchedulesAPILocalDb(scheduleData);
+          await saveUserSyncHistoryLocalDb(userInfo, 1);
+          await saveUserAttendanceLocalDb(userInfo, "in");
           await fetchAttendanceData();
-          const callData = await getCallsAPI(userInfo);
-          const scheduleData = await getSChedulesAPI(userInfo);
-          if (callData && scheduleData) {
-            const CallResult = await saveCallsAPILocalDb(callData);
-            const scheduleResult = await saveSchedulesAPILocalDb(scheduleData);
-            {
-              CallResult && scheduleResult == "Success"
-                ? Alert.alert("Success", "Successfully synced data from server")
-                : Alert.alert("Failed", "Error syncing");
-            }
-            const res = await saveUserSyncHistoryLocalDb(userInfo, 1);
-            console.log(
-              "AttendanceScreen > timeIn > saveUserSyncHistoryLocalDb > res : ",
-              res
-            );
-          }
         }
-      } else if (!timeInIsProceed.isProceed) {
-        customToast("Already timed in, please contact admin to reset");
+      } else {
+        customToast("Already timed in, please contact admin [time in api]");
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to time in.");
+      Alert.alert("Server Error", "Failed to time in. Please contact admin");
     } finally {
       setLoading(false);
     }
   };
 
   const timeOut = async () => {
-    setLoading(true);
     let msg = "";
+
+    setLoading(true);
     const checkQC = await getQuickCalls();
+    const checkPost = await checkPostCallUnsetExist();
     if (checkQC.length > 0) {
-      msg = "Error : Please check quick calls.";
+      msg = "Existing quick calls, kindly complete or remove any data";
       return;
     }
-    // todo : check if post call exist
-
+    if (checkPost) {
+      msg = "Existing empty post calls, kindly complete all post calls";
+      Alert.alert(msg);
+      setLoading(false);
+      return;
+    }
     if (!userInfo) {
-      msg = "Error : User information is missing.";
+      msg = "Server Error : User information is missing.";
+      Alert.alert(msg);
+      setLoading(false);
       return;
     }
 
     try {
       const timeOutIsProceed = await apiTimeOut(userInfo);
       if (timeOutIsProceed.isProceed) {
-        const checkIfTimedOut = await saveUserAttendanceLocalDb(
-          userInfo,
-          "out"
-        );
-        if (checkIfTimedOut === 1) {
-          msg = "Already timed out today";
-        } else {
-          await doctorRecordsSync(userInfo);
-          const reqRecordSync = await requestRecordSync(userInfo);
-          await fetchAttendanceData();
-          const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
-          const syncLocalToAPI = await syncUser(userInfo);
-          if (syncLocalToAPI != "No records to sync") {
-            msg = "Successfully Sync data to server";
-          } else {
-            console.log(
-              "AttendanceScreen > timeOut > syncUser > res : No records to sync"
-            );
-          }
-        }
+        await doctorRecordsSync(userInfo);
+        await requestRecordSync(userInfo);
+        await syncUser(userInfo);
+        await saveUserSyncHistoryLocalDb(userInfo, 2);
+        await saveUserAttendanceLocalDb(userInfo, "out");
+        await fetchAttendanceData();
+      } else {
+        customToast("Already timed out, please contact admin [time out api]");
       }
     } catch (error) {
-      msg = "Failed to time out.";
+      msg = "Server Error : Failed to time out please contact admin.";
     } finally {
-      Alert.alert(msg);
       setLoading(false);
     }
   };

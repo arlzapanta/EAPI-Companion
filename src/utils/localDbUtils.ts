@@ -1,5 +1,5 @@
 import * as SQLite from "expo-sqlite";
-import { formatDate, formatDateYMD, getCurrentDatePH, getRelevantDateRange, getWeekdaysRange } from "./dateUtils"; 
+import { formatDate, formatDateYMD, getCurrentDatePH, getRelevantDateRange, getWeekdaysRange, getWeekdaysRangeExToday } from "./dateUtils"; 
 import moment from "moment";
 
 // ************************************************************
@@ -962,7 +962,7 @@ export const getSchedulesWeekLocalDb = async (): Promise<ScheduleAPIRecord[]> =>
 
   await db.execAsync(createIfNEscheduleAPI);
 
-  const weekDates = await getWeekdaysRange();
+  const weekDates = await getWeekdaysRangeExToday();
   const placeholders = weekDates.map(() => '?').join(', ');
   const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) IN (${placeholders})`;
 
@@ -1772,3 +1772,25 @@ export const dropLocalTablesDb = async () => {
 
   await db.closeAsync();
 }
+export const dropLocalTable = async (tableName : string) => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+  const query = `DROP TABLE IF EXISTS ${tableName};`;
+  await db.getAllAsync(query);
+  console.log(tableName, 'has been dropped');
+
+  await db.closeAsync();
+}
+
+export const dropLocalTables = async (tableNames: string[]) => {
+  const db = await SQLite.openDatabaseAsync('cmms', {
+    useNewConnection: true,
+  });
+  for (const tableName of tableNames) {
+    const query = `DROP TABLE IF EXISTS ${tableName};`;
+    await db.getAllAsync(query);
+    console.log(tableName, 'has been dropped');
+  }
+  await db.closeAsync();
+};

@@ -62,7 +62,6 @@ const QuickCall = () => {
   const fetchCallsData = async () => {
     try {
       const data = await getQuickCalls();
-      console.log(data, "fetchcallsdata quickCall");
       if (Array.isArray(data)) {
         setCallData(data);
         if (selectedCallIdValue) {

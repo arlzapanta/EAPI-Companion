@@ -9,7 +9,7 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { RescheduleScreenNavigationProp } from "navigation";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import {
   cancelRescheduleReqLocalDb,
   deleteRescheduleReqLocalDb,
@@ -18,14 +18,17 @@ import {
   getRescheduleListLocalDb,
   insertRescheduleRequest,
   undoCancelRescheduleReqLocalDb,
-} from "../utils/localDbUtils";
+} from "../../utils/localDbUtils";
 import { Picker } from "@react-native-picker/picker";
-import { generateFutureDates, isWithinWeekOrAdvance } from "../utils/dateUtils";
-import { customToast } from "../utils/customToast";
-import RescheduleTable from "../screens/tables/RescheduleTable";
+import {
+  generateFutureDates,
+  isWithinWeekOrAdvance,
+} from "../../utils/dateUtils";
+import { customToast } from "../../utils/customToast";
+import RescheduleTable from "../tables/RescheduleTable";
 import { AntDesign } from "@expo/vector-icons";
-import { getStyleUtil } from "../utils/styleUtil";
-import { lightTheme, darkTheme } from "../utils/themes";
+import { getStyleUtil } from "../../utils/styleUtil";
+import { lightTheme, darkTheme } from "../../utils/themes";
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const RescheduleScreen: React.FC = () => {

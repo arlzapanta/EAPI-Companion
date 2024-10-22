@@ -98,25 +98,24 @@ const Settings = () => {
 
   const MidSync = async () => {
     if (!userInfo) {
-      Alert.alert("Error", "User information is missing.");
+      Alert.alert("Server Error", "User information is missing.");
       return;
     }
-    const isValidMidSync = isTimeBetween12and1PM();
-    setLoading(true);
-    if (isValidMidSync) {
+    if (isTimeBetween12and1PM()) {
       try {
-        const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
+        setLoading(true);
         const syncLocalToAPI = await syncUser(userInfo);
         if (syncLocalToAPI !== "No records to sync") {
-          Alert.alert("Success", "Successfully Sync data to server");
+          customToast("Successfully Sync data to server");
+          await saveUserSyncHistoryLocalDb(userInfo, 2);
         } else {
-          Alert.alert("No records", "No records to sync");
+          customToast("No records [actual calls] to sync");
           console.log(
             "SettingScreen > MidSync > syncUser > res : No records to sync"
           );
         }
       } catch (error) {
-        Alert.alert("Error", "Failed to Mid Sync.");
+        Alert.alert("Server Error", "Failed to Mid Sync.");
       } finally {
         setLoading(false);
       }

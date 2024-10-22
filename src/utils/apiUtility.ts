@@ -13,25 +13,25 @@ import {
   saveRescheduleListLocalDb,
 } from "../utils/localDbUtils";
 import { formatDateYMD, getCurrentDatePH } from "./dateUtils";
-import { getLocation } from "../utils/currentLocation";
+import { getLocation, getLocationAttendance } from "../utils/currentLocation";
 
 export const apiTimeIn = async (user: User) => {
   try {
-    const loc = await getLocation();
+    const loc = await getLocationAttendance();
     const { first_name, last_name, sales_portal_id, territory_id } = user;
 
     const userInfo = {
       first_name,
       last_name,
       sales_portal_id,
-      territory_id
+      territory_id,
     };
 
     const response = await axios.post(
       `${API_URL_ENV}/timeIn`,
       {
         sales_portal_id: userInfo.sales_portal_id,
-        location: loc
+        location: loc,
       },
       {
         headers: {
@@ -58,20 +58,20 @@ export const apiTimeIn = async (user: User) => {
 
 export const apiTimeOut = async (user: User) => {
   try {
-    const loc = await getLocation();
+    const loc = await getLocationAttendance();
     const { first_name, last_name, sales_portal_id } = user;
 
     const userInfo = {
       first_name,
       last_name,
-      sales_portal_id
+      sales_portal_id,
     };
 
     const response = await axios.post(
       `${API_URL_ENV}/timeOut`,
       {
         sales_portal_id: userInfo.sales_portal_id,
-        location : loc
+        location: loc,
       },
       {
         headers: {
@@ -99,7 +99,7 @@ export const apiTimeOut = async (user: User) => {
 export const syncUser = async (user: User): Promise<any> => {
   try {
     const localRecords = await getCallsTodayLocalDb();
-    const recordsToSync: ApiPayload[] = localRecords.map(record => ({
+    const recordsToSync: ApiPayload[] = localRecords.map((record) => ({
       schedule_id: record.schedule_id,
       call_start: record.call_start,
       call_end: record.call_end,
@@ -107,25 +107,21 @@ export const syncUser = async (user: User): Promise<any> => {
       signature_attempts: record.signature_attempts,
       signature_location: record.signature_location,
       photo: record.photo,
-      photo_location: record.photo_location
+      photo_location: record.photo_location,
     }));
 
     if (recordsToSync.length === 0) {
-      console.log('No records to sync.');
-      return 'No records to sync';
+      console.log("No records to sync.");
+      return "No records to sync";
     }
 
-    const response = await axios.post(
-      `${API_URL_ENV}/sync`,
-      recordsToSync,
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await axios.post(`${API_URL_ENV}/sync`, recordsToSync, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
-    if(response.data.isProceed){
+    if (response.data.isProceed) {
       await deleteCallsTodayLocalDb();
     }
 
@@ -148,13 +144,15 @@ export const syncUser = async (user: User): Promise<any> => {
 export const doctorRecordsSync = async (user: User): Promise<any> => {
   try {
     const localDoctorsUpdated = await getUpdatedDoctorRecordsLocalDb();
-    const docRecordsToSync: apiDoctorRecords[] = localDoctorsUpdated.map(record => ({
-      doctors_id: Number(record.doctors_id), 
-      notes_names: record.notes_names,
-      notes_values: record.notes_values,
-      territory_id: Number(user.territory_id), 
-      division: Number(user.division), 
-    }));
+    const docRecordsToSync: apiDoctorRecords[] = localDoctorsUpdated.map(
+      (record) => ({
+        doctors_id: Number(record.doctors_id),
+        notes_names: record.notes_names,
+        notes_values: record.notes_values,
+        territory_id: Number(user.territory_id),
+        division: Number(user.division),
+      })
+    );
 
     const responseDoc = await axios.post(
       `${API_URL_ENV}/updateDoctorsNotes`,
@@ -167,11 +165,11 @@ export const doctorRecordsSync = async (user: User): Promise<any> => {
     );
 
     if (docRecordsToSync.length === 0) {
-      console.log('No doctor records to sync.');
-      return 'No doctor records to sync';
+      console.log("No doctor records to sync.");
+      return "No doctor records to sync";
     }
 
-    if(responseDoc.data.isProceed){
+    if (responseDoc.data.isProceed) {
       await deleteDoctorsTodayLocalDb();
     }
 
@@ -189,20 +187,21 @@ export const doctorRecordsSync = async (user: User): Promise<any> => {
     }
     throw error;
   }
-}
+};
 
 export const requestRecordSync = async (user: User): Promise<any> => {
   try {
     const localRescheduleReq = await getRescheduleRequestRecordsLocalDb();
-    const rescheduleRecordsToSync: apiRescheduleReqRecords[] = localRescheduleReq.map(record => ({
-      schedule_id: record.schedule_id,
-      sales_portal_id: record.sales_portal_id,
-      doctors_id: record.doctors_id,
-      date_from: record.date_from,
-      date_to: record.date_to,
-      status: record.status,
-      type: record.type
-    }));
+    const rescheduleRecordsToSync: apiRescheduleReqRecords[] =
+      localRescheduleReq.map((record) => ({
+        schedule_id: record.schedule_id,
+        sales_portal_id: record.sales_portal_id,
+        doctors_id: record.doctors_id,
+        date_from: record.date_from,
+        date_to: record.date_to,
+        status: record.status,
+        type: record.type,
+      }));
 
     const responseResreq = await axios.post(
       `${API_URL_ENV}/rescheduleRequest`,
@@ -215,11 +214,11 @@ export const requestRecordSync = async (user: User): Promise<any> => {
     );
 
     if (rescheduleRecordsToSync.length === 0) {
-      console.log('No Request resched records to sync.');
-      return 'No request resched records to sync';
+      console.log("No Request resched records to sync.");
+      return "No request resched records to sync";
     }
 
-    if(responseResreq.data.isProceed){
+    if (responseResreq.data.isProceed) {
       await deleteDoctorsTodayLocalDb();
     }
 
@@ -237,24 +236,24 @@ export const requestRecordSync = async (user: User): Promise<any> => {
     }
     throw error;
   }
-}
+};
 
-// get schedules 
-  export const getSChedulesAPI = async (user: User): Promise<any> => {
+// get schedules
+export const getSChedulesAPI = async (user: User): Promise<any> => {
   try {
-    const {sales_portal_id } = user;
+    const { sales_portal_id } = user;
     const response = await axios.post(
       `${API_URL_ENV}/getSchedules`,
-        {
-          sales_portal_id
-        },
+      {
+        sales_portal_id,
+      },
       {
         headers: {
           "Content-Type": "application/json",
         },
       }
     );
-    
+
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
@@ -275,12 +274,12 @@ export const requestRecordSync = async (user: User): Promise<any> => {
 export const getCallsAPI = async (user: User): Promise<any> => {
   const now = await getCurrentDatePH();
   try {
-    const {sales_portal_id } = user;
+    const { sales_portal_id } = user;
     const response = await axios.post(
       `${API_URL_ENV}/getCalls`,
-        {
-          sales_portal_id
-        },
+      {
+        sales_portal_id,
+      },
       {
         headers: {
           "Content-Type": "application/json",
@@ -308,13 +307,13 @@ export const getCallsAPI = async (user: User): Promise<any> => {
 export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
   const now = await getCurrentDatePH();
   try {
-    const {sales_portal_id } = user;
+    const { sales_portal_id } = user;
     const response = await axios.post(
       `${API_URL_ENV}/checkSchedules`,
-        {
-          sales_portal_id,
-          date: formatDateYMD(now),
-        },
+      {
+        sales_portal_id,
+        date: formatDateYMD(now),
+      },
       {
         headers: {
           "Content-Type": "application/json",
@@ -340,13 +339,13 @@ export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
 
 export const getDoctors = async (user: User): Promise<any> => {
   try {
-    const {territory_id, division } = user;
+    const { territory_id, division } = user;
     const response = await axios.post(
       `${API_URL_ENV}/getDoctors`,
-        {
-          territory_id,
-          division
-        },
+      {
+        territory_id,
+        division,
+      },
       {
         headers: {
           "Content-Type": "application/json",
@@ -373,18 +372,22 @@ export const getDoctors = async (user: User): Promise<any> => {
 
 export const getReschedulesData = async (user: User): Promise<any> => {
   try {
-    const {sales_portal_id } = user;
+    const { sales_portal_id } = user;
     const response = await axios.post(
       `${API_URL_ENV}/getRescheduleRequestsSPI`,
-        {
-          sales_portal_id
-        },
-      { 
+      {
+        sales_portal_id,
+      },
+      {
         headers: {
           "Content-Type": "application/json",
         },
       }
     );
+
+    console.log(sales_portal_id, "sales_portal_id");
+    console.log(response, "response data get reschedules data");
+    console.log(response.data, "response data get reschedules data");
     await saveRescheduleListLocalDb(response.data);
     await saveRescheduleHistoryLocalDb(response.data);
 
@@ -406,14 +409,14 @@ export const getReschedulesData = async (user: User): Promise<any> => {
 
 export const getChartData = async (user: User): Promise<any[]> => {
   try {
-    const {sales_portal_id } = user;
+    const { sales_portal_id } = user;
     const response = await axios.post(
       `${API_URL_ENV}/getChartData`,
-        {
-          sales_portal_id,
-          user_type : "medrep"
-        },
-      { 
+      {
+        sales_portal_id,
+        user_type: "medrep",
+      },
+      {
         headers: {
           "Content-Type": "application/json",
         },
@@ -427,8 +430,14 @@ export const getChartData = async (user: User): Promise<any[]> => {
       const { response, request, message } = error;
       console.error("API getChartData Error message:", message);
       console.error("API getChartData Error response data:", response?.data);
-      console.error("API getChartData Error response status:", response?.status);
-      console.error("API getChartData Error response headers:", response?.headers);
+      console.error(
+        "API getChartData Error response status:",
+        response?.status
+      );
+      console.error(
+        "API getChartData Error response headers:",
+        response?.headers
+      );
       console.error("API getChartData Error request:", request);
     } else {
       console.error("An unexpected error occurred: getChartData", error);
@@ -439,14 +448,11 @@ export const getChartData = async (user: User): Promise<any[]> => {
 
 export const getDetailersData = async (): Promise<any[]> => {
   try {
-    const response = await axios.post(
-      `${API_URL_ENV}/getDetailers`,
-      { 
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await axios.post(`${API_URL_ENV}/getDetailers`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
     await saveDetailersDataLocalDb(response.data);
     return response.data;
   } catch (error: any) {
@@ -454,8 +460,14 @@ export const getDetailersData = async (): Promise<any[]> => {
       const { response, request, message } = error;
       console.error("API getChartData Error message:", message);
       console.error("API getChartData Error response data:", response?.data);
-      console.error("API getChartData Error response status:", response?.status);
-      console.error("API getChartData Error response headers:", response?.headers);
+      console.error(
+        "API getChartData Error response status:",
+        response?.status
+      );
+      console.error(
+        "API getChartData Error response headers:",
+        response?.headers
+      );
       console.error("API getChartData Error request123123:", request);
     } else {
       console.error("An unexpected error occurred: getChartData", error);

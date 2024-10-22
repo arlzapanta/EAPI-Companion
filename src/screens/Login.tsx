@@ -27,13 +27,14 @@ const Login = () => {
     try {
       const result = await onLogin!(email, password);
       if (result && result.error) {
-        Alert.alert("Login Error", result.msg, result.error);
+        Alert.alert("Login Error", result.msg);
       }
     } catch (error: any) {
       const result = await onLogin!(email, password);
       Alert.alert(
         "Login Error",
-        `${TOKEN_USERNAME_ENV} ${TOKEN_PASSWORD_ENV} ${API_URL_ENV} ${result} An error occurred during login. Please try again.`
+        `${API_URL_ENV} ${result} An error occurred during login. Please try again.`
+        // `${TOKEN_USERNAME_ENV} ${TOKEN_PASSWORD_ENV} ${API_URL_ENV} ${result} An error occurred during login. Please try again.`
       );
       console.error(error);
     }
