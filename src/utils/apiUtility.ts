@@ -6,11 +6,13 @@ import {
   getCallsTodayLocalDb,
   getRescheduleRequestRecordsLocalDb,
   getUpdatedDoctorRecordsLocalDb,
+  saveCallsAPILocalDb,
   saveChartDataLocalDb,
   saveDetailersDataLocalDb,
   saveDoctorListLocalDb,
   saveRescheduleHistoryLocalDb,
   saveRescheduleListLocalDb,
+  saveSchedulesAPILocalDb,
 } from "../utils/localDbUtils";
 import { formatDateYMD, getCurrentDatePH } from "./dateUtils";
 import { getLocation, getLocationAttendance } from "../utils/currentLocation";
@@ -195,6 +197,7 @@ export const requestRecordSync = async (user: User): Promise<any> => {
     const rescheduleRecordsToSync: apiRescheduleReqRecords[] =
       localRescheduleReq.map((record) => ({
         schedule_id: record.schedule_id,
+        request_id: record.request_id,
         sales_portal_id: record.sales_portal_id,
         doctors_id: record.doctors_id,
         date_from: record.date_from,
@@ -254,7 +257,19 @@ export const getSChedulesAPI = async (user: User): Promise<any> => {
       }
     );
 
-    return response.data;
+    const schedForMakeUp = await axios.post(
+      `${API_URL_ENV}/getSchedulesForMakeup`,
+      {
+        sales_portal_id,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const mergedData = [...response.data, ...schedForMakeUp.data];
+    await saveSchedulesAPILocalDb(mergedData);
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const { response, request, message } = error;
@@ -286,8 +301,7 @@ export const getCallsAPI = async (user: User): Promise<any> => {
         },
       }
     );
-
-    return response.data;
+    await saveCallsAPILocalDb(response.data);
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const { response, request, message } = error;
@@ -384,10 +398,6 @@ export const getReschedulesData = async (user: User): Promise<any> => {
         },
       }
     );
-
-    console.log(sales_portal_id, "sales_portal_id");
-    console.log(response, "response data get reschedules data");
-    console.log(response.data, "response data get reschedules data");
     await saveRescheduleListLocalDb(response.data);
     await saveRescheduleHistoryLocalDb(response.data);
 

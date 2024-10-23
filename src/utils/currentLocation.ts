@@ -1,19 +1,19 @@
-import * as Location from 'expo-location';
+import * as Location from "expo-location";
 
 export const getLocation = async (): Promise<any> => {
   try {
     // Request location permissions
     const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      throw new Error('Permission to access location was denied');
+    if (status !== "granted") {
+      throw new Error("Permission to access location was denied");
     }
 
     const loc = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.High, 
-      timeInterval: 10000
+      accuracy: Location.Accuracy.High,
+      timeInterval: 10000,
     });
     // const { coords } = await Location.getCurrentPositionAsync({
-    //   accuracy: Location.Accuracy.High, 
+    //   accuracy: Location.Accuracy.High,
     //   timeInterval: 10000
     // });
 
@@ -23,7 +23,7 @@ export const getLocation = async (): Promise<any> => {
     // };
     return `${loc.coords.latitude},${loc.coords.longitude}`;
   } catch (error) {
-    console.error('Error getting location:', error);
+    console.error("Error getting location:", error);
     return null;
   }
 };
@@ -32,13 +32,13 @@ export const getLocationAttendance = async (): Promise<any> => {
   try {
     // Request location permissions
     const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
-      throw new Error('Permission to access location was denied');
+    if (status !== "granted") {
+      throw new Error("Permission to access location was denied");
     }
-    
+
     const { coords } = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.High, 
-      timeInterval: 10000
+      accuracy: Location.Accuracy.High,
+      timeInterval: 10000,
     });
 
     return {
@@ -46,7 +46,7 @@ export const getLocationAttendance = async (): Promise<any> => {
       longitude: coords.longitude,
     };
   } catch (error) {
-    console.error('Error getting location:', error);
+    console.error("Error getting location:", error);
     return null;
   }
 };

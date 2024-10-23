@@ -1,12 +1,12 @@
-import moment from 'moment-timezone';
+import moment from "moment-timezone";
 
 import * as SecureStore from "expo-secure-store";
-import { format, parseISO } from 'date-fns';
+import { format, parseISO } from "date-fns";
 
-const DATE_KEY ='current_date_ph';
+const DATE_KEY = "current_date_ph";
 export const getCurrentDatePH = async (): Promise<string> => {
   const storedDate = await SecureStore.getItemAsync(DATE_KEY);
-  const currentDate = moment().tz('Asia/Manila').format('YYYY-MM-DD');
+  const currentDate = moment().tz("Asia/Manila").format("YYYY-MM-DD");
 
   if (storedDate && storedDate === currentDate) {
     return storedDate;
@@ -17,13 +17,13 @@ export const getCurrentDatePH = async (): Promise<string> => {
 };
 
 export const getWeekdaysRange = async () => {
-  const currentMoment = moment(await getCurrentDatePH()).tz('Asia/Manila');
-  const monday = currentMoment.clone().startOf('week').add(1, 'days'); 
-  const today = currentMoment.format('YYYY-MM-DD');
+  const currentMoment = moment(await getCurrentDatePH()).tz("Asia/Manila");
+  const monday = currentMoment.clone().startOf("week").add(1, "days");
+  const today = currentMoment.format("YYYY-MM-DD");
   const weekdays: string[] = [];
 
   for (let i = 0; i < 5; i++) {
-    const day = monday.clone().add(i, 'days').format('YYYY-MM-DD');
+    const day = monday.clone().add(i, "days").format("YYYY-MM-DD");
     weekdays.push(day);
   }
 
@@ -31,38 +31,51 @@ export const getWeekdaysRange = async () => {
 };
 
 export const getWeekdaysRangeExToday = async () => {
-  const currentMoment = moment(await getCurrentDatePH()).tz('Asia/Manila');
-  const monday = currentMoment.clone().startOf('week').add(1, 'days'); 
-  const today = currentMoment.format('YYYY-MM-DD');
+  const currentMoment = moment(await getCurrentDatePH()).tz("Asia/Manila");
+  const monday = currentMoment.clone().startOf("week").add(1, "days");
+  const today = currentMoment.format("YYYY-MM-DD");
   const weekdays: string[] = [];
 
   for (let i = 0; i < 5; i++) {
-    const day = monday.clone().add(i, 'days').format('YYYY-MM-DD');
-    if (day !== today) {
+    const day = monday.clone().add(i, "days").format("YYYY-MM-DD");
+    if (day !== today && day! > today) {
       weekdays.push(day);
     }
   }
   return weekdays;
 };
 
+export const getMonthRangeExToday = async () => {
+  const currentMoment = moment(await getCurrentDatePH()).tz("Asia/Manila");
+  const startOfMonth = currentMoment.clone().startOf("month");
+  const endToday = currentMoment.clone();
+  const monthDays: string[] = [];
+
+  for (let day = startOfMonth; day <= endToday; day.add(1, "days")) {
+    const dayString = day.format("YYYY-MM-DD");
+    monthDays.push(dayString);
+  }
+
+  return monthDays;
+};
 
 export const isTimeBetween12and1PM = (): boolean => {
   const currentTime = moment();
-  
+
   const startTime = moment().hour(12).minute(0).second(0);
   const endTime = moment().hour(13).minute(0).second(0);
 
   const isBetween = currentTime.isBetween(startTime, endTime);
 
-  console.log(isBetween ? 'true' : 'false');
-  
+  console.log(isBetween ? "true" : "false");
+
   return isBetween;
 };
 
-const TIME_KEY = 'current_time_ph';
+const TIME_KEY = "current_time_ph";
 export const getCurrentTimePH = async (): Promise<string> => {
   const storedTime = await SecureStore.getItemAsync(TIME_KEY);
-  const currentTime = moment().format('HH:mm:ss');
+  const currentTime = moment().format("HH:mm:ss");
 
   if (storedTime && storedTime === currentTime) {
     return storedTime;
@@ -77,7 +90,7 @@ function getDatesInRange(startDate: Date, endDate: Date): string[] {
   let currentDate = new Date(startDate);
 
   while (currentDate <= endDate) {
-    dates.push(currentDate.toISOString().split('T')[0]);
+    dates.push(currentDate.toISOString().split("T")[0]);
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
@@ -88,7 +101,7 @@ export function formatTimeHoursMinutes(date: Date): string {
   const formattedTime = date.toLocaleTimeString("en-GB", {
     hour: "2-digit",
     minute: "2-digit",
-    second: "2-digit"
+    second: "2-digit",
   });
   return formattedTime;
 }
@@ -104,10 +117,18 @@ export async function getRelevantDateRange(): Promise<string[]> {
   const lastDayOfCurrentMonth = new Date(year, month + 1, 0);
 
   const lastDayOfPreviousMonth = new Date(year, month, 0);
-  const firstDayOfPreviousMonthLastWeek = new Date(year, month - 1, Math.max(lastDayOfPreviousMonth.getDate() - 6, 1));
+  const firstDayOfPreviousMonthLastWeek = new Date(
+    year,
+    month - 1,
+    Math.max(lastDayOfPreviousMonth.getDate() - 6, 1)
+  );
 
   const firstDayOfNextMonth = new Date(year, month + 1, 1);
-  const lastDayOfNextMonthFirstWeek = new Date(year, month + 1, Math.min(7, new Date(year, month + 2, 0).getDate()));
+  const lastDayOfNextMonthFirstWeek = new Date(
+    year,
+    month + 1,
+    Math.min(7, new Date(year, month + 2, 0).getDate())
+  );
 
   const dates: string[] = [
     ...getDatesInRange(firstDayOfPreviousMonthLastWeek, lastDayOfPreviousMonth),
@@ -133,11 +154,10 @@ export const formatDateYMD = (dateString: string) => {
 };
 
 export const getFormattedDateToday = async () => {
-  const currentMoment = moment(await getCurrentDatePH()).tz('Asia/Manila');
-  const today = currentMoment.format('YYYY-MM-DD');
+  const currentMoment = moment(await getCurrentDatePH()).tz("Asia/Manila");
+  const today = currentMoment.format("YYYY-MM-DD");
   return today;
 };
-
 
 export const getCurrentQuarterPH = async (): Promise<number> => {
   const currentDatePH = await getCurrentDatePH();
@@ -154,26 +174,33 @@ export const getCurrentQuarterPH = async (): Promise<number> => {
   }
 };
 
-export const isWithinSameMonth = (selectedDate: string, dateToCheck: string): boolean => {
-  const selected = new Date(selectedDate); 
-  const toCheck = new Date(dateToCheck);   
+export const isWithinSameMonth = (
+  selectedDate: string,
+  dateToCheck: string
+): boolean => {
+  const selected = new Date(selectedDate);
+  const toCheck = new Date(dateToCheck);
 
-  const isSameMonth = selected.getFullYear() === toCheck.getFullYear() &&
-                      selected.getMonth() === toCheck.getMonth();
+  const isSameMonth =
+    selected.getFullYear() === toCheck.getFullYear() &&
+    selected.getMonth() === toCheck.getMonth();
 
   return isSameMonth;
 };
 
-export const isAfterDate = (selectedDate: string, dateToCheck: string): boolean => {
-  const selected = new Date(selectedDate);  
-  const toCheck = new Date(dateToCheck);    
+export const isAfterDate = (
+  selectedDate: string,
+  dateToCheck: string
+): boolean => {
+  const selected = new Date(selectedDate);
+  const toCheck = new Date(dateToCheck);
 
-  return toCheck > selected; 
+  return toCheck > selected;
 };
 
 export const isNotWeekend = (date: string): boolean => {
-  const dayOfWeek = new Date(date).getDay(); 
-  return dayOfWeek !== 0 && dayOfWeek !== 6; 
+  const dayOfWeek = new Date(date).getDay();
+  return dayOfWeek !== 0 && dayOfWeek !== 6;
 };
 
 export const generateFutureDates = (selectedDate: string): string[] => {
@@ -185,9 +212,9 @@ export const generateFutureDates = (selectedDate: string): string[] => {
   const futureDates: string[] = [];
   const startDay = selected.getDate() + 3;
 
-  for (let day = startDay; day <= lastDayOfMonth+1; day++) {
+  for (let day = startDay; day <= lastDayOfMonth + 1; day++) {
     const dateToCheck = new Date(year, month, day);
-    const dateString = dateToCheck.toISOString().split('T')[0];
+    const dateString = dateToCheck.toISOString().split("T")[0];
 
     if (isAfterDate(selectedDate, dateString) && isNotWeekend(dateString)) {
       futureDates.push(dateString);
@@ -197,24 +224,67 @@ export const generateFutureDates = (selectedDate: string): string[] => {
   return futureDates;
 };
 
+export const getMonthRangeExGTToday = async () => {
+  const currentMoment = moment(await getCurrentDatePH()).tz("Asia/Manila");
+  const endOfMonth = currentMoment.clone().endOf("month");
+  const endToday = currentMoment.clone().add(2, "days");
+  const monthDays: string[] = [];
+
+  for (let day = endToday; day <= endOfMonth; day.add(1, "days")) {
+    const dayString = day.format("YYYY-MM-DD");
+    monthDays.push(dayString);
+  }
+
+  return monthDays;
+};
+
+export const getDateRangeGTToday = async (selectedDate: string) => {
+  const currentMoment = moment(selectedDate).tz("Asia/Manila");
+  const endOfMonth = currentMoment.clone().endOf("month");
+  const endToday = currentMoment.add(2, "days");
+  const monthDays: string[] = [];
+
+  for (let day = endToday; day <= endOfMonth; day.add(1, "days")) {
+    if (day.isoWeekday() > 5) {
+      continue;
+    }
+    const dayString = day.format("YYYY-MM-DD");
+    monthDays.push(dayString);
+  }
+
+  return monthDays;
+};
 
 export const isWithinWeekOrAdvance = (dateStr: string): string | null => {
   const today = new Date();
   const date = new Date(dateStr);
 
   if (date <= today) {
-      return null; 
+    return null;
   }
 
   const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - today.getDay()); 
-  
+  startOfWeek.setDate(today.getDate() - today.getDay());
+
   const endOfWeek = new Date(today);
-  endOfWeek.setDate(today.getDate() + (6 - today.getDay())); 
+  endOfWeek.setDate(today.getDate() + (6 - today.getDay()));
 
   if (date >= startOfWeek && date <= endOfWeek) {
-      return "Makeup";
+    return "Makeup";
   } else {
-      return "Advance";
+    return "Advance";
   }
+};
+
+export const checkIfFirstWeekdayOfMonth = (date: string): boolean => {
+  const momentDate = moment(date, "YYYY-MM-DD");
+  const firstOfMonth = momentDate.clone().startOf("month");
+
+  if (firstOfMonth.day() === 0) {
+    firstOfMonth.add(1, "day");
+  } else if (firstOfMonth.day() === 6) {
+    firstOfMonth.add(2, "day");
+  }
+
+  return momentDate.isSame(firstOfMonth, "day");
 };

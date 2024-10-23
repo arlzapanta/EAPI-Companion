@@ -201,7 +201,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
           <Text style={styles.signatureLabel}>Signature Capture</Text>
           {signatureValue ? (
             <Image
-              source={{ uri: `${signatureValue}` }}
+              source={{ uri: `${getBase64StringFormat()}${signatureValue}` }}
               style={styles.signImage}
             />
           ) : (

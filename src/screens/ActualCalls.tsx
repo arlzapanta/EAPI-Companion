@@ -22,7 +22,7 @@ import {
   getPostCallNotesLocalDb,
   savePostCallNotesLocalDb,
 } from "../utils/callComponentsUtil";
-import { getCurrentDatePH } from "../utils/dateUtils";
+import { formatDatev1, getCurrentDatePH } from "../utils/dateUtils";
 import moment from "moment";
 import { Ionicons } from "@expo/vector-icons";
 import MapComponent from "../components/MapView";
@@ -151,11 +151,9 @@ const ActualCalls = () => {
       <View style={dynamicStyles.filterMainContainer}>
         <Text style={styles1.detailsTitle}>Call Details</Text>
         <View style={styles1.detailRow}>
-          <Text style={styles1.detailLabel}>Scheduled date :</Text>
+          <Text style={styles1.detailLabel}>Scheduled date: </Text>
           <Text style={styles1.columnSubTitle}>
-            {!moment(call.date).format("MMMM DD YYYY")
-              ? " " + moment(call.date).format("MMMM DD YYYY")
-              : " Unknown"}
+            {formatDatev1(call.created_at)}
           </Text>
         </View>
         <View style={styles1.detailRow}>
@@ -173,7 +171,7 @@ const ActualCalls = () => {
             <>
               <Image
                 source={{
-                  uri: call.signature,
+                  uri: `${getBase64StringFormat()}${call.signature}`,
                 }}
                 style={styles1.signature}
               />

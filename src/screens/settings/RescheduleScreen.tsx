@@ -18,10 +18,13 @@ import {
   getRescheduleListLocalDb,
   insertRescheduleRequest,
   undoCancelRescheduleReqLocalDb,
+  getDoctorsSchedGTtodayLocalDb,
 } from "../../utils/localDbUtils";
 import { Picker } from "@react-native-picker/picker";
 import {
   generateFutureDates,
+  getDateRangeGTToday,
+  getMonthRangeExGTToday,
   isWithinWeekOrAdvance,
 } from "../../utils/dateUtils";
 import { customToast } from "../../utils/customToast";
@@ -121,6 +124,7 @@ const RescheduleScreen: React.FC = () => {
         status: "0",
         type,
         sales_portal_id: userInfo.sales_portal_id,
+        fromServer: false,
       };
 
       const result1 = await insertRescheduleRequest(reschedDetails);
@@ -222,20 +226,24 @@ const RescheduleScreen: React.FC = () => {
               <Picker
                 style={styles.picker}
                 selectedValue={selectedDoctor}
-                onValueChange={(itemValue: ScheduleAPIRecord | null) => {
+                onValueChange={async (itemValue: ScheduleAPIRecord | null) => {
                   setSelectedDateTo("selectedate");
                   if (itemValue !== selectedDoctor) {
                     setSelectedDoctor(itemValue);
                     if (itemValue && itemValue.date) {
                       setSelectedDateTo(itemValue.date);
-                      const futureDates = generateFutureDates(itemValue.date);
-                      setAvailableDates(futureDates);
+                      const dateToAvail = await getDateRangeGTToday(
+                        itemValue.date
+                      );
+                      setAvailableDates(dateToAvail);
                     }
                   } else {
                     if (itemValue && itemValue.date) {
                       setSelectedDateTo(itemValue.date);
-                      const futureDates = generateFutureDates(itemValue.date);
-                      setAvailableDates(futureDates);
+                      const dateToAvail = await getDateRangeGTToday(
+                        itemValue.date
+                      );
+                      setAvailableDates(dateToAvail);
                     }
                   }
                 }}>
@@ -277,14 +285,24 @@ const RescheduleScreen: React.FC = () => {
                   />
                 )}
 
-                {availableDates.map((date) => (
-                  <Picker.Item
-                    label={date}
-                    value={date}
-                    key={date}
-                    style={styles.pickerLabel}
-                  />
-                ))}
+                {availableDates
+                  .filter((date) => {
+                    const selectedDate = new Date(date);
+                    const today = new Date();
+                    const twoDaysLater = new Date(
+                      today.getTime() + 1 * 24 * 60 * 60 * 1000
+                    );
+                    today.setHours(0, 0, 0, 0);
+                    return selectedDate > twoDaysLater;
+                  })
+                  .map((date) => (
+                    <Picker.Item
+                      label={date}
+                      value={date}
+                      key={date}
+                      style={styles.pickerLabel}
+                    />
+                  ))}
               </Picker>
 
               <TouchableOpacity

@@ -28,7 +28,7 @@ const RescheduleTable: React.FC<
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
-  const itemsPerPage = 8;
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -168,7 +168,7 @@ const RescheduleTable: React.FC<
                     </DataTable.Cell>
                     <DataTable.Cell style={{ flex: 0.5 }}>
                       {new Date(data.created_at).toDateString() ===
-                      new Date().toDateString() ? (
+                        new Date().toDateString() && data.fromServer != true ? (
                         <TouchableOpacity onPress={() => handleDelete(data.id)}>
                           <Ionicons
                             name="trash-outline"

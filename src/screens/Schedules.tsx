@@ -16,6 +16,7 @@ import {
   getSchedulesWeekLocalDb,
   getSchedulesFilterLocalDb,
   getAllSchedulesFilterLocalDb,
+  getSchedulesMakeupLocalDb,
 } from "../utils/localDbUtils";
 import CallComponents from "./call/CallComponents";
 import { getCurrentDatePH, formatDate } from "../utils/dateUtils";
@@ -42,6 +43,7 @@ const Schedules = () => {
   const [scheduleWeekData, setScheduleWeekData] = useState<any[]>([]);
   const [scheduleFilterData, setScheduleFilterData] = useState<any[]>([]);
   const [scheduleAllFilterData, setScheduleAllFilterData] = useState<any[]>([]);
+  const [scheduleMakeupData, setScheduleMakeupData] = useState<any[]>([]);
 
   const [selectedScheduleToday, setSelectedScheduleToday] = useState<
     any | null
@@ -52,10 +54,14 @@ const Schedules = () => {
   const [selectedScheduleFilter, setSelectedScheduleFilter] = useState<
     any | null
   >(null);
+  const [selectedScheduleMakeup, setSelectedScheduleMakeup] = useState<
+    any | null
+  >(null);
 
   const [accordionTodayExpanded, setAccordionTodayExpanded] = useState(false);
   const [accordionWeekExpanded, setAccordionWeekExpanded] = useState(false);
   const [accordionFilterExpanded, setAccordionFilterExpanded] = useState(false);
+  const [accordionMakeupExpanded, setAccordionMakeupExpanded] = useState(false);
   const [currentDate, getCurrentDate] = useState("");
   const { authState } = useAuth();
   const { refresh } = useRefreshFetchDataContext();
@@ -80,6 +86,9 @@ const Schedules = () => {
         // filter schedules
         const filterData = await getAllSchedulesFilterLocalDb();
         setScheduleAllFilterData(filterData);
+        // for makeup schedules
+        const makeUpData = await getSchedulesMakeupLocalDb();
+        setScheduleMakeupData(makeUpData);
       } catch (error: any) {
         console.log("fetchScheduleData error", error);
       }
@@ -97,7 +106,8 @@ const Schedules = () => {
     if (!accordionTodayExpanded) {
       setSelectedScheduleToday(null);
       setSelectedScheduleWeek(null);
-      setSelectedScheduleToday(null);
+      setSelectedScheduleFilter(null);
+      setSelectedScheduleMakeup(null);
     }
   };
 
@@ -106,7 +116,17 @@ const Schedules = () => {
     if (!accordionWeekExpanded) {
       setSelectedScheduleWeek(null);
       setSelectedScheduleToday(null);
+      setSelectedScheduleFilter(null);
+      setSelectedScheduleMakeup(null);
+    }
+  };
+  const toggleAccordionMakeup = () => {
+    setAccordionMakeupExpanded(!accordionMakeupExpanded);
+    if (!accordionMakeupExpanded) {
+      setSelectedScheduleWeek(null);
       setSelectedScheduleToday(null);
+      setSelectedScheduleFilter(null);
+      setSelectedScheduleMakeup(null);
     }
   };
 
@@ -115,7 +135,8 @@ const Schedules = () => {
     if (!accordionFilterExpanded) {
       setSelectedScheduleWeek(null);
       setSelectedScheduleToday(null);
-      setSelectedScheduleToday(null);
+      setSelectedScheduleFilter(null);
+      setSelectedScheduleMakeup(null);
     }
   };
 
@@ -123,18 +144,27 @@ const Schedules = () => {
     setSelectedScheduleToday(schedule);
     setSelectedScheduleWeek(null);
     setSelectedScheduleFilter(null);
+    setSelectedScheduleMakeup(null);
   };
 
   const handleScheduleClickWeek = (schedule: any) => {
     setSelectedScheduleToday(null);
     setSelectedScheduleWeek(schedule);
     setSelectedScheduleFilter(null);
+    setSelectedScheduleMakeup(null);
   };
 
   const handleScheduleClickFilter = (schedule: any) => {
+    setSelectedScheduleFilter(schedule);
     setSelectedScheduleToday(null);
     setSelectedScheduleWeek(null);
-    setSelectedScheduleFilter(schedule);
+    setSelectedScheduleMakeup(null);
+  };
+  const handleScheduleClickMakeup = (schedule: any) => {
+    setSelectedScheduleMakeup(schedule);
+    setSelectedScheduleToday(null);
+    setSelectedScheduleWeek(null);
+    setSelectedScheduleFilter(null);
   };
 
   const fetchFilterSchedule = async (itemValue: string) => {
@@ -154,6 +184,7 @@ const Schedules = () => {
       setSelectedScheduleToday(null);
       setSelectedScheduleWeek(null);
       setSelectedScheduleFilter(null);
+      setSelectedScheduleMakeup(null);
     }
   }, [refresh]);
 
@@ -337,6 +368,44 @@ const Schedules = () => {
                       ))}
                   </View>
                 )}
+                {/* make up data */}
+                <TouchableOpacity
+                  onPress={toggleAccordionMakeup}
+                  style={styles1.accordionButton}>
+                  <Text style={styles1.accordionTitle}>
+                    {accordionMakeupExpanded
+                      ? "Hide Make up schedule"
+                      : "View Make up schedule"}
+                  </Text>
+                  <Ionicons
+                    name={
+                      accordionMakeupExpanded ? "chevron-up" : "chevron-down"
+                    }
+                    size={20}
+                    color="#007BFF"
+                    style={styles1.icon}
+                  />
+                </TouchableOpacity>
+
+                {accordionMakeupExpanded && (
+                  <View style={styles1.accordionContent}>
+                    {scheduleMakeupData.map((schedule) => (
+                      <TouchableOpacity
+                        key={schedule.schedule_id}
+                        onPress={() => handleScheduleClickMakeup(schedule)}
+                        style={styles1.scheduleItem}>
+                        <Text style={styles1.scheduleText}>
+                          {`${moment(schedule.date).format("MMMM DD, dddd")}, `}
+                          {`\n${schedule.full_name}, ${
+                            schedule.municipality_city
+                              ? `${schedule.municipality_city}`
+                              : ""
+                          }`}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                )}
               </ScrollView>
             </View>
           </View>
@@ -345,7 +414,8 @@ const Schedules = () => {
             <View style={dynamicStyles.card2Col}>
               {selectedScheduleToday ||
               selectedScheduleWeek ||
-              selectedScheduleFilter ? (
+              selectedScheduleFilter ||
+              selectedScheduleMakeup ? (
                 <>
                   {selectedScheduleToday ? (
                     <>
@@ -409,6 +479,28 @@ const Schedules = () => {
                         scheduleId={String(selectedScheduleFilter.schedule_id)}
                         docName={String(selectedScheduleFilter.full_name)}
                         canStartCall={false}
+                      />
+                    </>
+                  ) : null}
+
+                  {selectedScheduleMakeup ? (
+                    <>
+                      <Text style={styles1.columnTitle}>
+                        {String(selectedScheduleMakeup.full_name)}
+                      </Text>
+                      <Text style={styles1.columnSubTitle}>
+                        {moment(selectedScheduleMakeup.date).format(
+                          "MMMM DD, dddd"
+                        )}
+                      </Text>
+                      <Text style={styles1.columnSubTitle}>
+                        {selectedScheduleMakeup.municipality_city} {" - "}
+                        {selectedScheduleMakeup.province}
+                      </Text>
+                      <CallComponents
+                        scheduleId={String(selectedScheduleMakeup.schedule_id)}
+                        docName={String(selectedScheduleMakeup.full_name)}
+                        canStartCall={true}
                       />
                     </>
                   ) : null}

@@ -7,6 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../type/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
+  dropLocalTable,
   dropLocalTablesDb,
   insertDummyRecords,
   saveUserSyncHistoryLocalDb,
@@ -15,6 +16,9 @@ import { doctorRecordsSync, syncUser } from "../utils/apiUtility";
 import { getCurrentTimePH, isTimeBetween12and1PM } from "../utils/dateUtils";
 import Loading from "../components/Loading";
 import { getLocation } from "../utils/currentLocation";
+import { showConfirmAlert } from "../utils/commonUtil";
+import { getQuickCalls } from "../utils/quickCallUtil";
+import { checkPostCallUnsetExist } from "../utils/callComponentsUtil";
 
 type SettingsScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -78,25 +82,7 @@ const Settings = () => {
     navigation.navigate("Attendance");
   };
 
-  const showConfirmAlert = (action: () => void, actionName: string) => {
-    Alert.alert(
-      `Confirm ${actionName}`,
-      `Are you sure you want to ${actionName.toLowerCase()}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "OK",
-          onPress: action,
-        },
-      ],
-      { cancelable: false }
-    );
-  };
-
-  const MidSync = async () => {
+  const MidSync_old = async () => {
     if (!userInfo) {
       Alert.alert("Server Error", "User information is missing.");
       return;
@@ -122,6 +108,60 @@ const Settings = () => {
     } else {
       customToast("Mid sync is available between 12pm and 1pm");
     }
+  };
+
+  const MidSync = async () => {
+    let msg = "";
+    // if (isTimeBetween12and1PM()) {
+    try {
+      setLoading(true);
+      const checkQC = await getQuickCalls();
+      const checkPost = await checkPostCallUnsetExist();
+      if (checkQC.length > 0) {
+        msg = "Existing quick calls, kindly complete or remove any data";
+        Alert.alert(msg);
+        setLoading(false);
+        return;
+      }
+      if (checkPost) {
+        msg = "Existing empty post calls, kindly complete all post calls";
+        Alert.alert(msg);
+        setLoading(false);
+        return;
+      }
+      if (!userInfo) {
+        msg = "Server Error : User information is missing.";
+        Alert.alert(msg);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        let hasError = false;
+        try {
+          await syncUser(userInfo);
+        } catch (error) {
+          hasError = true;
+          msg = "Server Error : Failed to mid sync please contact admin.";
+          Alert.alert(msg);
+          throw error;
+        }
+
+        if (!hasError) {
+          await saveUserSyncHistoryLocalDb(userInfo, 3);
+        }
+      } catch (error) {
+        msg = "Server Error : Failed to mid sync please contact admin.";
+        Alert.alert(msg);
+      }
+    } catch (error) {
+      Alert.alert("Server Error", " Failed to mid sync please contact admin.");
+    } finally {
+      setLoading(false);
+    }
+    // } else {
+    //   customToast("Mid sync is available between 12pm and 1pm");
+    // }
   };
 
   useEffect(() => {

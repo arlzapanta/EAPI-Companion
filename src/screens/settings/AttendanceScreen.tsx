@@ -44,11 +44,14 @@ import { getStyleUtil } from "../../utils/styleUtil";
 import Loading from "../../components/Loading";
 import { customToast } from "../../utils/customToast";
 import { checkPostCallUnsetExist } from "../../utils/callComponentsUtil";
+import { useDataContext } from "../../context/DataContext";
+import { checkIfFirstWeekdayOfMonth } from "../../utils/dateUtils";
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const Attendance: React.FC = () => {
   const navigation = useNavigation<AttendanceScreenNavigationProp>();
   const { authState } = useAuth();
+  const { currentDate } = useDataContext();
   const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     first_name: string;
@@ -161,15 +164,33 @@ const Attendance: React.FC = () => {
     try {
       const timeInIsProceed = await apiTimeIn(userInfo);
       if (timeInIsProceed.isProceed) {
-        await getDoctors(userInfo);
-        await getReschedulesData(userInfo);
-        await getChartData(userInfo);
-        await getDetailersData();
-        const callData = await getCallsAPI(userInfo);
-        const scheduleData = await getSChedulesAPI(userInfo);
-        if (callData && scheduleData) {
-          await saveCallsAPILocalDb(callData);
-          await saveSchedulesAPILocalDb(scheduleData);
+        let hasError = false;
+        try {
+          await getDoctors(userInfo);
+          await getReschedulesData(userInfo);
+          await getChartData(userInfo);
+          await getDetailersData();
+          await getCallsAPI(userInfo);
+          await getSChedulesAPI(userInfo);
+        } catch (error) {
+          await dropLocalTables([
+            "detailers_tbl",
+            "quick_call_tbl",
+            "reschedule_req_tbl",
+            "schedule_API_tbl",
+            "calls_tbl",
+            "doctors_tbl",
+            "pre_call_notes_tbl",
+            "post_call_notes_tbl",
+            "chart_data_tbl",
+            // "reschedule_history_tbl",
+            // "user_sync_history_tbl",
+            // "user_attendance_tbl",
+          ]);
+          hasError = true;
+        }
+
+        if (!hasError) {
           await saveUserSyncHistoryLocalDb(userInfo, 1);
           await saveUserAttendanceLocalDb(userInfo, "in");
           await fetchAttendanceData();
@@ -179,6 +200,7 @@ const Attendance: React.FC = () => {
       }
     } catch (error) {
       Alert.alert("Server Error", "Failed to time in. Please contact admin");
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -192,6 +214,8 @@ const Attendance: React.FC = () => {
     const checkPost = await checkPostCallUnsetExist();
     if (checkQC.length > 0) {
       msg = "Existing quick calls, kindly complete or remove any data";
+      Alert.alert(msg);
+      setLoading(false);
       return;
     }
     if (checkPost) {
@@ -208,19 +232,46 @@ const Attendance: React.FC = () => {
     }
 
     try {
+      let hasError = false;
       const timeOutIsProceed = await apiTimeOut(userInfo);
       if (timeOutIsProceed.isProceed) {
-        await doctorRecordsSync(userInfo);
-        await requestRecordSync(userInfo);
-        await syncUser(userInfo);
-        await saveUserSyncHistoryLocalDb(userInfo, 2);
-        await saveUserAttendanceLocalDb(userInfo, "out");
-        await fetchAttendanceData();
+        try {
+          await doctorRecordsSync(userInfo);
+          await requestRecordSync(userInfo);
+          await syncUser(userInfo);
+        } catch (error) {
+          hasError = true;
+          msg = "Server Error : Failed to time out please contact admin.";
+          Alert.alert(msg);
+          throw error;
+        }
+
+        if (!hasError) {
+          await saveUserSyncHistoryLocalDb(userInfo, 2);
+          await saveUserAttendanceLocalDb(userInfo, "out");
+          await fetchAttendanceData();
+
+          await dropLocalTables([
+            "detailers_tbl",
+            "quick_call_tbl",
+            "reschedule_req_tbl",
+            "schedule_API_tbl",
+            "calls_tbl",
+            "doctors_tbl",
+            "pre_call_notes_tbl",
+            "post_call_notes_tbl",
+            "chart_data_tbl",
+            // "reschedule_history_tbl",
+            // "user_sync_history_tbl",
+            // "user_attendance_tbl",
+          ]);
+        }
       } else {
         customToast("Already timed out, please contact admin [time out api]");
       }
     } catch (error) {
       msg = "Server Error : Failed to time out please contact admin.";
+      Alert.alert(msg);
     } finally {
       setLoading(false);
     }
@@ -286,6 +337,16 @@ const Attendance: React.FC = () => {
                 </Text>
               )}
               <View style={styles.centerItems}>
+                {/* <TouchableOpacity
+                  onPress={() => showConfirmAlert(timeIn, "Time In")}
+                  style={styles.buttonContainer}>
+                  <Text style={styles.buttonText}>Time In</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => showConfirmAlert(timeOut, "Time Out")}
+                  style={styles.buttonContainer}>
+                  <Text style={styles.buttonText}>Time Out</Text>
+                </TouchableOpacity> */}
                 {!hasTimedIn && !loading && (
                   <>
                     {signatureVal && selfieVal ? (
