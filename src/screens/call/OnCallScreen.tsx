@@ -25,8 +25,14 @@ import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
 import { getLocation } from "../../utils/currentLocation";
 import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
-import { getBase64StringFormat } from "../../utils/commonUtil";
+import {
+  getBase64StringFormat,
+  showConfirmAlert,
+} from "../../utils/commonUtil";
 import DetailersOnCallModal from "../modals/DetailersOnCallModal";
+import Entypo from "@expo/vector-icons/Entypo";
+import { getStyleUtil } from "../../utils/styleUtil";
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 type OnCallScreenRouteProp = RouteProp<RootStackParamList, "OnCall">;
 type OnCallScreenNavigationProp = NativeStackNavigationProp<
@@ -56,6 +62,14 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
   const [signatureLocation, setSignatureLocation] = useState<string>("");
   const [photoValue, setPhotoValue] = useState<string>("");
   const [photoLocation, setPhotoLocation] = useState<string>("");
+
+  const moodToIconMap = {
+    hot: "emoji-happy",
+    warm: "emoji-neutral",
+    cold: "emoji-sad",
+  };
+
+  const moodOptions = [{ mood: "hot" }, { mood: "warm" }, { mood: "cold" }];
 
   useEffect(() => {
     startTimer();
@@ -188,8 +202,10 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         ))}
       </View>
       <View style={styles.cardContainer}>
-        <TouchableOpacity onPress={openModal} style={styles.openModalButton}>
-          <Text style={styles.buttonText}>START DETAILERS</Text>
+        <TouchableOpacity
+          onPress={openModal}
+          style={[styles.openModalButton, dynamicStyles.mainBgColor]}>
+          <Text style={styles.buttonText}>START DETAILING</Text>
         </TouchableOpacity>
 
         {/* Render DetailerModal and pass isVisible and onClose */}
@@ -198,7 +214,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
 
       <View style={styles.cardContainer}>
         <View style={styles.centerItems}>
-          <Text style={styles.signatureLabel}>Signature Capture</Text>
+          <Text style={dynamicStyles.mainText}>Signature Capture</Text>
           {signatureValue ? (
             <Image
               source={{ uri: `${getBase64StringFormat()}${signatureValue}` }}
@@ -212,13 +228,13 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
           )}
           {!imageBase64 ? (
             <TouchableOpacity
-              style={styles.takePhotoButton}
+              style={dynamicStyles.buttonContainer1}
               onPress={handleImagePicker}>
-              <Text style={styles.buttonText}>Take a photo</Text>
+              <Text style={dynamicStyles.buttonText}>Take a photo</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.imageContainer}>
-              <Text style={styles.signatureLabel}>Photo Capture</Text>
+              <Text style={dynamicStyles.mainText}>Photo Capture</Text>
               <Image
                 source={{ uri: `${getBase64StringFormat()}${imageBase64}` }}
                 style={styles.image}
@@ -241,29 +257,43 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         />
         <Text style={styles.moodLabel}>Doctor's Mood:</Text>
         <View style={styles.radioGroup}>
-          {["cold", "warm", "hot"].map((mood) => (
+          {moodOptions.map((option) => (
             <TouchableOpacity
-              key={mood}
+              key={option.mood}
               style={[
                 styles.radioButtonContainer,
-                selectedMood === mood && styles.radioButtonSelected,
+                selectedMood === option.mood && styles.radioButtonSelected,
               ]}
-              onPress={() => setSelectedMood(mood)}>
+              onPress={() => setSelectedMood(option.mood)}>
+              <Entypo
+                name={(moodToIconMap as any)[option.mood]}
+                size={20}
+                color="black"
+              />
               <Text
                 style={[
                   styles.radioButtonText,
-                  selectedMood === mood && styles.radioButtonTextSelected,
+                  selectedMood === option.mood &&
+                    styles.radioButtonTextSelected,
                 ]}>
-                {mood.charAt(0).toUpperCase() + mood.slice(1)}
+                {option.mood.charAt(0).toUpperCase() + option.mood.slice(1)}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
-
       <TouchableOpacity
-        onLongPress={endCall}
-        style={styles.floatingButtonContainer}>
+        onPress={
+          signatureValue || photoValue
+            ? () => showConfirmAlert(endCall, "End Call")
+            : undefined
+        }
+        disabled={!(signatureValue || photoValue)}
+        style={[
+          styles.floatingButtonContainer,
+          !(signatureValue || photoValue) &&
+            dynamicStyles.buttonContainerDisabled,
+        ]}>
         <View style={styles.floatingButton}>
           <Icon name="exit" size={24} color="#fff" />
           <Text style={styles.buttonText}>End Call</Text>
@@ -329,7 +359,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   input: {
-    height: 50,
+    height: 70,
     borderColor: "#ddd",
     borderWidth: 1,
     borderRadius: 8,

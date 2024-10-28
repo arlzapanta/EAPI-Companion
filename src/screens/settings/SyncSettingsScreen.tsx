@@ -104,18 +104,10 @@ const SyncSettingsScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f5f5f5",
   },
   scrollViewContent: {
     flex: 1,
     flexGrow: 1,
-    paddingTop: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-    marginVertical: 10,
-    marginStart: 20,
-    marginEnd: 20,
   },
   content: {
     flex: 1,

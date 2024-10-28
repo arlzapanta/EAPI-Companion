@@ -25,6 +25,7 @@
     "expo-image-picker": "~15.0.7",
     "expo-linear-gradient": "~13.0.2",
     "expo-location": "~17.0.1",
+    "expo-navigation-bar": "^3.0.7",
     "expo-screen-orientation": "~7.0.5",
     "expo-secure-store": "~13.0.2",
     "expo-shimmer-placeholder": "^3.0.0",

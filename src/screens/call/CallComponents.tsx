@@ -31,6 +31,8 @@ import {
 } from "../../utils/callComponentsUtil";
 import { customToast } from "../../utils/customToast";
 import { uploadImage } from "../../utils/localDbUtils";
+import { getStyleUtil } from "../../utils/styleUtil";
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 type OnCallScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -216,7 +218,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({
       <View style={styles.startCallContainer}>
         {canStartCall && (
           <TouchableOpacity
-            style={styles.buttonStartCall}
+            style={[styles.buttonStartCall, dynamicStyles.mainBgColor]}
             onPress={executeStartCall}>
             <Text style={styles.buttonTextSave}>START CALL</Text>
           </TouchableOpacity>
@@ -242,7 +244,10 @@ const CallComponents: React.FC<CallComponentsProps> = ({
           />
 
           <TouchableOpacity onPress={addNote}>
-            <Icon style={styles.addNotesBtn} name="add" />
+            <Icon
+              style={[styles.addNotesBtn, dynamicStyles.subBgColor]}
+              name="add"
+            />
           </TouchableOpacity>
         </View>
 
@@ -406,7 +411,7 @@ const styles = StyleSheet.create({
   addNotesBtn: {
     backgroundColor: "#046E37",
     color: "#fff",
-    fontSize: 24,
+    fontSize: 16,
     padding: 10,
     borderRadius: 25,
     elevation: 3,
@@ -446,9 +451,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   buttonStartCall: {
-    backgroundColor: "red",
     color: "white",
     padding: 30,
+    elevation: 5,
     borderRadius: 8,
     flexDirection: "row",
     alignItems: "center",

@@ -3,6 +3,7 @@ import { API_URL_ENV } from "@env";
 import {
   deleteCallsTodayLocalDb,
   deleteDoctorsTodayLocalDb,
+  dropLocalTables,
   getCallsTodayLocalDb,
   getRescheduleRequestRecordsLocalDb,
   getUpdatedDoctorRecordsLocalDb,
@@ -16,6 +17,11 @@ import {
 } from "../utils/localDbUtils";
 import { formatDateYMD, getCurrentDatePH } from "./dateUtils";
 import { getLocation, getLocationAttendance } from "../utils/currentLocation";
+import * as SQLite from "expo-sqlite";
+import {
+  getPostCallNotesLocalDb,
+  getPreCallNotesLocalDb,
+} from "./callComponentsUtil";
 
 export const apiTimeIn = async (user: User) => {
   try {
@@ -100,17 +106,37 @@ export const apiTimeOut = async (user: User) => {
 // sync calls from local to api
 export const syncUser = async (user: User): Promise<any> => {
   try {
+    let recordsToSync: ApiPayload[] = [];
     const localRecords = await getCallsTodayLocalDb();
-    const recordsToSync: ApiPayload[] = localRecords.map((record) => ({
-      schedule_id: record.schedule_id,
-      call_start: record.call_start,
-      call_end: record.call_end,
-      signature: record.signature,
-      signature_attempts: record.signature_attempts,
-      signature_location: record.signature_location,
-      photo: record.photo,
-      photo_location: record.photo_location,
-    }));
+
+    for (const record of localRecords) {
+      const scheduleId = record.schedule_id.toString();
+      const postCallsPerScheduleId = await getPostCallNotesLocalDb(scheduleId);
+      const preCallsPerScheduleId = await getPreCallNotesLocalDb(scheduleId);
+
+      let postCallNotes = "";
+      if (postCallsPerScheduleId) {
+        postCallNotes = `${postCallsPerScheduleId.feedback},${postCallsPerScheduleId.mood}`;
+      }
+
+      let preCallNotes = "";
+      if (preCallsPerScheduleId && preCallsPerScheduleId.length > 0) {
+        preCallNotes = preCallsPerScheduleId[0].notesArray.join(",");
+      }
+
+      recordsToSync.push({
+        schedule_id: record.schedule_id,
+        call_start: record.call_start,
+        call_end: record.call_end,
+        signature: record.signature,
+        signature_attempts: record.signature_attempts,
+        signature_location: record.signature_location,
+        photo: record.photo,
+        photo_location: record.photo_location,
+        post_call: postCallNotes,
+        pre_call: preCallNotes,
+      });
+    }
 
     if (recordsToSync.length === 0) {
       console.log("No records to sync.");
@@ -124,7 +150,21 @@ export const syncUser = async (user: User): Promise<any> => {
     });
 
     if (response.data.isProceed) {
-      await deleteCallsTodayLocalDb();
+      // await deleteCallsTodayLocalDb();
+      await dropLocalTables([
+        "detailers_tbl",
+        "quick_call_tbl",
+        "reschedule_req_tbl",
+        "schedule_API_tbl",
+        "calls_tbl",
+        "doctors_tbl",
+        "pre_call_notes_tbl",
+        "post_call_notes_tbl",
+        "chart_data_tbl",
+        // "reschedule_history_tbl",
+        // "user_sync_history_tbl",
+        // "user_attendance_tbl",
+      ]);
     }
 
     return response.data;
@@ -464,7 +504,14 @@ export const getDetailersData = async (): Promise<any[]> => {
       },
     });
     await saveDetailersDataLocalDb(response.data);
-    return response.data;
+
+    const query = `SELECT * FROM detailers_tbl`;
+    const db = await SQLite.openDatabaseAsync("cmms", {
+      useNewConnection: true,
+    });
+    const existingRows = await db.getAllAsync(query);
+
+    return existingRows;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const { response, request, message } = error;

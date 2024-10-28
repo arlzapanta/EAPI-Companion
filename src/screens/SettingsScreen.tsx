@@ -9,16 +9,25 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   dropLocalTable,
   dropLocalTablesDb,
+  getCallsTodayLocalDb,
   insertDummyRecords,
   saveUserSyncHistoryLocalDb,
 } from "../utils/localDbUtils";
-import { doctorRecordsSync, syncUser } from "../utils/apiUtility";
+import {
+  doctorRecordsSync,
+  getDetailersData,
+  syncUser,
+} from "../utils/apiUtility";
 import { getCurrentTimePH, isTimeBetween12and1PM } from "../utils/dateUtils";
 import Loading from "../components/Loading";
 import { getLocation } from "../utils/currentLocation";
 import { showConfirmAlert } from "../utils/commonUtil";
 import { getQuickCalls } from "../utils/quickCallUtil";
-import { checkPostCallUnsetExist } from "../utils/callComponentsUtil";
+import {
+  checkPostCallUnsetExist,
+  getPostCallNotesLocalDb,
+  getPreCallNotesLocalDb,
+} from "../utils/callComponentsUtil";
 
 type SettingsScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -111,54 +120,67 @@ const Settings = () => {
   };
 
   const MidSync = async () => {
-    let msg = "";
+    const localRecords = await getCallsTodayLocalDb();
+    localRecords.forEach(async (record) => {
+      const scheduleId = record.schedule_id.toString();
+      const postCallsPerScheduleId = await getPostCallNotesLocalDb(scheduleId);
+      const preCallsPerScheduleId = await getPreCallNotesLocalDb(scheduleId);
+
+      console.log("scheduleId", scheduleId);
+      console.log("postCallsPerScheduleId", postCallsPerScheduleId);
+      console.log("preCallsPerScheduleId", preCallsPerScheduleId);
+    });
+    // let msg = "";
     // if (isTimeBetween12and1PM()) {
-    try {
-      setLoading(true);
-      const checkQC = await getQuickCalls();
-      const checkPost = await checkPostCallUnsetExist();
-      if (checkQC.length > 0) {
-        msg = "Existing quick calls, kindly complete or remove any data";
-        Alert.alert(msg);
-        setLoading(false);
-        return;
-      }
-      if (checkPost) {
-        msg = "Existing empty post calls, kindly complete all post calls";
-        Alert.alert(msg);
-        setLoading(false);
-        return;
-      }
-      if (!userInfo) {
-        msg = "Server Error : User information is missing.";
-        Alert.alert(msg);
-        setLoading(false);
-        return;
-      }
+    //   try {
+    //     setLoading(true);
+    //     const checkQC = await getQuickCalls();
+    //     const checkPost = await checkPostCallUnsetExist();
+    //     if (checkQC.length > 0) {
+    //       msg = "Existing quick calls, kindly complete or remove any data";
+    //       Alert.alert(msg);
+    //       setLoading(false);
+    //       return;
+    //     }
+    //     if (checkPost) {
+    //       msg = "Existing empty post calls, kindly complete all post calls";
+    //       Alert.alert(msg);
+    //       setLoading(false);
+    //       return;
+    //     }
+    //     if (!userInfo) {
+    //       msg = "Server Error : User information is missing.";
+    //       Alert.alert(msg);
+    //       setLoading(false);
+    //       return;
+    //     }
 
-      try {
-        let hasError = false;
-        try {
-          await syncUser(userInfo);
-        } catch (error) {
-          hasError = true;
-          msg = "Server Error : Failed to mid sync please contact admin.";
-          Alert.alert(msg);
-          throw error;
-        }
+    //     try {
+    //       let hasError = false;
+    //       try {
+    //         await syncUser(userInfo);
+    //       } catch (error) {
+    //         hasError = true;
+    //         msg = "Server Error : Failed to mid sync please contact admin.";
+    //         Alert.alert(msg);
+    //         throw error;
+    //       }
 
-        if (!hasError) {
-          await saveUserSyncHistoryLocalDb(userInfo, 3);
-        }
-      } catch (error) {
-        msg = "Server Error : Failed to mid sync please contact admin.";
-        Alert.alert(msg);
-      }
-    } catch (error) {
-      Alert.alert("Server Error", " Failed to mid sync please contact admin.");
-    } finally {
-      setLoading(false);
-    }
+    //       if (!hasError) {
+    //         await saveUserSyncHistoryLocalDb(userInfo, 3);
+    //       }
+    //     } catch (error) {
+    //       msg = "Server Error : Failed to mid sync please contact admin.";
+    //       Alert.alert(msg);
+    //     }
+    //   } catch (error) {
+    //     Alert.alert(
+    //       "Server Error",
+    //       " Failed to mid sync please contact admin."
+    //     );
+    //   } finally {
+    //     setLoading(false);
+    //   }
     // } else {
     //   customToast("Mid sync is available between 12pm and 1pm");
     // }
@@ -210,7 +232,7 @@ const Settings = () => {
         <Loading />
       ) : (
         <>
-          <View style={styles.card}>
+          <View style={dynamicStyle.card}>
             <Text style={styles.title}>Settings</Text>
             <View style={styles.centerItems}>
               <TouchableOpacity

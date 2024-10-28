@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   PanResponder,
@@ -16,6 +16,7 @@ import { updateCallSignature } from "../utils/quickCallUtil";
 import { getStyleUtil } from "../utils/styleUtil";
 import Loading from "./Loading";
 import { getBase64StringFormat } from "../utils/commonUtil";
+import { formatTimeHoursMinutes } from "../utils/dateUtils";
 const dynamicStyle = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
@@ -33,6 +34,32 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   const canvasWidth = width - 40;
   const canvasHeight = 300;
   const [attemptCount, setAttemptCount] = useState<number>(0);
+
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [timer, setTimer] = useState<number>(0);
+  const [callStartTime, setCallStartTime] = useState<string>("");
+  const [callEndTime, setCallEndTime] = useState<string>("");
+
+  const startTimer = () => {
+    setCallStartTime(formatTimeHoursMinutes(new Date()));
+    const id = setInterval(() => {
+      setTimer((prev) => prev + 1);
+    }, 1000);
+    setIntervalId(id);
+  };
+
+  const stopTimer = () => {
+    setCallEndTime(formatTimeHoursMinutes(new Date()));
+    if (intervalId) clearInterval(intervalId);
+    setIntervalId(null);
+  };
+
+  useEffect(() => {
+    startTimer();
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
 
   const SpacerW = ({ size }: { size: number }) => (
     <View style={{ width: size }} />
@@ -85,6 +112,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   };
 
   const captureSignature = async () => {
+    stopTimer();
     if (viewRef.current) {
       setIsSignatureLoading(true);
       try {
@@ -99,7 +127,14 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
         const loc = await getLocation();
         try {
           if (callId !== 12340000) {
-            await updateCallSignature(callId, uri, loc, attemptCount);
+            await updateCallSignature(
+              callId,
+              uri,
+              loc,
+              attemptCount,
+              callStartTime,
+              callEndTime ? callEndTime : formatTimeHoursMinutes(new Date())
+            );
           }
           onSignatureUpdate(base64Signature, loc, attemptCount);
         } catch (error) {
@@ -114,7 +149,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={styles.buttonContainer}
+        style={dynamicStyle.buttonContainer1}
         onPress={() => setIsModalVisible(true)}>
         <Text style={styles.buttonText}>Open Signature Pad</Text>
       </TouchableOpacity>
@@ -125,7 +160,6 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
         transparent={true}
         onRequestClose={() => setIsModalVisible(false)}>
         <View style={styles.modalContainer}>
-          <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
           <View
             ref={viewRef}
             style={[
@@ -148,23 +182,29 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
               ))}
             </Svg>
           </View>
-
           <View style={dynamicStyle.centerItems}>
+            <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
+            <SpacerH size={30} />
+          </View>
+          <View style={[dynamicStyle.trioBtnRow]}>
             <TouchableOpacity
-              style={styles.buttonContainer1}
+              style={[dynamicStyle.buttonContainer1, dynamicStyle.subBgColor]}
               onPress={clearSignature}>
-              <Text style={styles.buttonText}>Clear Signature</Text>
+              <Text style={dynamicStyle.buttonText}>Clear Signature</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={styles.buttonContainer1}
+              style={dynamicStyle.buttonContainer1}
               onPress={captureSignature}>
-              <Text style={styles.buttonText}>Capture Signature</Text>
+              <Text style={dynamicStyle.buttonText}>Capture Signature</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.buttonContainer1}
+              style={[
+                dynamicStyle.buttonContainer1,
+                { backgroundColor: "red" },
+              ]}
               onPress={() => setIsModalVisible(false)}>
-              <Text style={styles.buttonText}>Close</Text>
+              <Text style={dynamicStyle.buttonText}>Close</Text>
             </TouchableOpacity>
           </View>
         </View>

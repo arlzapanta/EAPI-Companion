@@ -285,7 +285,6 @@ export const saveUserAttendanceLocalDb = async (
   });
 
   const currentDatePH = await getCurrentDatePH();
-
   await db.execAsync(createIfNE_userAttendance);
 
   let result: number;
@@ -1004,7 +1003,7 @@ export const saveDetailersDataLocalDb = async (
 
     // const query = `SELECT * FROM detailers_tbl`;
     // const existingRows = await db.getAllAsync(query);
-    // console.log('GUMANA:', existingRows);
+    // console.log("GUMANA:", existingRows);
 
     return "Success";
   } catch (error) {
@@ -1047,7 +1046,7 @@ export const fetchDetailersDataLocalDb = async (): Promise<
   try {
     const query = `SELECT * FROM detailers_tbl`;
     const existingRows = await db.getAllAsync(query);
-    // console.log('GUMANA123:', existingRows);
+    // console.log("GUMANA123:", existingRows);
 
     return existingRows as DetailersRecord[];
   } catch (error) {
@@ -1318,7 +1317,7 @@ export const getSchedulesWeekLocalDb = async (): Promise<
 
     return existingRows;
   } catch (error) {
-    console.error("Error fetching schedule records data3:", error);
+    console.error("Error fetching schedule records data123:", error);
     return [];
   } finally {
     await db.closeAsync();
@@ -1343,7 +1342,7 @@ export const getSchedulesFilterLocalDb = async (
 
     return existingRows;
   } catch (error) {
-    console.error("Error fetching schedule records data3:", error);
+    console.error("Error fetching schedule records data14123:", error);
     return [];
   } finally {
     await db.closeAsync();
@@ -1368,7 +1367,7 @@ export const getActualFilterLocalDb = async (
 
     return existingRows;
   } catch (error) {
-    console.error("Error fetching schedule records data3:", error);
+    console.error("Error fetching schedule records data1113:", error);
     return [];
   } finally {
     await db.closeAsync();
@@ -1392,7 +1391,7 @@ export const getAllSchedulesFilterLocalDb = async (): Promise<
 
     return existingRows;
   } catch (error) {
-    console.error("Error fetching schedule records data3:", error);
+    console.error("Error fetching schedule records data223:", error);
     return [];
   } finally {
     await db.closeAsync();
@@ -1406,6 +1405,7 @@ export const getSchedulesMakeupLocalDb = async (): Promise<
     useNewConnection: true,
   });
 
+  await db.execAsync(createIfNERescheduleReq);
   await db.execAsync(createIfNEscheduleAPI);
 
   const weekDates = await getMonthRangeExToday();
@@ -1426,7 +1426,7 @@ export const getSchedulesMakeupLocalDb = async (): Promise<
 
     return existingRows;
   } catch (error) {
-    console.error("Error fetching schedule records data3:", error);
+    console.error("Error fetching schedule records data3333:", error);
     return [];
   } finally {
     await db.closeAsync();
@@ -1589,7 +1589,7 @@ export const getDoctorsSchedGTtodayLocalDb = async (): Promise<
   try {
     const result = await db.getAllAsync(query);
     const existingRows = result as ScheduleAPIRecord[];
-    console.log(existingRows, "getDoctorsSchedGTtodayLocalDb");
+    // console.log(existingRows, "getDoctorsSchedGTtodayLocalDb");
     return existingRows;
   } catch (error) {
     console.error("Error fetching schedule records data5:", error);

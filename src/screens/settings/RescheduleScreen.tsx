@@ -216,7 +216,7 @@ const RescheduleScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.content}>
           <View style={styles.requestContainer}>
@@ -377,13 +377,11 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flex: 1,
     flexGrow: 1,
-    paddingTop: 30,
     paddingVertical: 10,
     paddingHorizontal: 10,
     paddingBottom: 10,
     marginVertical: 10,
-    marginStart: 20,
-    marginEnd: 20,
+    marginHorizontal: 10,
     flexDirection: "row",
   },
   content: {

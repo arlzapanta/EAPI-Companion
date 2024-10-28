@@ -4,6 +4,10 @@ declare global {
   }
 
   export interface DoctorRecord {
+    SecretaryPhone: any;
+    OfficePhone: any;
+    MobilePhone: any;
+    City_Municipality: any;
     doctors_id: string;
     first_name: string;
     last_name: string;
@@ -21,7 +25,33 @@ declare global {
     notes_values: string;
     update_date: string;
   }
+  interface DetailCardProps {
+    details: {
+      label: string;
+      detail?: string; // detail is now optional
+    }[];
+  }
+  interface DetailRowProps {
+    label: string;
+    value: string | undefined;
+  }
 
+  interface DetailListProps {
+    doc: {
+      first_name: string;
+      last_name: string;
+      Specialization: string;
+      Classification: string;
+      Birthday: string;
+      Address1: string;
+      Address2: string;
+      City_Municipality: string;
+      Province: string;
+      MobilePhone: string;
+      OfficePhone: string;
+      SecretaryPhone: string;
+    };
+  }
   export interface RescheduleRecord {
     id: string;
     request_id: string;
@@ -180,6 +210,8 @@ declare global {
     signature_attempts: number;
     notes: string;
     full_name: string;
+    call_start: string;
+    call_end: string;
   }
 
   export interface AddCall {
@@ -285,6 +317,8 @@ declare global {
     signature_location: string;
     photo: string;
     photo_location: string;
+    pre_call: string;
+    post_call: string;
   }
 
   export interface LocationData {

@@ -65,6 +65,8 @@ const Schedules = () => {
   const [currentDate, getCurrentDate] = useState("");
   const { authState } = useAuth();
   const { refresh } = useRefreshFetchDataContext();
+  const [isInternalSchedLoading, setIsInternalSchedLoading] =
+    useState<boolean>(false);
 
   const uniqueDates = Array.from(
     new Set(scheduleFilterData.map((item) => formatDate(item.date)))
@@ -141,30 +143,58 @@ const Schedules = () => {
   };
 
   const handleScheduleClickToday = (schedule: any) => {
-    setSelectedScheduleToday(schedule);
-    setSelectedScheduleWeek(null);
-    setSelectedScheduleFilter(null);
-    setSelectedScheduleMakeup(null);
+    setIsInternalSchedLoading(true);
+    try {
+      setSelectedScheduleToday(schedule);
+      setSelectedScheduleWeek(null);
+      setSelectedScheduleFilter(null);
+      setSelectedScheduleMakeup(null);
+    } catch (error) {
+      console.log("error schedule today");
+    } finally {
+      setTimeout(() => setIsInternalSchedLoading(false), 300);
+    }
   };
 
   const handleScheduleClickWeek = (schedule: any) => {
-    setSelectedScheduleToday(null);
-    setSelectedScheduleWeek(schedule);
-    setSelectedScheduleFilter(null);
-    setSelectedScheduleMakeup(null);
+    setIsInternalSchedLoading(true);
+    try {
+      setSelectedScheduleToday(null);
+      setSelectedScheduleWeek(schedule);
+      setSelectedScheduleFilter(null);
+      setSelectedScheduleMakeup(null);
+    } catch (error) {
+      console.log("error schedule week");
+    } finally {
+      setTimeout(() => setIsInternalSchedLoading(false), 300);
+    }
   };
 
   const handleScheduleClickFilter = (schedule: any) => {
-    setSelectedScheduleFilter(schedule);
-    setSelectedScheduleToday(null);
-    setSelectedScheduleWeek(null);
-    setSelectedScheduleMakeup(null);
+    setIsInternalSchedLoading(true);
+    try {
+      setSelectedScheduleFilter(schedule);
+      setSelectedScheduleToday(null);
+      setSelectedScheduleWeek(null);
+      setSelectedScheduleMakeup(null);
+    } catch (error) {
+      console.log("error schedule filter");
+    } finally {
+      setTimeout(() => setIsInternalSchedLoading(false), 300);
+    }
   };
   const handleScheduleClickMakeup = (schedule: any) => {
-    setSelectedScheduleMakeup(schedule);
-    setSelectedScheduleToday(null);
-    setSelectedScheduleWeek(null);
-    setSelectedScheduleFilter(null);
+    setIsInternalSchedLoading(true);
+    try {
+      setSelectedScheduleMakeup(schedule);
+      setSelectedScheduleToday(null);
+      setSelectedScheduleWeek(null);
+      setSelectedScheduleFilter(null);
+    } catch (error) {
+      console.log("error schedule make up");
+    } finally {
+      setTimeout(() => setIsInternalSchedLoading(false), 300);
+    }
   };
 
   const fetchFilterSchedule = async (itemValue: string) => {
@@ -209,48 +239,17 @@ const Schedules = () => {
       {isScheduleLoading || timeOutLoading ? (
         <Loading />
       ) : (
-        <View style={styles1.row}>
-          <View style={styles1.column1}>
+        <View style={dynamicStyles.row}>
+          <View style={dynamicStyles.column1}>
             <View style={dynamicStyles.card1Col}>
-              <Text style={styles1.columnTitle}>Schedules</Text>
-              <Text style={styles1.columnSubTitle}>{currentDate}</Text>
+              <Text style={dynamicStyles.columnTitle}>Schedules</Text>
+              <Text style={dynamicStyles.columnSubTitle}>{currentDate}</Text>
               <ScrollView>
                 <View style={dynamicStyles.filterMainContainer}>
-                  <View style={dynamicStyles.filterContainer}>
-                    <Picker
-                      selectedValue={selectedDate}
-                      onValueChange={(itemValue: string) =>
-                        fetchFilterSchedule(itemValue)
-                      }
-                      style={dynamicStyles.picker1col}>
-                      <Picker.Item
-                        label="Select Date"
-                        value=""
-                        style={dynamicStyles.pickerInitialLabel}
-                      />
-
-                      {[
-                        ...new Map(
-                          scheduleAllFilterData.map((item) => [
-                            moment(item.date).format("YYYY-MM-DD"),
-                            item,
-                          ])
-                        ).values(),
-                      ].map((item) => (
-                        <Picker.Item
-                          label={moment(item.date).format("MMMM DD, dddd")}
-                          value={item.date}
-                          key={item.id}
-                          style={dynamicStyles.pickerLabel}
-                        />
-                      ))}
-                    </Picker>
-                  </View>
-
                   <TouchableOpacity
                     onPress={toggleAccordionFilter}
-                    style={styles1.accordionButton}>
-                    <Text style={styles1.accordionTitle}>
+                    style={dynamicStyles.accordionButton}>
+                    <Text style={dynamicStyles.accordionTitle}>
                       {accordionFilterExpanded ? "Hide Filter" : "View Filter"}
                     </Text>
                     <Ionicons
@@ -259,41 +258,73 @@ const Schedules = () => {
                       }
                       size={20}
                       color="#007BFF"
-                      style={styles1.icon}
+                      style={dynamicStyles.icon}
                     />
                   </TouchableOpacity>
                   {accordionFilterExpanded && (
-                    <View style={styles1.accordionContent}>
-                      {scheduleFilterData.length === 0 ? (
-                        <Text>No schedules found or select date first.</Text>
-                      ) : (
-                        scheduleFilterData.map((scheduleFilter) => (
-                          <TouchableOpacity
-                            key={scheduleFilter.schedule_id}
-                            onPress={() =>
-                              handleScheduleClickFilter(scheduleFilter)
-                            }
-                            style={styles1.scheduleItem}>
-                            <Text style={styles1.scheduleText}>
-                              {`${moment(scheduleFilter.date).format(
-                                "MMMM DD, dddd"
-                              )}, `}
-                              {`\n${scheduleFilter.full_name}, ${
-                                scheduleFilter.municipality_city
-                                  ? `${scheduleFilter.municipality_city}`
-                                  : ""
-                              }`}
-                            </Text>
-                          </TouchableOpacity>
-                        ))
-                      )}
-                    </View>
+                    <>
+                      <View style={dynamicStyles.filterContainer}>
+                        <Picker
+                          selectedValue={selectedDate}
+                          onValueChange={(itemValue: string) =>
+                            fetchFilterSchedule(itemValue)
+                          }
+                          style={dynamicStyles.picker1col}>
+                          <Picker.Item
+                            label="Select Date"
+                            value=""
+                            style={dynamicStyles.pickerInitialLabel}
+                          />
+
+                          {[
+                            ...new Map(
+                              scheduleAllFilterData.map((item) => [
+                                moment(item.date).format("YYYY-MM-DD"),
+                                item,
+                              ])
+                            ).values(),
+                          ].map((item) => (
+                            <Picker.Item
+                              label={moment(item.date).format("MMMM DD, dddd")}
+                              value={item.date}
+                              key={item.id}
+                              style={dynamicStyles.pickerLabel}
+                            />
+                          ))}
+                        </Picker>
+                      </View>
+                      <View style={dynamicStyles.accordionContent}>
+                        {scheduleFilterData.length === 0 ? (
+                          <Text>No schedules found or select date first.</Text>
+                        ) : (
+                          scheduleFilterData.map((scheduleFilter) => (
+                            <TouchableOpacity
+                              key={scheduleFilter.schedule_id}
+                              onPress={() =>
+                                handleScheduleClickFilter(scheduleFilter)
+                              }
+                              style={dynamicStyles.cardItems}>
+                              <Text style={dynamicStyles.cardItemText}>
+                                {`${moment(scheduleFilter.date).format(
+                                  "MMMM DD, dddd"
+                                )}, `}
+                                {`\n${scheduleFilter.full_name}, ${
+                                  scheduleFilter.municipality_city
+                                    ? `${scheduleFilter.municipality_city}`
+                                    : ""
+                                }`}
+                              </Text>
+                            </TouchableOpacity>
+                          ))
+                        )}
+                      </View>
+                    </>
                   )}
                 </View>
                 <TouchableOpacity
                   onPress={toggleAccordionToday}
-                  style={styles1.accordionButton}>
-                  <Text style={styles1.accordionTitle}>
+                  style={dynamicStyles.accordionButton}>
+                  <Text style={dynamicStyles.accordionTitle}>
                     {accordionTodayExpanded ? "Hide Today" : "View Today"}
                   </Text>
                   <Ionicons
@@ -302,18 +333,18 @@ const Schedules = () => {
                     }
                     size={20}
                     color="#007BFF"
-                    style={styles1.icon}
+                    style={dynamicStyles.icon}
                   />
                 </TouchableOpacity>
 
                 {accordionTodayExpanded && (
-                  <View style={styles1.accordionContent}>
+                  <View style={dynamicStyles.accordionContent}>
                     {scheduleDataToday.map((schedule) => (
                       <TouchableOpacity
                         key={schedule.schedule_id}
                         onPress={() => handleScheduleClickToday(schedule)}
-                        style={styles1.scheduleItem}>
-                        <Text style={styles1.scheduleText}>
+                        style={dynamicStyles.cardItems}>
+                        <Text style={dynamicStyles.cardItemText}>
                           {schedule.full_name}
                           {`${
                             schedule.municipality_city
@@ -328,8 +359,8 @@ const Schedules = () => {
 
                 <TouchableOpacity
                   onPress={toggleAccordionWeek}
-                  style={styles1.accordionButton}>
-                  <Text style={styles1.accordionTitle}>
+                  style={dynamicStyles.accordionButton}>
+                  <Text style={dynamicStyles.accordionTitle}>
                     {accordionWeekExpanded
                       ? "Hide This Week"
                       : "View This Week"}
@@ -338,12 +369,12 @@ const Schedules = () => {
                     name={accordionWeekExpanded ? "chevron-up" : "chevron-down"}
                     size={20}
                     color="#007BFF"
-                    style={styles1.icon}
+                    style={dynamicStyles.icon}
                   />
                 </TouchableOpacity>
 
                 {accordionWeekExpanded && (
-                  <View style={styles1.accordionContent}>
+                  <View style={dynamicStyles.accordionContent}>
                     {scheduleWeekData
                       .filter(
                         (record) =>
@@ -353,8 +384,8 @@ const Schedules = () => {
                         <TouchableOpacity
                           key={schedule.schedule_id}
                           onPress={() => handleScheduleClickWeek(schedule)}
-                          style={styles1.scheduleItem}>
-                          <Text style={styles1.scheduleText}>
+                          style={dynamicStyles.cardItems}>
+                          <Text style={dynamicStyles.cardItemText}>
                             {`${moment(schedule.date).format(
                               "MMMM DD, dddd"
                             )}, `}
@@ -371,8 +402,8 @@ const Schedules = () => {
                 {/* make up data */}
                 <TouchableOpacity
                   onPress={toggleAccordionMakeup}
-                  style={styles1.accordionButton}>
-                  <Text style={styles1.accordionTitle}>
+                  style={dynamicStyles.accordionButton}>
+                  <Text style={dynamicStyles.accordionTitle}>
                     {accordionMakeupExpanded
                       ? "Hide Make up schedule"
                       : "View Make up schedule"}
@@ -383,18 +414,18 @@ const Schedules = () => {
                     }
                     size={20}
                     color="#007BFF"
-                    style={styles1.icon}
+                    style={dynamicStyles.icon}
                   />
                 </TouchableOpacity>
 
                 {accordionMakeupExpanded && (
-                  <View style={styles1.accordionContent}>
+                  <View style={dynamicStyles.accordionContent}>
                     {scheduleMakeupData.map((schedule) => (
                       <TouchableOpacity
                         key={schedule.schedule_id}
                         onPress={() => handleScheduleClickMakeup(schedule)}
-                        style={styles1.scheduleItem}>
-                        <Text style={styles1.scheduleText}>
+                        style={dynamicStyles.cardItems}>
+                        <Text style={dynamicStyles.cardItemText}>
                           {`${moment(schedule.date).format("MMMM DD, dddd")}, `}
                           {`\n${schedule.full_name}, ${
                             schedule.municipality_city
@@ -410,24 +441,25 @@ const Schedules = () => {
             </View>
           </View>
 
-          <View style={styles1.column2}>
+          <View style={dynamicStyles.column2}>
             <View style={dynamicStyles.card2Col}>
-              {selectedScheduleToday ||
-              selectedScheduleWeek ||
-              selectedScheduleFilter ||
-              selectedScheduleMakeup ? (
+              {(selectedScheduleToday ||
+                selectedScheduleWeek ||
+                selectedScheduleFilter ||
+                selectedScheduleMakeup) &&
+              !isInternalSchedLoading ? (
                 <>
                   {selectedScheduleToday ? (
                     <>
-                      <Text style={styles1.columnTitle}>
+                      <Text style={dynamicStyles.columnTitle}>
                         {String(selectedScheduleToday.full_name)}
                       </Text>
-                      <Text style={styles1.columnSubTitle}>
+                      <Text style={dynamicStyles.columnSubTitle}>
                         {moment(selectedScheduleToday.date).format(
                           "MMMM DD, dddd"
                         )}
                       </Text>
-                      <Text style={styles1.columnSubTitle}>
+                      <Text style={dynamicStyles.columnSubTitle}>
                         {selectedScheduleToday.municipality_city} {" - "}
                         {selectedScheduleToday.province}
                       </Text>
@@ -441,15 +473,15 @@ const Schedules = () => {
 
                   {selectedScheduleWeek ? (
                     <>
-                      <Text style={styles1.columnTitle}>
+                      <Text style={dynamicStyles.columnTitle}>
                         {String(selectedScheduleWeek.full_name)}
                       </Text>
-                      <Text style={styles1.columnSubTitle}>
+                      <Text style={dynamicStyles.columnSubTitle}>
                         {moment(selectedScheduleWeek.date).format(
                           "MMMM DD, dddd"
                         )}
                       </Text>
-                      <Text style={styles1.columnSubTitle}>
+                      <Text style={dynamicStyles.columnSubTitle}>
                         {selectedScheduleWeek.municipality_city} {" - "}
                         {selectedScheduleWeek.province}
                       </Text>
@@ -463,15 +495,15 @@ const Schedules = () => {
 
                   {selectedScheduleFilter ? (
                     <>
-                      <Text style={styles1.columnTitle}>
+                      <Text style={dynamicStyles.columnTitle}>
                         {String(selectedScheduleFilter.full_name)}
                       </Text>
-                      <Text style={styles1.columnSubTitle}>
+                      <Text style={dynamicStyles.columnSubTitle}>
                         {moment(selectedScheduleFilter.date).format(
                           "MMMM DD, dddd"
                         )}
                       </Text>
-                      <Text style={styles1.columnSubTitle}>
+                      <Text style={dynamicStyles.columnSubTitle}>
                         {selectedScheduleFilter.municipality_city} {" - "}
                         {selectedScheduleFilter.province}
                       </Text>
@@ -485,15 +517,15 @@ const Schedules = () => {
 
                   {selectedScheduleMakeup ? (
                     <>
-                      <Text style={styles1.columnTitle}>
+                      <Text style={dynamicStyles.columnTitle}>
                         {String(selectedScheduleMakeup.full_name)}
                       </Text>
-                      <Text style={styles1.columnSubTitle}>
+                      <Text style={dynamicStyles.columnSubTitle}>
                         {moment(selectedScheduleMakeup.date).format(
                           "MMMM DD, dddd"
                         )}
                       </Text>
-                      <Text style={styles1.columnSubTitle}>
+                      <Text style={dynamicStyles.columnSubTitle}>
                         {selectedScheduleMakeup.municipality_city} {" - "}
                         {selectedScheduleMakeup.province}
                       </Text>
@@ -505,6 +537,8 @@ const Schedules = () => {
                     </>
                   ) : null}
                 </>
+              ) : isInternalSchedLoading ? (
+                <Loading />
               ) : (
                 <NoScheduleSelected />
               )}
@@ -517,60 +551,6 @@ const Schedules = () => {
 };
 
 const styles1 = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F0F0F0",
-  },
-  row: {
-    flexDirection: "row",
-    flex: 1,
-  },
-  column1: {
-    width: "30%",
-  },
-  column2: {
-    width: "70%",
-  },
-  innerCard: {
-    height: "100%",
-    paddingHorizontal: 30,
-    paddingVertical: 40,
-    backgroundColor: "#ffffff",
-    borderRadius: 10,
-    elevation: 2, // For Android shadow
-    shadowColor: "#000", // For iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-  },
-  columnTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#343a40",
-    marginBottom: 8,
-  },
-  columnSubTitle: {
-    fontSize: 16,
-    color: "#6c757d",
-  },
-  accordionButton: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#e9ecef",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginVertical: 10,
-  },
-  accordionTitle: {
-    fontSize: 16,
-    color: "#046E37",
-  },
-  icon: {
-    marginLeft: 10,
-    color: "#046E37",
-  },
   scheduleItem: {
     padding: 12,
     borderBottomWidth: 1,
@@ -582,12 +562,6 @@ const styles1 = StyleSheet.create({
   scheduleText: {
     fontSize: 16,
     color: "#343a40",
-  },
-  accordionContent: {
-    backgroundColor: "#f8f9fa",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
   },
   containerNoSched: {
     flex: 1,

@@ -28,6 +28,9 @@ import { useDataContext } from "../context/DataContext";
 const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const { isDoctorLoading } = useDataContext();
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
+  const [isInternalDoctorLoading, setIsInternalDoctorLoading] =
+    useState<boolean>(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeOutLoading(false);
@@ -113,10 +116,12 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
 
   const handleCallClick = (doc: DoctorRecord) => {
     setSelectedDoctor(doc);
+    setIsInternalDoctorLoading(true);
+    setTimeout(() => setIsInternalDoctorLoading(false), 500);
   };
 
   const DetailRow = ({ label, value }: { label: string; value: string }) => (
-    <View style={styles.detailRow}>
+    <View style={dynamicStyles.detailRow}>
       <Text style={styles.detailLabel}>{label}</Text>
       <Text style={styles.detailValue}>{value}</Text>
     </View>
@@ -231,91 +236,115 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
     };
 
     return (
-      <View key={doc.doctors_id} style={styles.callDetailsContainer}>
-        <Text>{`Doctor: ${doc.first_name} ${doc.last_name}`}</Text>
-        {[
-          { label: "First Name", value: doc.first_name },
-          { label: "Last Name", value: doc.last_name },
-          { label: "Specialization", value: doc.specialization },
-          { label: "Classification", value: doc.classification },
-          { label: "Birthday", value: doc.birthday },
-          { label: "Address 1", value: doc.address_1 },
-          { label: "Address 2", value: doc.address_2 },
-          { label: "City/Municipality", value: doc.municipality_city },
-          { label: "Province", value: doc.province },
-          { label: "Mobile Phone", value: doc.phone_mobile },
-          { label: "Office Phone", value: doc.phone_office },
-          { label: "Secretary Phone", value: doc.phone_secretary },
-        ].map(
-          (detail, index) =>
-            detail.value && (
-              <DetailRow
-                key={`detail-${detail.label}-${index}`}
-                label={detail.label}
-                value={detail.value}
-              />
-            )
-        )}
-
-        {notesNamesArray.map((noteName, index) => (
-          <View key={`note-${noteName}-${index}`} style={styles.noteRow}>
-            {editingIndex === index ? (
-              <>
-                <TextInput
-                  style={styles.input}
-                  value={editName}
-                  onChangeText={setEditName}
-                />
-
-                <TextInput
-                  style={styles.input}
-                  value={editValue}
-                  onChangeText={setEditValue}
-                />
-
-                <TouchableOpacity onPress={() => handleSaveEdit(index)}>
-                  <Ionicons name="checkmark-outline" size={24} color="green" />
-                </TouchableOpacity>
-              </>
-            ) : (
-              <>
-                <Text>{`${noteName.trim()}: ${
-                  notesValuesArray[index]?.trim() || "N/A"
-                }`}</Text>
-
-                <TouchableOpacity onPress={() => handleEdit(index)}>
-                  <Ionicons name="pencil-outline" size={24} color="blue" />
-                </TouchableOpacity>
-              </>
-            )}
-
+      <ScrollView>
+        <View key={doc.doctors_id} style={styles.callDetailsContainer}>
+          <Text style={[dynamicStyles.mainTextBig, dynamicStyles.textBlack]}>
+            Doctor details and{" "}
+            <Text
+              style={[dynamicStyles.mainTextBig, dynamicStyles.textSubColor]}>
+              Custom Notes
+            </Text>
+          </Text>
+          <View style={[dynamicStyles.row, { marginTop: 10 }]}>
+            <TextInput
+              style={dynamicStyles.inputDoctors}
+              placeholder="Enter Custom Note Name"
+              value={tagName}
+              onChangeText={setTagName}
+            />
+            <TextInput
+              style={dynamicStyles.inputDoctors}
+              placeholder="Enter Value"
+              value={tag}
+              onChangeText={setTag}
+            />
             <TouchableOpacity
-              onPress={() =>
-                showConfirmAlert(() => handleDelete(index), "delete this item")
-              }>
-              <Ionicons name="trash-outline" size={24} color="red" />
+              style={dynamicStyles.buttonContainerDoctors}
+              onPress={handleAdd}>
+              <Ionicons name="add" size={16} style={dynamicStyles.textWhite} />
             </TouchableOpacity>
           </View>
-        ))}
+          {notesNamesArray.map((noteName, index) => (
+            <View key={`note-${noteName}-${index}`}>
+              {editingIndex === index ? (
+                <View style={dynamicStyles.rowItem}>
+                  <TextInput
+                    style={dynamicStyles.inputDoctors}
+                    value={editName}
+                    onChangeText={setEditName}
+                  />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Tag Name"
-          value={tagName}
-          onChangeText={setTagName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Tag"
-          value={tag}
-          onChangeText={setTag}
-        />
+                  <TextInput
+                    style={dynamicStyles.inputDoctors}
+                    value={editValue}
+                    onChangeText={setEditValue}
+                  />
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleAdd}>
-          <Ionicons name="save-outline" size={24} />
-          <Text>Add</Text>
-        </TouchableOpacity>
-      </View>
+                  <TouchableOpacity onPress={() => handleSaveEdit(index)}>
+                    <Ionicons
+                      name="checkmark-outline"
+                      size={50}
+                      color="green"
+                    />
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  <View style={dynamicStyles.detailCustomRow}>
+                    <Text style={styles.detailLabel}>
+                      {`${noteName.trim()} : `}
+                      <Text style={{ fontWeight: "400" }}>{`${notesValuesArray[
+                        index
+                      ]?.trim()}`}</Text>
+                    </Text>
+                    <Text style={styles.detailValue}>
+                      <TouchableOpacity onPress={() => handleEdit(index)}>
+                        <Ionicons
+                          name="pencil-outline"
+                          size={24}
+                          style={dynamicStyles.mainColor}
+                        />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() =>
+                          showConfirmAlert(
+                            () => handleDelete(index),
+                            "delete this item"
+                          )
+                        }>
+                        <Ionicons name="trash-outline" size={24} color="red" />
+                      </TouchableOpacity>
+                    </Text>
+                  </View>
+                </>
+              )}
+            </View>
+          ))}
+          {[
+            { label: "First Name", value: doc.first_name },
+            { label: "Last Name", value: doc.last_name },
+            { label: "Specialization", value: doc.specialization },
+            { label: "Classification", value: doc.classification },
+            { label: "Birthday", value: doc.birthday },
+            { label: "Address 1", value: doc.address_1 },
+            { label: "Address 2", value: doc.address_2 },
+            { label: "City/Municipality", value: doc.municipality_city },
+            { label: "Province", value: doc.province },
+            { label: "Mobile Phone", value: doc.phone_mobile },
+            { label: "Office Phone", value: doc.phone_office },
+            { label: "Secretary Phone", value: doc.phone_secretary },
+          ].map(
+            (detail, index) =>
+              detail.value && (
+                <DetailRow
+                  key={`detail-${detail.label}-${index}`}
+                  label={`${detail.label}`}
+                  value={detail.value}
+                />
+              )
+          )}
+        </View>
+      </ScrollView>
     );
   };
 
@@ -349,7 +378,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                     <TouchableOpacity
                       key={`${doc.doctors_id}`}
                       onPress={() => handleCallClick(doc)}
-                      style={styles.callItem}>
+                      style={dynamicStyles.cardItems}>
                       <Text
                         style={
                           styles.callText
@@ -364,8 +393,10 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
           </View>
           <View style={styles.column2}>
             <View style={dynamicStyles.card2Col}>
-              {selectedDoctor ? (
+              {selectedDoctor && !isInternalDoctorLoading ? (
                 <DoctorDetails doc={selectedDoctor} />
+              ) : isInternalDoctorLoading ? (
+                <Loading />
               ) : (
                 <NoDoctorSelected />
               )}
@@ -398,15 +429,12 @@ const styles = StyleSheet.create({
     color: "#6c757d",
   },
   input: {
-    borderColor: "#ccc",
+    borderColor: "black",
     borderWidth: 1,
     padding: 10,
     marginRight: 10,
     borderRadius: 5,
-  },
-  container: {
-    flex: 1,
-    backgroundColor: "#F0F0F0",
+    minWidth: 200,
   },
   row: {
     flexDirection: "row",
@@ -441,37 +469,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#343a40",
   },
-  signImage: {
-    marginVertical: 15,
-    width: "100%",
-    height: 200,
-    resizeMode: "contain",
-  },
-  removeButtonInline: {
-    backgroundColor: "transparent",
-    padding: 2,
-    marginVertical: 5,
-  },
-  takePhotoButton: {
-    padding: 10,
-    backgroundColor: "#007BFF",
-    borderRadius: 5,
-    width: 200,
-    alignItems: "center",
-  },
-  removeButtonText: {
-    color: "red",
-    fontWeight: "bold",
-  },
-  callItemContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginVertical: 4,
-    paddingHorizontal: 14,
-    backgroundColor: "#f1f1f1",
-    borderRadius: 5,
-  },
+
   containerNoCallData: {
     flex: 1,
     alignItems: "center",
@@ -486,32 +484,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#046E37",
     textAlign: "center",
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#007bff",
-    borderRadius: 25,
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-    top: 20,
-    right: 20,
-    elevation: 5,
-  },
-  addButtonText: {
-    fontSize: 25,
-    color: "#ffffff",
-  },
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-  },
-  removeButton: {
-    backgroundColor: "#dc3545",
-    borderRadius: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
   },
   scrollViewContainer: {
     flexGrow: 1,
@@ -531,127 +503,15 @@ const styles = StyleSheet.create({
     elevation: 2,
     margin: 10,
     justifyContent: "flex-start",
-    alignItems: "center",
     backgroundColor: "#e9ecef",
     borderColor: "#046E37",
     borderWidth: 1,
   },
-  callDetailText: {
-    fontSize: 16,
-    color: "#343a40",
-    marginBottom: 10,
-  },
-  signatureLabel: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#007bff",
-  },
-  imageContainer: {
-    marginTop: 20,
-    alignItems: "center",
-  },
-  image: {
-    width: 400,
-    height: 260,
-    marginTop: 10,
-    resizeMode: "contain",
-  },
-  locationText: {
-    marginTop: 10,
-    fontSize: 9,
-    color: "blue",
-  },
-  noteContainer: {
-    marginTop: 20,
-    flexDirection: "row",
-    width: "100%",
-    alignItems: "center",
-  },
-  noteInput: {
-    flex: 1,
-    borderColor: "#ddd",
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  updateButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  updateButtonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-    fontSize: 14,
-  },
-  dropdownContainer: {
-    width: 400,
-    padding: 20,
-  },
-  saveButton: {
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#007BFF",
-    padding: 10,
-    borderRadius: 5,
-    marginTop: 10,
-  },
-  pickerContainer: {
-    marginVertical: 10,
-  },
-  picker: {
-    height: 50,
-    width: "100%",
-    padding: 20,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: "#ddd",
-  },
-  addNotesBtn: {
-    backgroundColor: "#046E37",
-    color: "#fff",
-    fontSize: 24,
-    padding: 10,
-    borderRadius: 25,
-    elevation: 3,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  button: {
-    height: 50,
-    borderRadius: 8,
-    backgroundColor: "#007BFF",
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 3,
-    marginVertical: 10,
-  },
-  detailRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 8,
-    marginVertical: 5,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-
   detailLabel: {
     fontSize: 16,
     fontWeight: "600",
     color: "#343a40",
   },
-
   detailValue: {
     fontSize: 16,
     color: "#6c757d",

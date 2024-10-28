@@ -17,6 +17,8 @@ import { getStatusText, showConfirmAlert } from "../../utils/commonUtil";
 import { Ionicons } from "@expo/vector-icons";
 import { customToast } from "../../utils/customToast";
 import { AntDesign } from "@expo/vector-icons";
+import { getStyleUtil } from "../../utils/styleUtil";
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const RescheduleTable: React.FC<
   RescheduleTableProps & {
@@ -33,7 +35,7 @@ const RescheduleTable: React.FC<
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1000);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, []);
@@ -94,7 +96,7 @@ const RescheduleTable: React.FC<
     <Provider>
       <View style={styles.container}>
         {loading ? (
-          <View style={styles.loadingOverlay}>
+          <View style={dynamicStyles.loadingOverlay}>
             <ActivityIndicator size="large" color="#046E37" />
           </View>
         ) : (
@@ -121,13 +123,13 @@ const RescheduleTable: React.FC<
               <Button
                 mode="contained"
                 onPress={clearDateSelection}
-                style={styles.resetButton}>
-                Reset
+                style={dynamicStyles.resetButton}>
+                Clear Filter
               </Button>
             </View>
-            <Card style={styles.card}>
+            <Card style={dynamicStyles.tableCard}>
               <DataTable>
-                <DataTable.Header>
+                <DataTable.Header style={dynamicStyles.tableHeader}>
                   <DataTable.Title style={{ flex: 1.5 }}>
                     Doctor Name
                   </DataTable.Title>
@@ -146,7 +148,7 @@ const RescheduleTable: React.FC<
                 </DataTable.Header>
                 {currentData.map((data, index) => (
                   <DataTable.Row
-                    style={styles.dataTableRow}
+                    style={dynamicStyles.tableRow}
                     key={data.request_id ? data.request_id : `row-${index}`}>
                     <DataTable.Cell style={{ flex: 1.5 }}>
                       {data.full_name}
@@ -254,14 +256,13 @@ const RescheduleTable: React.FC<
 
 const styles = StyleSheet.create({
   container: {
-    margin: 15,
     flex: 1,
   },
   filterContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
     justifyContent: "space-between",
+    paddingVertical: 10,
   },
   picker: {
     width: Dimensions.get("window").width * 0.25,

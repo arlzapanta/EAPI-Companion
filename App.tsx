@@ -22,6 +22,8 @@ import OnCallScreen from "./src/screens/call/OnCallScreen";
 import { DataProvider } from "./src/context/DataContext";
 import * as Location from "expo-location";
 import { Camera } from "expo-camera";
+import ExpoStatusBar from "expo-status-bar/build/ExpoStatusBar";
+import * as NavigationBar from "expo-navigation-bar";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -56,21 +58,52 @@ const Layout = () => {
   }
   React.useEffect(() => {
     console.log("Layout initialized");
+    NavigationBar.setBackgroundColorAsync("black");
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     requestPermissions();
   }, []);
   return (
     <SafeAreaView style={styles.container}>
+      <ExpoStatusBar style="light" backgroundColor="black" animated />
+
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
         }}>
         {authState.authenticated ? (
           <>
-            <Stack.Screen name="Home" component={Home} />
-            <Stack.Screen name="Sync" component={SyncSettingsScreen} />
-            <Stack.Screen name="Reschedule" component={RescheduleScreen} />
-            <Stack.Screen name="Attendance" component={AttendanceScreen} />
+            <Stack.Screen
+              name="Home"
+              component={Home}
+              options={{
+                // Hide the header for this route
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Sync"
+              component={SyncSettingsScreen}
+              options={{
+                // Hide the header for this route
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Reschedule"
+              component={RescheduleScreen}
+              options={{
+                // Hide the header for this route
+                headerShown: false,
+              }}
+            />
+            <Stack.Screen
+              name="Attendance"
+              component={AttendanceScreen}
+              options={{
+                // Hide the header for this route
+                headerShown: false,
+              }}
+            />
             <Stack.Screen
               name="OnCall"
               component={OnCallScreen}
@@ -102,7 +135,6 @@ const App = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#046E37",
   },
 });
 

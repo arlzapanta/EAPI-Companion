@@ -11,7 +11,12 @@ import {
   Alert,
 } from "react-native";
 import moment from "moment";
-import { getCurrentDatePH, getFormattedDateToday } from "../../utils/dateUtils";
+import {
+  formatDate,
+  formatTimeHoursMinutes,
+  getCurrentDatePH,
+  getFormattedDateToday,
+} from "../../utils/dateUtils";
 import {
   addQuickCall,
   getQuickCalls,
@@ -35,12 +40,14 @@ import Loading from "../../components/Loading";
 import Octicons from "@expo/vector-icons/Octicons";
 import { getStyleUtil } from "../../utils/styleUtil";
 import { getLocation } from "../../utils/currentLocation";
-import { getBase64StringFormat } from "../../utils/commonUtil";
+import {
+  getBase64StringFormat,
+  showConfirmAlert,
+} from "../../utils/commonUtil";
+import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
 const dynamicStyles = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
-// todo : add to data context
-// todo : backsheet
 const QuickCall = () => {
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
   const { isQuickLoading, currentDate, quickCallData } = useDataContext();
@@ -129,6 +136,8 @@ const QuickCall = () => {
         notes: "",
         id: 0,
         full_name: "",
+        call_start: "",
+        call_end: "",
       };
       const addedCall = await addQuickCall(newCall);
       if (addedCall === "Success") {
@@ -217,7 +226,7 @@ const QuickCall = () => {
 
     useEffect(() => {
       if (call) {
-        setNote(call.notes); // Set the initial value of note based on the selected call
+        setNote(call.notes);
       }
     }, [call]);
 
@@ -240,8 +249,8 @@ const QuickCall = () => {
       if (selectedDoctor) {
         const callDetails = {
           schedule_id: selectedDoctor.schedule_id,
-          call_start: "quick",
-          call_end: "quick",
+          call_start: call.call_start,
+          call_end: call.call_end,
           signature: call.signature,
           signature_attempts: call.signature_attempts.toString(),
           signature_location: call.signature_location,
@@ -250,6 +259,12 @@ const QuickCall = () => {
           doctors_name: selectedDoctor.full_name,
           created_at: await getFormattedDateToday(),
         };
+
+        await savePostCallNotesLocalDb({
+          mood: "",
+          feedback: "",
+          scheduleId: selectedDoctor.schedule_id,
+        });
 
         const result = await saveCallsDoneFromSchedules(
           selectedDoctor.schedule_id,
@@ -275,7 +290,10 @@ const QuickCall = () => {
               placeholder="Enter doctor's name or any note ..."
             />
             <TouchableOpacity
-              style={styles.updateButton}
+              style={[
+                dynamicStyles.buttonSubContainer1,
+                dynamicStyles.subBgColor,
+              ]}
               onPress={handleUpdateNote}>
               <Text style={styles.updateButtonText}>Save Note</Text>
             </TouchableOpacity>
@@ -308,19 +326,58 @@ const QuickCall = () => {
                   .map((schedule) => (
                     <Picker.Item
                       key={schedule.id}
-                      label={schedule.full_name || "Unknown Name"}
+                      label={
+                        `${schedule.full_name} - ${formatDate(
+                          schedule.date
+                        )}` || "Unknown Name"
+                      }
                       value={schedule}
                     />
                   ))}
               </Picker>
             </View>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={styles.saveButton}
               onLongPress={handleSaveQuickCall}>
               <Text style={styles.buttonText}>Save (hold)</Text>
+            </TouchableOpacity> */}
+
+            <TouchableOpacity
+              onPress={
+                call.signature || call.photo
+                  ? () => showConfirmAlert(handleSaveQuickCall, "End Call")
+                  : undefined
+              }
+              disabled={!(call.signature || call.photo)}
+              style={[
+                styles.saveButton,
+                !(call.signature || call.photo) &&
+                  dynamicStyles.buttonContainerDisabled,
+              ]}>
+              <View style={dynamicStyles.floatingButton}>
+                <Icon name="exit" size={24} color="#fff" />
+                <Text style={dynamicStyles.buttonText}>Save</Text>
+              </View>
             </TouchableOpacity>
           </View>
-          <Text style={styles.signatureLabel}>Signature Capture</Text>
+          {!call.photo ? (
+            <>
+              <TouchableOpacity
+                style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
+                onPress={handleImagePicker}>
+                <Octicons name="device-camera" size={20} color="white" />
+                <Text style={styles.buttonText}>Take a photo</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View style={styles.imageContainer}>
+              <Text style={styles.signatureLabel}>Photo Capture</Text>
+              <Image
+                source={{ uri: `${getBase64StringFormat()}${call.photo}` }}
+                style={styles.image}
+              />
+            </View>
+          )}
           {call.signature ? (
             <Image
               source={{ uri: `${getBase64StringFormat()}${call.signature}` }}
@@ -332,22 +389,6 @@ const QuickCall = () => {
               onSignatureUpdate={onSignatureUpdate}
             />
           )}
-          {!call.photo ? (
-            <TouchableOpacity
-              style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
-              onPress={handleImagePicker}>
-              <Octicons name="device-camera" size={30} color="white" />
-              <Text style={styles.buttonText}>Take a photo</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.imageContainer}>
-              <Text style={styles.signatureLabel}>Photo Capture</Text>
-              <Image
-                source={{ uri: `${getBase64StringFormat()}${call.photo}` }}
-                style={styles.image}
-              />
-            </View>
-          )}
         </View>
       </ScrollView>
     );
@@ -358,29 +399,29 @@ const QuickCall = () => {
       {isQuickLoading || timeOutLoading ? (
         <Loading />
       ) : (
-        <View style={styles.row}>
-          <View style={styles.column1}>
+        <View style={dynamicStyles.row}>
+          <View style={dynamicStyles.column1}>
             <View style={dynamicStyles.card1Col}>
-              <Text style={styles.columnTitle}>Quick Calls</Text>
-              <Text style={styles.columnSubTitle}>
+              <Text style={dynamicStyles.columnTitle}>Quick Calls</Text>
+              <Text style={dynamicStyles.columnSubTitle}>
                 {moment(currentDate).format("MMMM DD, dddd")}
               </Text>
               <TouchableOpacity
-                style={styles.addButton}
+                style={[styles.addButton, dynamicStyles.subBgColor]}
                 onPress={handleAddCall}>
                 <Text style={styles.addButtonText}>+</Text>
               </TouchableOpacity>
-              <ScrollView contentContainerStyle={styles.scrollViewContainer}>
+              <ScrollView
+                contentContainerStyle={dynamicStyles.scrollViewQuickContainer}>
                 {Array.isArray(callData) && callData.length > 0 ? (
                   callData.map((call) => <CallItem key={call.id} call={call} />)
                 ) : (
-                  <Text>No calls available</Text>
+                  <Text style={{ marginTop: 20 }}>No calls available</Text>
                 )}
               </ScrollView>
             </View>
           </View>
-
-          <View style={styles.column2}>
+          <View style={dynamicStyles.column2}>
             <View style={dynamicStyles.card2Col}>
               {selectedCall ? (
                 <CallDetails
@@ -403,12 +444,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F0F0F0",
   },
-  row: {
-    flexDirection: "row",
-    flex: 1,
-    marginStart: 20,
-    marginEnd: 20,
-  },
   column1: {
     width: "30%",
     marginEnd: 10,
@@ -430,16 +465,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 5,
-  },
-  columnTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#343a40",
-    marginBottom: 8,
-  },
-  columnSubTitle: {
-    fontSize: 16,
-    color: "#6c757d",
   },
   callItem: {
     padding: 12,
@@ -483,7 +508,6 @@ const styles = StyleSheet.create({
   callText: {
     fontSize: 14,
     color: "black",
-    // color: "#495057",
   },
   containerNoCallData: {
     flex: 1,
@@ -525,9 +549,6 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     paddingHorizontal: 10,
     paddingVertical: 5,
-  },
-  scrollViewContainer: {
-    flexGrow: 1,
   },
   iconNoSched: {
     marginBottom: 10,
@@ -589,7 +610,6 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   updateButton: {
-    // backgroundColor: "#007BFF",
     backgroundColor: "lightgray",
     paddingVertical: 12,
     paddingHorizontal: 10,
@@ -604,7 +624,7 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     width: 400,
-    padding: 60,
+    padding: 10,
   },
   saveButton: {
     alignItems: "center",

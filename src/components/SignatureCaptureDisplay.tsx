@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   PanResponder,
@@ -12,15 +12,18 @@ import {
 import { captureRef } from "react-native-view-shot";
 import Svg, { Path } from "react-native-svg";
 import { getLocation } from "../utils/currentLocation";
-import { updateCallSignature } from "../utils/quickCallUtil";
+import { updateCallPhoto, updateCallSignature } from "../utils/quickCallUtil";
 import { getStyleUtil } from "../utils/styleUtil";
 import Foundation from "@expo/vector-icons/Foundation";
 import Loading from "./Loading";
-import { getBase64StringFormat } from "../utils/commonUtil";
+import { getBase64StringFormat, showConfirmAlert } from "../utils/commonUtil";
+import { useImagePicker } from "../hook/useImagePicker";
+import Octicons from "@expo/vector-icons/Octicons";
+import { formatTimeHoursMinutes } from "../utils/dateUtils";
 const dynamicStyle = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
-const SignatureCapture: React.FC<SignatureCaptureProps> = ({
+const SignatureCaptureDisplay: React.FC<SignatureCaptureProps> = ({
   callId,
   onSignatureUpdate,
 }) => {
@@ -32,8 +35,53 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const viewRef = useRef<View>(null);
   const canvasWidth = width - 50;
-  const canvasHeight = 350;
+  const canvasHeight = 300;
   const [attemptCount, setAttemptCount] = useState<number>(0);
+
+  const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
+  const [timer, setTimer] = useState<number>(0);
+  const [callStartTime, setCallStartTime] = useState<string>("");
+  const [callEndTime, setCallEndTime] = useState<string>("");
+
+  const [photoVal, setPhotoVal] = useState<string>("");
+
+  const handlePhotoCaptured = async (
+    base64: string,
+    location: { latitude: number; longitude: number }
+  ) => {
+    try {
+      const loc = await getLocation();
+      setPhotoVal(base64);
+      await updateCallPhoto(callId, base64, loc);
+    } catch (error) {
+      console.log("handlePhotoCaptured error", error);
+    }
+  };
+
+  const { imageBase64, location, handleImagePicker } = useImagePicker({
+    onPhotoCaptured: handlePhotoCaptured,
+  });
+
+  const startTimer = () => {
+    setCallStartTime(formatTimeHoursMinutes(new Date()));
+    const id = setInterval(() => {
+      setTimer((prev) => prev + 1);
+    }, 1000);
+    setIntervalId(id);
+  };
+
+  const stopTimer = () => {
+    setCallEndTime(formatTimeHoursMinutes(new Date()));
+    if (intervalId) clearInterval(intervalId);
+    setIntervalId(null);
+  };
+
+  useEffect(() => {
+    startTimer();
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, []);
 
   const SpacerW = ({ size }: { size: number }) => (
     <View style={{ width: size }} />
@@ -86,6 +134,8 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   };
 
   const captureSignature = async () => {
+    const loc = await getLocation();
+    stopTimer();
     if (viewRef.current) {
       setIsSignatureLoading(true);
       try {
@@ -96,12 +146,16 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
         });
         const base64Signature = `${uri}`;
         setSignature(base64Signature);
-
-        const loc = await getLocation();
-
         try {
           if (callId !== 12340000) {
-            await updateCallSignature(callId, uri, loc, attemptCount);
+            await updateCallSignature(
+              callId,
+              uri,
+              loc,
+              attemptCount,
+              callStartTime,
+              callEndTime ? callEndTime : formatTimeHoursMinutes(new Date())
+            );
           }
           onSignatureUpdate(base64Signature, loc, attemptCount);
         } catch (error) {
@@ -110,40 +164,96 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
       } catch (error) {
         console.error("Error capturing the view:", error);
       }
+    } else {
+      onSignatureUpdate("", loc, 0);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <View
-        ref={viewRef}
-        style={[styles.canvas, { width: canvasWidth, height: canvasHeight }]}
-        {...panResponder.panHandlers}>
-        <Svg
-          width={canvasWidth}
-          height={canvasHeight}
-          style={{ position: "absolute", top: 0, left: 0 }}>
-          {paths.map((path, index) => (
-            <Path
-              key={index}
-              d={createPathString(path)}
-              stroke="black"
-              strokeWidth="2"
-              fill="none"
-            />
-          ))}
-        </Svg>
+    <View>
+      {!photoVal ? (
+        <View
+          ref={viewRef}
+          style={[styles.canvas, { width: canvasWidth, height: canvasHeight }]}
+          {...panResponder.panHandlers}>
+          <Svg
+            width={canvasWidth}
+            height={canvasHeight}
+            style={{ position: "absolute", top: 0, left: 0 }}>
+            {paths.map((path, index) => (
+              <Path
+                key={index}
+                d={createPathString(path)}
+                stroke="black"
+                strokeWidth="2"
+                fill="none"
+              />
+            ))}
+          </Svg>
+        </View>
+      ) : null}
+
+      <View style={dynamicStyle.centerItems}>
+        {!photoVal ? (
+          <>
+            <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
+            <View style={dynamicStyle.centerItems}>
+              <Text style={dynamicStyle.textBlack}>Or ..</Text>
+            </View>
+          </>
+        ) : null}
+
+        <View
+          style={[
+            styles.noteContainer,
+            dynamicStyle.centerItems,
+            { marginBottom: 10 },
+            { marginTop: 5 },
+          ]}>
+          {!photoVal ? (
+            <TouchableOpacity
+              style={[styles.takePhotoButton, dynamicStyle.mainBgColor]}
+              onPress={handleImagePicker}>
+              <Octicons name="device-camera" size={30} color="white" />
+              <Text style={dynamicStyle.buttonText}>Take a photo</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={dynamicStyle.imageContainer}>
+              <Text style={dynamicStyle.mainText}>Photo Capture</Text>
+              <Image
+                source={{ uri: `${getBase64StringFormat()}${photoVal}` }}
+                style={dynamicStyle.image}
+              />
+            </View>
+          )}
+        </View>
+        <SpacerH size={5} />
       </View>
       <View style={dynamicStyle.centerItems}>
-        <TouchableOpacity
-          style={styles.buttonContainer1}
-          onPress={clearSignature}>
-          <Text style={styles.buttonText}>Clear Signature</Text>
-        </TouchableOpacity>
+        <View style={[dynamicStyle.trioBtnRow]}>
+          {!photoVal ? (
+            <TouchableOpacity
+              style={[
+                dynamicStyle.buttonContainer1,
+                { marginEnd: 5 },
+                dynamicStyle.subBgColor,
+              ]}
+              onPress={clearSignature}>
+              <Text style={dynamicStyle.buttonText}>Clear Signature</Text>
+            </TouchableOpacity>
+          ) : null}
+
+          <TouchableOpacity
+            style={dynamicStyle.buttonContainer1}
+            onPress={() =>
+              showConfirmAlert(captureSignature, "save quick call")
+            }>
+            <Text style={dynamicStyle.buttonText}>Save Quick Call</Text>
+          </TouchableOpacity>
+        </View>
+        <SpacerH size={20} />
       </View>
-      <TouchableOpacity style={styles.newCallBtn} onPress={captureSignature}>
-        <Text style={styles.buttonText}>Save</Text>
-      </TouchableOpacity>
+
       <Modal
         visible={signature !== null}
         animationType="slide"
@@ -162,58 +272,9 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    margin: 5,
-  },
-  margEnd: {
-    marginEnd: 10,
-  },
-  newCallBtn: {
-    backgroundColor: "#046E37",
-    paddingVertical: 20,
-    paddingHorizontal: 60,
-    minWidth: "51%",
-    alignItems: "center",
-    position: "absolute",
-    bottom: -354,
-    left: -30,
-  },
-  buttonContainer1: {
-    // backgroundColor: "#046E37",
-    backgroundColor: "lightgray",
-    paddingVertical: 10,
-    paddingHorizontal: 5,
-    borderRadius: 5,
-    elevation: 5,
-    maxWidth: 200,
-    minWidth: 200,
-    maxHeight: 40,
-    marginBottom: 2,
-    alignItems: "center",
-  },
-  buttonText1: {
-    color: "#FFF",
-    fontWeight: "bold",
-    alignSelf: "center",
-  },
-  buttonText: {
-    color: "white",
-    fontWeight: "bold",
-    marginTop: 1,
-  },
-  modalContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(255, 255, 255,1)",
-    padding: 20,
-    zIndex: -10,
-  },
   canvas: {
     borderWidth: 1,
-    marginBottom: 10,
+    marginBottom: 5,
     backgroundColor: "#FFF",
   },
   signatureImage: {
@@ -222,41 +283,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "#FFF",
   },
-  clearButton: {
-    marginTop: 10,
-    width: "100%",
-    alignItems: "center",
-    backgroundColor: "#FF5722",
-    padding: 10,
-    borderRadius: 5,
-  },
-  saveButton: {
-    marginTop: 10,
-    width: "100%",
-    alignItems: "center",
-    backgroundColor: "#4CAF50",
-    padding: 10,
-    borderRadius: 5,
-  },
-  closeButton: {
-    marginTop: 10,
-    width: "100%",
-    alignItems: "center",
-    backgroundColor: "#FF0000",
-    padding: 10,
-    borderRadius: 5,
-  },
+
   signatureModalContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 20,
   },
-  buttonContainer: {
-    backgroundColor: "#046E37",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+  takePhotoButton: {
+    backgroundColor: "#007BFF",
     borderRadius: 5,
-    elevation: 5,
+    width: 300,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 60,
+  },
+  noteContainer: {
+    flexDirection: "row",
+  },
+  noteInput: {
+    flex: 1,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 10,
+    maxWidth: 500,
+    marginStart: 90,
+  },
+  updateButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });
 
-export default SignatureCapture;
+export default SignatureCaptureDisplay;

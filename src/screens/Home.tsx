@@ -15,6 +15,7 @@ import DoctorScreen from "./DoctorScreen";
 import NavLinkComponent from "../components/NavLink";
 import RBSheet from "react-native-raw-bottom-sheet";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import { getStyleUtil } from "../utils/styleUtil";
 import QuickCallBottomSheet from "./call/QuickCallBottomSheet";
@@ -36,6 +37,10 @@ const defaultDoctor: DoctorRecord = {
   notes_names: "",
   notes_values: "",
   update_date: "",
+  SecretaryPhone: "",
+  OfficePhone: "",
+  MobilePhone: "",
+  City_Municipality: "",
 };
 
 const Home = () => {
@@ -111,7 +116,7 @@ const Home = () => {
           active={selectedScreen === "quickcall"}
         />
       </View>
-      <ScrollView>{renderContent()}</ScrollView>
+      <View style={dynamicStyles.components_container}>{renderContent()}</View>
       <TouchableOpacity
         onLongPress={() => {
           setSelectedScreen("dashboard");
@@ -119,8 +124,14 @@ const Home = () => {
         }}
         style={dynamicStyles.floatingButtonContainer}>
         <View style={dynamicStyles.floatingButton}>
-          <MaterialIcons name="add-call" size={24} color="white" />
-          <Text>(hold)</Text>
+          {/* <MaterialIcons name="add-call" size={24} color="white" /> */}
+          <MaterialCommunityIcons
+            name="lightning-bolt-circle"
+            size={24}
+            color="white"
+          />
+          <Text style={dynamicStyles.textWhite}>QUICK CALL</Text>
+          <Text style={dynamicStyles.textWhite}>[hold]</Text>
         </View>
       </TouchableOpacity>
       <RBSheet

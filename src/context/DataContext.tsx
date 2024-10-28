@@ -14,7 +14,7 @@ import {
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import { getQuickCalls } from "../utils/quickCallUtil";
 // todo : add necessary states from components
-interface DataContextProps {
+interface DataContextProps<T> {
   currentDate: string;
   calendarData: CalendarProps;
   chartData: ChartDashboardRecord[];
@@ -29,7 +29,7 @@ interface DataContextProps {
   isActualLoading: boolean;
   isDoctorLoading: boolean;
   isQuickLoading: boolean;
-  detailersRecord: DetailersRecord[];
+  detailersRecord: T[];
   quickCallData: Call[];
   ytdDataMonthValues: Array<{
     value: number;
@@ -37,12 +37,16 @@ interface DataContextProps {
     spacing?: number;
     label?: string;
   }>;
+  setDetailersRecord: (newDetailersRecord: T[]) => void;
 }
 interface DataProviderProps {
   children: ReactNode;
 }
 
-const DataContext = createContext<DataContextProps | undefined>(undefined);
+// const DataContext = createContext<DataContextProps | undefined>(undefined);
+const DataContext = createContext<
+  DataContextProps<DetailersRecord> | undefined
+>(undefined);
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // ***************************************************************************
@@ -409,6 +413,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         // ***************************************************************************
         isScheduleLoading,
         detailersRecord,
+        setDetailersRecord,
         // ***************************************************************************
         // SCHEDULE DATA END
         // ***************************************************************************

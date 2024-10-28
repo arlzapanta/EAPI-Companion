@@ -1,6 +1,6 @@
 import * as SQLite from "expo-sqlite";
 
-// 
+//
 const createINE_quickcall = `
       PRAGMA journal_mode = WAL;
       CREATE TABLE IF NOT EXISTS quick_call_tbl (
@@ -13,95 +13,98 @@ const createINE_quickcall = `
         signature_location TEXT,
         signature_attempts TEXT,
         notes TEXT,
+        call_start TEXT,
+        call_end TEXT
         created_date TEXT DEFAULT CURRENT_TIMESTAMP
       );
     `;
-// 
+//
 export const getQuickCalls = async (): Promise<any> => {
-    const db = await SQLite.openDatabaseAsync("cmms", {
-      useNewConnection: true,
-    });
-  
-    await db.execAsync(createINE_quickcall);
-  
-    try {
-      const query = await db.getAllAsync(`SELECT * FROM quick_call_tbl`);
-  
-      if (query) {
-        return query;
-      } else {
-        return null;
-      }
-    } catch (error) {
-      console.error("Error fetching quick calls:", error);
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createINE_quickcall);
+
+  try {
+    const query = await db.getAllAsync(`SELECT * FROM quick_call_tbl`);
+
+    if (query) {
+      return query;
+    } else {
       return null;
-    } finally {
-      await db.closeAsync();
     }
+  } catch (error) {
+    console.error("Error fetching quick calls:", error);
+    return null;
+  } finally {
+    await db.closeAsync();
+  }
 };
 
 export const upsertCall = async (
-quickCallId: number,
-location: string,
-doctors_id: string,
-photo: string,
-photo_location: string,
-signature: string,
-signature_location: string,
-notes: string
+  quickCallId: number,
+  location: string,
+  doctors_id: string,
+  photo: string,
+  photo_location: string,
+  signature: string,
+  signature_location: string,
+  notes: string
 ) => {
-const db = await SQLite.openDatabaseAsync("cmms", {
+  const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
-});
+  });
 
-await db.execAsync(createINE_quickcall);
+  await db.execAsync(createINE_quickcall);
 
-try {
+  try {
     const existingRow = await db.getFirstAsync(
-    `SELECT * FROM quick_call_tbl WHERE id = ?`,
-    [quickCallId]
+      `SELECT * FROM quick_call_tbl WHERE id = ?`,
+      [quickCallId]
     );
 
     if (!existingRow) {
-    await db.runAsync(
+      await db.runAsync(
         `INSERT INTO quick_call_tbl (location, doctors_id, photo, photo_location, signature, signature_location, notes) VALUES (?,?,?,?,?,?,?)`,
         [
-        location,
-        doctors_id,
-        photo,
-        photo_location,
-        signature,
-        signature_location,
-        notes,
+          location,
+          doctors_id,
+          photo,
+          photo_location,
+          signature,
+          signature_location,
+          notes,
         ]
-    );
+      );
     } else {
-    await db.runAsync(
+      await db.runAsync(
         `UPDATE quick_call_tbl SET location = ?, doctors_id = ?, photo = ?, photo_location = ?, signature = ?, signature_location = ?, notes = ?, WHERE id = ?`,
         [
-        location,
-        doctors_id,
-        photo,
-        photo_location,
-        signature,
-        signature_location,
-        notes,
-        quickCallId,
+          location,
+          doctors_id,
+          photo,
+          photo_location,
+          signature,
+          signature_location,
+          notes,
+          quickCallId,
         ]
-    );
+      );
     }
-} catch (error) {
+  } catch (error) {
     console.error("Error upserting call:", error);
-}
+  }
 };
 
 export const updateCallSignature = async (
   quickCallId: number,
   signature: string,
   signature_location: string,
-  signature_attempts : number
+  signature_attempts: number,
+  call_start: string,
+  call_end: string
 ) => {
-
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -118,8 +121,15 @@ export const updateCallSignature = async (
       console.error(`Call with ID ${quickCallId} not found.`);
     } else {
       await db.runAsync(
-        `UPDATE quick_call_tbl SET signature = ?, signature_location = ?, signature_attempts = ? WHERE id = ?`,
-        [signature, signature_location, signature_attempts.toString(), quickCallId]
+        `UPDATE quick_call_tbl SET signature = ?, signature_location = ?, call_start = ? ,call_end = ?, signature_attempts = ? WHERE id = ?`,
+        [
+          signature,
+          signature_location,
+          call_start,
+          call_end,
+          signature_attempts.toString(),
+          quickCallId,
+        ]
       );
     }
   } catch (error) {
@@ -132,11 +142,6 @@ export const updateCallPhoto = async (
   photo: string,
   photo_location: string
 ) => {
-
-
-  console.log(photo);
-  console.log(photo_location);
-  console.log(quickCallId);
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -162,11 +167,7 @@ export const updateCallPhoto = async (
   }
 };
 
-export const updateCallNotes = async (
-  quickCallId: number,
-  notes: string,
-) => {
-
+export const updateCallNotes = async (quickCallId: number, notes: string) => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -182,10 +183,10 @@ export const updateCallNotes = async (
     if (!existingRow) {
       console.error(`Call with ID ${quickCallId} not found.`);
     } else {
-      await db.runAsync(
-        `UPDATE quick_call_tbl SET notes = ? WHERE id = ?`,
-        [notes, quickCallId]
-      );
+      await db.runAsync(`UPDATE quick_call_tbl SET notes = ? WHERE id = ?`, [
+        notes,
+        quickCallId,
+      ]);
     }
   } catch (error) {
     console.error("Error updating call:", error);
@@ -198,10 +199,7 @@ export const deleteCallNote = async (quickCallId: number) => {
   });
 
   try {
-    await db.runAsync(
-      `DELETE FROM quick_call_tbl WHERE id = ?`,
-      quickCallId
-    );
+    await db.runAsync(`DELETE FROM quick_call_tbl WHERE id = ?`, quickCallId);
 
     // console.log(`Successfully deleted all pre-call notes for scheduleId: ${scheduleId}`);
   } catch (error) {
@@ -210,7 +208,6 @@ export const deleteCallNote = async (quickCallId: number) => {
     await db.closeAsync();
   }
 };
-
 
 export const removeCallFromLocalDb = async (quickCallId: number) => {
   const db = await SQLite.openDatabaseAsync("cmms", {
@@ -230,7 +227,9 @@ export const removeCallFromLocalDb = async (quickCallId: number) => {
 
 export const addQuickCall = async (call: Call): Promise<string> => {
   try {
-    const db = await SQLite.openDatabaseAsync('cmms', { useNewConnection: true });
+    const db = await SQLite.openDatabaseAsync("cmms", {
+      useNewConnection: true,
+    });
 
     // Create table if not exists
     await db.execAsync(createINE_quickcall);
@@ -257,16 +256,18 @@ export const addQuickCall = async (call: Call): Promise<string> => {
     // Properly close the database connection
     await db.closeAsync();
 
-    return 'Success';
+    return "Success";
   } catch (error) {
     console.error("Error adding quick call:4141", error);
-    throw new Error('Failed to add quick call');
+    throw new Error("Failed to add quick call");
   }
 };
 
 export const addQuickCallBottomSheet = async (call: Call): Promise<string> => {
   try {
-    const db = await SQLite.openDatabaseAsync('cmms', { useNewConnection: true });
+    const db = await SQLite.openDatabaseAsync("cmms", {
+      useNewConnection: true,
+    });
 
     // Create table if not exists
     await db.execAsync(createINE_quickcall);
@@ -291,6 +292,6 @@ export const addQuickCallBottomSheet = async (call: Call): Promise<string> => {
     return insert.lastInsertRowId.toString();
   } catch (error) {
     console.error("Error adding quick call:123123", error);
-    throw new Error('Failed to add quick call');
+    throw new Error("Failed to add quick call");
   }
 };

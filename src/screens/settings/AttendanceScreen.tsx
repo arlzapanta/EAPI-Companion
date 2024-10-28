@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
   Image,
@@ -51,7 +51,6 @@ const dynamicStyles = getStyleUtil({ theme: "light" });
 const Attendance: React.FC = () => {
   const navigation = useNavigation<AttendanceScreenNavigationProp>();
   const { authState } = useAuth();
-  const { currentDate } = useDataContext();
   const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     first_name: string;
@@ -77,6 +76,12 @@ const Attendance: React.FC = () => {
   const [signatureLoc, setSignatureLoc] = useState<string>("");
   const [selfieVal, setSelfieVal] = useState<string>("");
   const [selfieLoc, setSelfieLoc] = useState<string>("");
+
+  const { detailersRecord, setDetailersRecord } = useDataContext();
+
+  const handleUpdateDetailers = (newDetailersData: DetailersRecord[]) => {
+    setDetailersRecord(newDetailersData);
+  };
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
@@ -169,7 +174,8 @@ const Attendance: React.FC = () => {
           await getDoctors(userInfo);
           await getReschedulesData(userInfo);
           await getChartData(userInfo);
-          await getDetailersData();
+          const getDetailersRes = await getDetailersData();
+          handleUpdateDetailers(getDetailersRes);
           await getCallsAPI(userInfo);
           await getSChedulesAPI(userInfo);
         } catch (error) {
@@ -250,21 +256,6 @@ const Attendance: React.FC = () => {
           await saveUserSyncHistoryLocalDb(userInfo, 2);
           await saveUserAttendanceLocalDb(userInfo, "out");
           await fetchAttendanceData();
-
-          await dropLocalTables([
-            "detailers_tbl",
-            "quick_call_tbl",
-            "reschedule_req_tbl",
-            "schedule_API_tbl",
-            "calls_tbl",
-            "doctors_tbl",
-            "pre_call_notes_tbl",
-            "post_call_notes_tbl",
-            "chart_data_tbl",
-            // "reschedule_history_tbl",
-            // "user_sync_history_tbl",
-            // "user_attendance_tbl",
-          ]);
         }
       } else {
         customToast("Already timed out, please contact admin [time out api]");
@@ -349,20 +340,26 @@ const Attendance: React.FC = () => {
                 </TouchableOpacity> */}
                 {!hasTimedIn && !loading && (
                   <>
-                    {signatureVal && selfieVal ? (
-                      <TouchableOpacity
-                        onPress={() => showConfirmAlert(timeIn, "Time In")}
-                        style={styles.buttonContainer}>
-                        <Text style={styles.buttonText}>Time In</Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <TouchableOpacity
-                        onPress={() => showConfirmAlert(timeIn, "Time In")}
-                        style={styles.buttonContainerDisabled}
-                        disabled>
-                        <Text style={styles.buttonText}>Time In</Text>
-                      </TouchableOpacity>
-                    )}
+                    <TouchableOpacity
+                      onPress={
+                        signatureVal && selfieVal
+                          ? () => showConfirmAlert(timeIn, "Time In")
+                          : undefined
+                      }
+                      disabled={!(signatureVal && selfieVal)}
+                      style={[
+                        styles.buttonContainer,
+                        !(signatureVal && selfieVal) &&
+                          styles.buttonContainerDisabled,
+                      ]}>
+                      <AntDesign
+                        name="clockcircle"
+                        size={24}
+                        color="white"
+                        style={{ alignSelf: "center" }}
+                      />
+                      <Text style={styles.buttonText}>Time In</Text>
+                    </TouchableOpacity>
 
                     {signatureVal ? (
                       <></>
@@ -372,9 +369,10 @@ const Attendance: React.FC = () => {
                         onSignatureUpdate={handleSignatureUpdate}
                       />
                     )}
+
                     {!selfieVal ? (
                       <TouchableOpacity
-                        style={styles.buttonContainer1}
+                        style={dynamicStyles.buttonContainer1}
                         onPress={handleImagePicker}>
                         <Text style={styles.buttonText1}>Take a photo</Text>
                       </TouchableOpacity>
@@ -387,7 +385,13 @@ const Attendance: React.FC = () => {
                   <TouchableOpacity
                     onPress={() => showConfirmAlert(timeOut, "Time Out")}
                     style={styles.buttonContainer}>
-                    <Text style={styles.buttonText}>Time Out</Text>
+                    <AntDesign
+                      name="clockcircle"
+                      size={24}
+                      color="white"
+                      style={{ alignSelf: "center" }}
+                    />
+                    <Text style={styles.buttonText}> Time Out</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -416,19 +420,10 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flex: 1,
-    flexGrow: 1,
-    paddingTop: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-    marginVertical: 10,
-    marginStart: 20,
-    marginEnd: 20,
   },
   content: {
     flex: 1,
     backgroundColor: "#fff",
-    borderRadius: 10,
     padding: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
