@@ -3,6 +3,7 @@ import { API_URL_ENV } from "@env";
 import {
   deleteCallsTodayLocalDb,
   deleteDoctorsTodayLocalDb,
+  dropLocalTable,
   dropLocalTables,
   getCallsTodayLocalDb,
   getRescheduleRequestRecordsLocalDb,
@@ -165,6 +166,72 @@ export const syncUser = async (user: User): Promise<any> => {
         // "user_sync_history_tbl",
         // "user_attendance_tbl",
       ]);
+    }
+
+    return response.data;
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred:", error);
+    }
+    throw error;
+  }
+};
+
+export const syncUserMid = async (user: User): Promise<any> => {
+  try {
+    let recordsToSync: ApiPayload[] = [];
+    const localRecords = await getCallsTodayLocalDb();
+
+    for (const record of localRecords) {
+      const scheduleId = record.schedule_id.toString();
+      const postCallsPerScheduleId = await getPostCallNotesLocalDb(scheduleId);
+      const preCallsPerScheduleId = await getPreCallNotesLocalDb(scheduleId);
+
+      let postCallNotes = "";
+      if (postCallsPerScheduleId) {
+        postCallNotes = `${postCallsPerScheduleId.feedback},${postCallsPerScheduleId.mood}`;
+      }
+
+      let preCallNotes = "";
+      if (preCallsPerScheduleId && preCallsPerScheduleId.length > 0) {
+        preCallNotes = preCallsPerScheduleId[0].notesArray.join(",");
+      }
+
+      recordsToSync.push({
+        schedule_id: record.schedule_id,
+        call_start: record.call_start,
+        call_end: record.call_end,
+        signature: record.signature,
+        signature_attempts: record.signature_attempts,
+        signature_location: record.signature_location,
+        photo: record.photo,
+        photo_location: record.photo_location,
+        post_call: postCallNotes,
+        pre_call: preCallNotes,
+      });
+    }
+
+    if (recordsToSync.length === 0) {
+      console.log("No records to sync.");
+      return "No records to sync";
+    }
+
+    const response = await axios.post(`${API_URL_ENV}/sync`, recordsToSync, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (response.data.isProceed) {
+      // await deleteCallsTodayLocalDb();
+      await dropLocalTable("calls_tbl");
     }
 
     return response.data;

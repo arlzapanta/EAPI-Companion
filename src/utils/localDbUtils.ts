@@ -284,6 +284,7 @@ export const saveUserAttendanceLocalDb = async (
   dateTime: { Date: string; Time: string }
 ): Promise<number> => {
   const dateTimeString = `${dateTime.Date} ${dateTime.Time}`;
+
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -309,6 +310,7 @@ export const saveUserAttendanceLocalDb = async (
       result = 1;
     }
   } else if (type === "out") {
+    const dateTimeString = `${dateTime.Date} ${dateTime.Time}`;
     const existingRow = await db.getFirstAsync(
       `SELECT * FROM user_attendance_tbl WHERE DATE(date) = ? AND type = ?`,
       [currentDatePH, "out"]
@@ -319,14 +321,14 @@ export const saveUserAttendanceLocalDb = async (
         `INSERT INTO user_attendance_tbl (email, type, sales_portal_id, dateTime) VALUES (?,?,?,?)`,
         [user.email, type, user.sales_portal_id, dateTimeString]
       );
-      result = 0; // Successfully recorded
+      result = 0;
     } else {
       console.log("User already timed out today");
-      result = 1; // Already recorded
+      result = 1;
     }
   } else {
     console.log("Invalid type provided");
-    result = -1; // Invalid type
+    result = -1;
   }
 
   db.closeSync();
@@ -1563,10 +1565,17 @@ export const getDoctorsSchedLocalDb = async (): Promise<
   await db.execAsync(createIfNEscheduleAPI);
 
   // const query = `SELECT * FROM schedule_API_tbl`;
-  const query = `SELECT schedule_API_tbl.*
+  const query = `
+      SELECT schedule_API_tbl.*
       FROM schedule_API_tbl
-      INNER JOIN reschedule_req_tbl AS rr
-      ON schedule_API_tbl.schedule_id != rr.schedule_id`;
+      LEFT JOIN reschedule_req_tbl
+      ON schedule_API_tbl.schedule_id = reschedule_req_tbl.schedule_id
+      WHERE reschedule_req_tbl.request_id IS NULL OR (reschedule_req_tbl.request_id IS NOT NULL AND reschedule_req_tbl.status = 1)
+      `;
+  // const query = `SELECT schedule_API_tbl.*
+  //     FROM schedule_API_tbl
+  //     INNER JOIN reschedule_req_tbl AS rr
+  //     ON schedule_API_tbl.schedule_id != rr.schedule_id`;
 
   try {
     const result = await db.getAllAsync(query);
@@ -1717,8 +1726,10 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
     const result = await db.getAllAsync(query, [currentDate]);
     const existingRows = result as ScheduleRecord[];
 
-    // const testRecords = await db.getAllAsync('SELECT schedule_id, created_date, created_at FROM calls_tbl');
-    // console.log('CHECK NEW CALL IN CALLS_TBL', testRecords);
+    const testRecords = await db.getAllAsync(
+      "SELECT schedule_id, created_date, created_at FROM calls_tbl"
+    );
+    console.log("CHECK NEW CALL IN CALLS_TBL", testRecords);
 
     return existingRows;
   } catch (error) {

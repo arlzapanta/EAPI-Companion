@@ -19,6 +19,7 @@ import Detailers from "../modals/DetailersOnCallModal";
 import {
   formatDate,
   formatTimeHoursMinutes,
+  getCurrentDatePH,
   getFormattedDateToday,
 } from "../../utils/dateUtils";
 import SignatureCapture from "../../components/SignatureCapture";
@@ -110,7 +111,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         photo: photoValue,
         photo_location: photoLocation,
         doctors_name: docName,
-        created_at: await getFormattedDateToday(),
+        created_at: await getCurrentDatePH(),
       };
 
       setCallsData(callDetails);

@@ -5,7 +5,6 @@ export const savePostCallNotesLocalDb = async ({
   feedback,
   scheduleId,
 }: PostCallNotesParams): Promise<void> => {
-  console.log(scheduleId, " oajksdlkasjdlkjasdkljasdklj");
   try {
     const db = await SQLite.openDatabaseAsync("cmms", {
       useNewConnection: true,

@@ -2,7 +2,8 @@ import moment from "moment-timezone";
 moment.tz.setDefault("Asia/Tokyo");
 
 import * as SecureStore from "expo-secure-store";
-import { format, parseISO } from "date-fns";
+// import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 
 export const formatDateTime = (dateString: string) => {
   const thisDate = moment(dateString).tz("Asia/Manila").format("YYYY-MM-DD");
@@ -158,7 +159,9 @@ export async function getRelevantDateRange(): Promise<string[]> {
 }
 
 export const formatDate = (dateString: string) => {
-  const date = parseISO(dateString);
+  const date = moment(dateString)
+    .tz("Asia/Manila")
+    .format("YYYY-MM-DD HH:mm:ss");
   return format(date, "MMM d, yyyy EEEE");
 };
 
@@ -167,12 +170,16 @@ export const formatDatev1 = (dateString: string) => {
 };
 
 export const formatDateYMD = (dateString: string) => {
-  const date = parseISO(dateString);
-  return format(date, "yyyy-MM-dd");
+  const thisDateWithTime = moment(dateString)
+    .tz("Asia/Manila")
+    .format("YYYY-MM-DD HH:mm:ss");
+  return format(thisDateWithTime, "yyyy-MM-dd");
 };
 
 export const getFormattedDateToday = async () => {
-  const currentMoment = moment(await getCurrentDatePH()).tz("Asia/Manila");
+  console.log(await getCurrentDatePH());
+  const currentMoment = moment(await getCurrentDatePH());
+  console.log(currentMoment, "currentMoment getFormattedDateToday");
   const today = currentMoment.format("YYYY-MM-DD");
   return today;
 };

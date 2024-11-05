@@ -11,6 +11,7 @@ import {
   dropLocalTablesDb,
   getCallsTodayLocalDb,
   getDailyChartsData,
+  getDoctorsSchedLocalDb,
   insertDummyRecords,
   saveUserSyncHistoryLocalDb,
 } from "../utils/localDbUtils";
@@ -18,8 +19,13 @@ import {
   doctorRecordsSync,
   getDetailersData,
   syncUser,
+  syncUserMid,
 } from "../utils/apiUtility";
-import { getCurrentTimePH, isTimeBetween12and1PM } from "../utils/dateUtils";
+import {
+  getCurrentDatePH,
+  getCurrentTimePH,
+  isTimeBetween12and1PM,
+} from "../utils/dateUtils";
 import Loading from "../components/Loading";
 import { getLocation } from "../utils/currentLocation";
 import { showConfirmAlert } from "../utils/commonUtil";
@@ -103,7 +109,7 @@ const Settings = () => {
         const syncLocalToAPI = await syncUser(userInfo);
         if (syncLocalToAPI !== "No records to sync") {
           customToast("Successfully Sync data to server");
-          await saveUserSyncHistoryLocalDb(userInfo, 2);
+          // await saveUserSyncHistoryLocalDb(userInfo, 2);
         } else {
           customToast("No records [actual calls] to sync");
           console.log(
@@ -160,7 +166,8 @@ const Settings = () => {
         try {
           let hasError = false;
           try {
-            await syncUser(userInfo);
+            // await syncUser(userInfo);
+            await syncUserMid(userInfo);
           } catch (error) {
             hasError = true;
             msg = "Server Error : Failed to mid sync please contact admin.";
@@ -169,7 +176,10 @@ const Settings = () => {
           }
 
           if (!hasError) {
-            await saveUserSyncHistoryLocalDb(userInfo, 3);
+            await saveUserSyncHistoryLocalDb(userInfo, 3, {
+              Date: await getCurrentDatePH(),
+              Time: "mid sync",
+            });
           }
         } catch (error) {
           msg = "Server Error : Failed to mid sync please contact admin.";

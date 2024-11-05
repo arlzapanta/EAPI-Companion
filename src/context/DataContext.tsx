@@ -14,6 +14,7 @@ import {
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import { getQuickCalls } from "../utils/quickCallUtil";
+
 // todo : add necessary states from components
 interface DataContextProps<T> {
   currentDate: string;
@@ -92,6 +93,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isDashboardLoading, setIsDashboardLoading] = useState<boolean>(false);
   const { getCurrentDate } = useRefreshFetchDataContext();
+  const { refreshSchedData } = useRefreshFetchDataContext();
   const fetchDashboardData = async () => {
     try {
       setIsDashboardLoading(true);
@@ -230,13 +232,13 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setMonthlyData(monthlyData);
         setYtdData(ytdData);
       }
-
       setIsDashboardLoading(false);
     } catch (error) {
       console.error("Error fetching chart data123:", error);
       setIsDashboardLoading(false);
     }
   };
+
   const ytdDataMonthValues = [
     {
       value: ytdData[0]?.value[0] ?? 0,

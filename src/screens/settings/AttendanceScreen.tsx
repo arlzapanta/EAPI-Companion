@@ -45,7 +45,8 @@ import Loading from "../../components/Loading";
 import { customToast } from "../../utils/customToast";
 import { checkPostCallUnsetExist } from "../../utils/callComponentsUtil";
 import { useDataContext } from "../../context/DataContext";
-import { checkIfFirstWeekdayOfMonth } from "../../utils/dateUtils";
+import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
+
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const Attendance: React.FC = () => {
@@ -78,6 +79,7 @@ const Attendance: React.FC = () => {
   const [selfieLoc, setSelfieLoc] = useState<string>("");
 
   const { detailersRecord, setDetailersRecord } = useDataContext();
+  const { refreshSchedData } = useRefreshFetchDataContext();
 
   const handleUpdateDetailers = (newDetailersData: DetailersRecord[]) => {
     setDetailersRecord(newDetailersData);
@@ -208,6 +210,7 @@ const Attendance: React.FC = () => {
             timeInIsProceed.DateTime
           );
           await fetchAttendanceData();
+          refreshSchedData();
         }
       } else {
         customToast("Already timed in, please contact admin [time in api]");

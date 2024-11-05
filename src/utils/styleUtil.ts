@@ -534,13 +534,13 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     // ***************************************************************************************
     containerLogin: {
       flex: 1,
-      padding: 16,
-      backgroundColor: currentTheme.containerBackgroundColor,
+      paddingTop: width >= 1280 ? width * 0.02 : width * 0.002,
+      padding: 2,
+      backgroundColor: currentTheme.containerSecondaryBackgroundColor,
     } as ViewStyle,
     cardLogin: {
       justifyContent: "center",
-      padding: 30,
-      borderRadius: 20,
+      borderRadius: 5,
       backgroundColor: "#fff",
       height: "100%",
     } as ViewStyle,
