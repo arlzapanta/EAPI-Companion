@@ -36,7 +36,10 @@ const Dashboard = () => {
     chartData,
     dailyDataCompletion,
     dailyData,
+    dailyTargetVal,
+    monthlyTargetVal,
     monthlyData,
+    yearlyTargetVal,
     yearlyData,
     ytdData,
     isLoading,
@@ -48,23 +51,34 @@ const Dashboard = () => {
   const plottedColor = "lightgray";
 
   let isDailyAvail = true;
+  let allDailyValuesZero = true;
   dailyData.forEach((d) => {
     if (d.value == 0) {
       isDailyAvail = false;
+      return;
     }
   });
+  isDailyAvail = allDailyValuesZero;
+
   let isMontlyAvail = true;
+  let allMonthlyValuesZero = true;
   monthlyData.forEach((d) => {
     if (d.value == 0) {
       isMontlyAvail = false;
+      return;
     }
   });
+  isMontlyAvail = allMonthlyValuesZero;
+
+  let allYearlyValuesZero = true;
   let isYearlyAvail = true;
   yearlyData.forEach((d) => {
     if (d.value == 0) {
       isYearlyAvail = false;
+      return;
     }
   });
+  isYearlyAvail = allYearlyValuesZero;
 
   return (
     <View style={dynamicStyles.container}>
@@ -169,6 +183,23 @@ const Dashboard = () => {
                             radius={122}
                             innerRadius={75}
                             innerCircleColor={"#fff"}
+                            centerLabelComponent={() => (
+                              <View style={styles.centerLabelContainer}>
+                                <Text style={styles.centerLabelText}>
+                                  {`${
+                                    dailyData[1].value ?? 0
+                                  } / ${dailyTargetVal}`}
+                                </Text>
+                                <View
+                                  style={{
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginTop: 5,
+                                  }}>
+                                  {/* <Text>Completion</Text> */}
+                                </View>
+                              </View>
+                            )}
                           />
                           {dailyData && (
                             <View
@@ -182,7 +213,7 @@ const Dashboard = () => {
                                   flexDirection: "row",
                                   justifyContent: "space-between",
                                   width: "100%",
-                                  maxWidth: 360,
+                                  maxWidth: 260,
                                   alignItems: "center",
                                 }}>
                                 <View
@@ -199,7 +230,8 @@ const Dashboard = () => {
                                       marginRight: 5,
                                     }}
                                   />
-                                  <Text style={{ color: "black" }}>
+                                  <Text
+                                    style={{ color: "black", marginRight: 15 }}>
                                     Scheduled: {dailyData[0].value ?? 0}
                                   </Text>
                                 </View>
@@ -217,7 +249,8 @@ const Dashboard = () => {
                                       marginRight: 5,
                                     }}
                                   />
-                                  <Text style={{ color: "black" }}>
+                                  <Text
+                                    style={{ color: "black", marginRight: 15 }}>
                                     Actual: {dailyData[1].value ?? 0}
                                   </Text>
                                 </View>
@@ -235,8 +268,9 @@ const Dashboard = () => {
                                       marginRight: 5,
                                     }}
                                   />
-                                  <Text style={{ color: "black" }}>
-                                    Target: {dailyData[2].value ?? 0}
+                                  <Text
+                                    style={{ color: "black", marginRight: 15 }}>
+                                    Target: {dailyTargetVal ?? 0}
                                   </Text>
                                 </View>
                               </View>
@@ -268,6 +302,23 @@ const Dashboard = () => {
                             radius={122}
                             innerRadius={75}
                             innerCircleColor={"#fff"}
+                            centerLabelComponent={() => (
+                              <View style={styles.centerLabelContainer}>
+                                <Text style={styles.centerLabelText}>
+                                  {`${
+                                    monthlyData[1].value ?? 0
+                                  } / ${monthlyTargetVal}`}
+                                </Text>
+                                <View
+                                  style={{
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginTop: 5,
+                                  }}>
+                                  {/* <Text>Completion</Text> */}
+                                </View>
+                              </View>
+                            )}
                           />
                           {monthlyData && (
                             <View
@@ -281,33 +332,35 @@ const Dashboard = () => {
                                   flexDirection: "row",
                                   justifyContent: "space-between",
                                   width: "100%",
-                                  maxWidth: 360,
+                                  // maxWidth: 360,
+                                  maxWidth: 220,
                                   alignItems: "center",
                                 }}>
                                 <View
                                   style={{
                                     flexDirection: "row",
                                     alignItems: "center",
-                                    marginEnd: 10,
+                                    // marginEnd: 10,
                                   }}>
                                   <View
                                     style={{
                                       width: 15,
                                       height: 15,
                                       borderRadius: 7.5,
-                                      backgroundColor: "#6ED7A5",
-                                      marginRight: 5,
+                                      backgroundColor: "transparent",
+                                      // backgroundColor: "#6ED7A5",
+                                      // marginRight: 5,
                                     }}
                                   />
                                   <Text style={{ color: "black" }}>
-                                    Scheduled: {monthlyData[0].value ?? 0}
+                                    {/* Scheduled: {monthlyData[0].value ?? 0} */}
                                   </Text>
                                 </View>
                                 <View
                                   style={{
                                     flexDirection: "row",
                                     alignItems: "center",
-                                    marginEnd: 10,
+                                    // marginEnd: 10,
                                   }}>
                                   <View
                                     style={{
@@ -318,8 +371,9 @@ const Dashboard = () => {
                                       marginRight: 5,
                                     }}
                                   />
-                                  <Text style={{ color: "black" }}>
-                                    Actual: {monthlyData[1].value ?? 0}
+                                  <Text
+                                    style={{ color: "black", marginRight: 15 }}>
+                                    Calls: {monthlyData[1].value ?? 0}
                                   </Text>
                                 </View>
                                 <View
@@ -331,8 +385,9 @@ const Dashboard = () => {
                                     marginRight: 5,
                                   }}
                                 />
-                                <Text style={{ color: "black" }}>
-                                  Target: {monthlyData[2].value ?? 0}
+                                <Text
+                                  style={{ color: "black", marginRight: 15 }}>
+                                  Target: {monthlyTargetVal ?? 0}
                                 </Text>
                               </View>
                             </View>
@@ -361,6 +416,23 @@ const Dashboard = () => {
                             radius={122}
                             innerRadius={75}
                             innerCircleColor={"#fff"}
+                            centerLabelComponent={() => (
+                              <View style={styles.centerLabelContainer}>
+                                <Text style={styles.centerLabelText}>
+                                  {`${
+                                    yearlyData[1].value ?? 0
+                                  } / ${yearlyTargetVal}`}
+                                </Text>
+                                <View
+                                  style={{
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    marginTop: 5,
+                                  }}>
+                                  {/* <Text>Completion</Text> */}
+                                </View>
+                              </View>
+                            )}
                           />
                           {yearlyData && (
                             <View
@@ -374,7 +446,8 @@ const Dashboard = () => {
                                   flexDirection: "row",
                                   justifyContent: "space-between",
                                   width: "100%",
-                                  maxWidth: 360,
+                                  // maxWidth: 360,
+                                  maxWidth: 260,
                                   alignItems: "center",
                                 }}>
                                 <View
@@ -388,19 +461,20 @@ const Dashboard = () => {
                                       width: 15,
                                       height: 15,
                                       borderRadius: 7.5,
-                                      backgroundColor: "#6ED7A5",
-                                      marginRight: 5,
+                                      // backgroundColor: "#6ED7A5",
+                                      backgroundColor: "transparent",
+                                      // marginRight: 5,
                                     }}
                                   />
                                   <Text style={{ color: "black" }}>
-                                    Scheduled: {yearlyData[0].value ?? 0}
+                                    {/* Scheduled: {yearlyData[0].value ?? 0} */}
                                   </Text>
                                 </View>
                                 <View
                                   style={{
                                     flexDirection: "row",
                                     alignItems: "center",
-                                    marginEnd: 10,
+                                    // marginEnd: 10,
                                   }}>
                                   <View
                                     style={{
@@ -411,8 +485,9 @@ const Dashboard = () => {
                                       marginRight: 5,
                                     }}
                                   />
-                                  <Text style={{ color: "black" }}>
-                                    Actual: {yearlyData[1].value ?? 0}
+                                  <Text
+                                    style={{ color: "black", marginEnd: 15 }}>
+                                    Calls: {yearlyData[1].value ?? 0}
                                   </Text>
                                 </View>
                                 <View
@@ -421,11 +496,11 @@ const Dashboard = () => {
                                     height: 15,
                                     borderRadius: 7.5,
                                     backgroundColor: "lightgray",
-                                    marginRight: 5,
+                                    // marginRight: 5,
                                   }}
                                 />
-                                <Text style={{ color: "black" }}>
-                                  Target: {yearlyData[2].value ?? 0}
+                                <Text style={{ color: "black", marginEnd: 15 }}>
+                                  Target: {yearlyTargetVal ?? 0}
                                 </Text>
                               </View>
                             </View>

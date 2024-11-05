@@ -5,6 +5,7 @@ export const savePostCallNotesLocalDb = async ({
   feedback,
   scheduleId,
 }: PostCallNotesParams): Promise<void> => {
+  console.log(scheduleId, " oajksdlkasjdlkjasdkljasdklj");
   try {
     const db = await SQLite.openDatabaseAsync("cmms", {
       useNewConnection: true,
@@ -41,7 +42,9 @@ export const savePostCallNotesLocalDb = async ({
   }
 };
 
-export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<any | null> => {
+export const getPostCallNotesLocalDb = async (
+  scheduleId: string
+): Promise<any | null> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -58,7 +61,6 @@ export const getPostCallNotesLocalDb = async (scheduleId: string): Promise<any |
   `);
 
   try {
-
     const query = await db.getFirstAsync(
       `SELECT * FROM post_call_notes_tbl WHERE schedule_id = ?`,
       [scheduleId]
@@ -94,8 +96,10 @@ export const checkPostCallUnsetExist = async (): Promise<Boolean> => {
   `);
 
   try {
-    const query = await db.getAllAsync(`SELECT * FROM post_call_notes_tbl WHERE mood = '' OR feedback = ''`);
-    return query.length > 0 ?  true : false;
+    const query = await db.getAllAsync(
+      `SELECT * FROM post_call_notes_tbl WHERE mood = '' OR feedback = ''`
+    );
+    return query.length > 0 ? true : false;
   } catch (error) {
     console.error("Error fetching post-call notes:", error);
     return false;
@@ -103,8 +107,6 @@ export const checkPostCallUnsetExist = async (): Promise<Boolean> => {
     await db.closeAsync();
   }
 };
-
-
 
 export const savePreCallNotesLocalDb = async ({
   notesArray,
@@ -146,7 +148,9 @@ export const savePreCallNotesLocalDb = async ({
   }
 };
 
-export const getPreCallNotesLocalDb = async (scheduleId: string): Promise<PreCallNotesParams[]> => {
+export const getPreCallNotesLocalDb = async (
+  scheduleId: string
+): Promise<PreCallNotesParams[]> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -166,7 +170,7 @@ export const getPreCallNotesLocalDb = async (scheduleId: string): Promise<PreCal
   try {
     const result = await db.getAllAsync(query, [scheduleId]);
     const existingRows = result as { notes: string; schedule_id: string }[];
-    return existingRows.map(row => ({
+    return existingRows.map((row) => ({
       notesArray: JSON.parse(row.notes),
       scheduleId: row.schedule_id,
     }));
@@ -178,8 +182,11 @@ export const getPreCallNotesLocalDb = async (scheduleId: string): Promise<PreCal
   }
 };
 
-export const deleteAllPreCallNotes = async ({ scheduleId }: { scheduleId: string }) => {
-
+export const deleteAllPreCallNotes = async ({
+  scheduleId,
+}: {
+  scheduleId: string;
+}) => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -198,8 +205,11 @@ export const deleteAllPreCallNotes = async ({ scheduleId }: { scheduleId: string
   }
 };
 
-export const deleteAllPostCallNotes = async ({ scheduleId }: { scheduleId: string }) => {
-
+export const deleteAllPostCallNotes = async ({
+  scheduleId,
+}: {
+  scheduleId: string;
+}) => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -217,4 +227,3 @@ export const deleteAllPostCallNotes = async ({ scheduleId }: { scheduleId: strin
     await db.closeAsync();
   }
 };
-

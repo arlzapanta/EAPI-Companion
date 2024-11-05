@@ -104,6 +104,11 @@ declare global {
     value: number;
     color: string;
   }
+
+  interface DailyChartData {
+    calls_count: number;
+    schedule_api_count: number;
+  }
   interface chartYtdData {
     value: number[];
   }
@@ -276,14 +281,7 @@ declare global {
   export interface AttendanceRecord {
     id: number;
     date: string;
-    email: string;
-    sales_portal_id: string;
-    type: string;
-  }
-
-  export interface AttendanceRecord {
-    id: number;
-    date: string;
+    dateTime: string;
     email: string;
     sales_portal_id: string;
     type: string;
@@ -299,6 +297,7 @@ declare global {
   export interface SyncHistoryRecord {
     id: number;
     date: string;
+    dateTime: string;
     email: string;
     sales_portal_id: string;
     type: number;

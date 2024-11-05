@@ -153,7 +153,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log("Error during login:", error.message);
       return {
         error: true,
-        msg: "Invalid credentials",
+        msg: "No or Intermittent Internet Connection, Please try again",
       };
     }
   };

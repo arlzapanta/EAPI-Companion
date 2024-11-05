@@ -31,7 +31,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import Loading from "../components/Loading";
 import { useDataContext } from "../context/DataContext";
 import { Picker } from "@react-native-picker/picker";
-import { getBase64StringFormat } from "../utils/commonUtil";
+import { calculateDuration, getBase64StringFormat } from "../utils/commonUtil";
 const dynamicStyles = getStyleUtil({});
 // todo : add date filter to view actual details (whole month)
 // todo : fix design
@@ -124,6 +124,7 @@ const ActualCalls = () => {
         setSelectedMood("");
       }
       setSelectedCall(call);
+      setScheduleIdValue(call.schedule_id);
     } catch (error) {
       console.error("Error fetching call data:", error);
     } finally {
@@ -298,7 +299,26 @@ const ActualCalls = () => {
                             Scheduled date:{" "}
                           </Text>
                           <Text style={dynamicStyles.columnSubTitle}>
-                            {formatDatev1(selectedCall.created_at)}
+                            {formatDatev1(selectedCall.date)}
+                          </Text>
+                        </View>
+                        <View style={styles1.detailRow}>
+                          <Text style={styles1.detailLabel}>
+                            Call duration:{" "}
+                          </Text>
+                          <Text style={dynamicStyles.columnSubTitle}>
+                            {calculateDuration(
+                              selectedCall.call_start,
+                              selectedCall.call_end
+                            )}
+                          </Text>
+                        </View>
+                        <View style={styles1.detailRow}>
+                          <Text style={styles1.detailLabel}>
+                            Doctors name:{" "}
+                          </Text>
+                          <Text style={dynamicStyles.columnSubTitle}>
+                            {selectedCall.doctors_name}
                           </Text>
                         </View>
                         <View style={styles1.detailRow}>
@@ -339,7 +359,7 @@ const ActualCalls = () => {
                             dynamicStyles.subBgColor,
                             { marginEnd: 5 },
                           ]}>
-                          <Text style={styles1.buttonText}>Save</Text>
+                          <Text style={dynamicStyles.buttonText}>Save</Text>
                         </TouchableOpacity>
                       </View>
 

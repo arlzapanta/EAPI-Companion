@@ -1,12 +1,15 @@
 import moment from "moment-timezone";
+moment.tz.setDefault("Asia/Tokyo");
 
 import * as SecureStore from "expo-secure-store";
 import { format, parseISO } from "date-fns";
 
 export const formatDateTime = (dateString: string) => {
   const thisDate = moment(dateString).tz("Asia/Manila").format("YYYY-MM-DD");
-  const date = parseISO(thisDate);
-  return format(date, "MMM d, yyyy | hh:mma | EE ");
+  const thisDateWithTime = moment(dateString)
+    .tz("Asia/Manila")
+    .format("YYYY-MM-DD HH:mm:ss");
+  return format(thisDateWithTime, "MMM d, yyyy | hh:mma | EE ");
 };
 
 const DATE_KEY = "current_date_ph";

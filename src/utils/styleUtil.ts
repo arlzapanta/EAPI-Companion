@@ -19,7 +19,8 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     // ***************************************************************************************
     container: {
       flex: 1,
-      paddingTop: width * 0.002,
+      // paddingTop: width * 0.002,
+      paddingTop: width >= 1280 ? width * 0.02 : width * 0.002,
       backgroundColor: currentTheme.containerSubBackgroundColor,
     } as ViewStyle,
     subContainer: {
@@ -34,7 +35,7 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       color: currentTheme.containerBackgroundColor,
     },
     subBgColor: {
-      backgroundColor: currentTheme.containerSubBackgroundColor,
+      backgroundColor: currentTheme.containerSecondaryBackgroundColor,
     },
     accordionButton: {
       flexDirection: "row",
@@ -122,8 +123,8 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     },
     floatingButtonContainer: {
       position: "absolute",
-      top: 20,
-      right: 20,
+      bottom: width >= 1280 ? 20 : 15,
+      right: width >= 1280 ? 20 : 15,
       backgroundColor: "#046E37",
       opacity: 0.9,
       borderRadius: 5,
@@ -304,6 +305,17 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       color: currentTheme.textColor,
       caretColor: currentTheme.caretColor,
     } as ViewStyle,
+    inputPWicon: {
+      width: "100%",
+      padding: 10,
+      marginBottom: 10,
+      borderColor: currentTheme.inputBorderColor,
+      borderWidth: 1,
+      borderRadius: 4,
+      maxWidth: 450,
+      color: currentTheme.textColor,
+      caretColor: currentTheme.caretColor,
+    } as ViewStyle,
     inputDoctors: {
       width: "100%",
       padding: 10,
@@ -332,6 +344,9 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     } as TextStyle,
     textBlack: {
       color: "black",
+    } as TextStyle,
+    textDwhite: {
+      color: "#E8E4C9",
     } as TextStyle,
     textSubColor: {
       color: currentTheme.containerSubBackgroundColor,

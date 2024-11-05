@@ -17,6 +17,7 @@ import { getStyleUtil } from "../utils/styleUtil";
 import Loading from "./Loading";
 import { getBase64StringFormat } from "../utils/commonUtil";
 import { formatTimeHoursMinutes } from "../utils/dateUtils";
+import { customToast } from "../utils/customToast";
 const dynamicStyle = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
@@ -112,8 +113,8 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   };
 
   const captureSignature = async () => {
-    stopTimer();
-    if (viewRef.current) {
+    if (viewRef.current && paths.length > 0) {
+      stopTimer();
       setIsSignatureLoading(true);
       try {
         const uri = await captureRef(viewRef.current, {
@@ -143,6 +144,8 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
       } catch (error) {
         console.error("Error capturing the view:", error);
       }
+    } else {
+      customToast("Please sign first");
     }
   };
 

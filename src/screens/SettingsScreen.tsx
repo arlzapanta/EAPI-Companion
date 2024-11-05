@@ -10,6 +10,7 @@ import {
   dropLocalTable,
   dropLocalTablesDb,
   getCallsTodayLocalDb,
+  getDailyChartsData,
   insertDummyRecords,
   saveUserSyncHistoryLocalDb,
 } from "../utils/localDbUtils";
@@ -120,70 +121,71 @@ const Settings = () => {
   };
 
   const MidSync = async () => {
-    const localRecords = await getCallsTodayLocalDb();
-    localRecords.forEach(async (record) => {
-      const scheduleId = record.schedule_id.toString();
-      const postCallsPerScheduleId = await getPostCallNotesLocalDb(scheduleId);
-      const preCallsPerScheduleId = await getPreCallNotesLocalDb(scheduleId);
+    // const localRecords = await getCallsTodayLocalDb();
+    // localRecords.forEach(async (record) => {
+    //   const scheduleId = record.schedule_id.toString();
+    //   const postCallsPerScheduleId = await getPostCallNotesLocalDb(scheduleId);
+    //   const preCallsPerScheduleId = await getPreCallNotesLocalDb(scheduleId);
 
-      console.log("scheduleId", scheduleId);
-      console.log("postCallsPerScheduleId", postCallsPerScheduleId);
-      console.log("preCallsPerScheduleId", preCallsPerScheduleId);
-    });
-    // let msg = "";
-    // if (isTimeBetween12and1PM()) {
-    //   try {
-    //     setLoading(true);
-    //     const checkQC = await getQuickCalls();
-    //     const checkPost = await checkPostCallUnsetExist();
-    //     if (checkQC.length > 0) {
-    //       msg = "Existing quick calls, kindly complete or remove any data";
-    //       Alert.alert(msg);
-    //       setLoading(false);
-    //       return;
-    //     }
-    //     if (checkPost) {
-    //       msg = "Existing empty post calls, kindly complete all post calls";
-    //       Alert.alert(msg);
-    //       setLoading(false);
-    //       return;
-    //     }
-    //     if (!userInfo) {
-    //       msg = "Server Error : User information is missing.";
-    //       Alert.alert(msg);
-    //       setLoading(false);
-    //       return;
-    //     }
+    //   console.log("scheduleId", scheduleId);
+    //   console.log("postCallsPerScheduleId", postCallsPerScheduleId);
+    //   console.log("preCallsPerScheduleId", preCallsPerScheduleId);
+    // });
 
-    //     try {
-    //       let hasError = false;
-    //       try {
-    //         await syncUser(userInfo);
-    //       } catch (error) {
-    //         hasError = true;
-    //         msg = "Server Error : Failed to mid sync please contact admin.";
-    //         Alert.alert(msg);
-    //         throw error;
-    //       }
+    let msg = "";
+    if (isTimeBetween12and1PM()) {
+      try {
+        setLoading(true);
+        const checkQC = await getQuickCalls();
+        const checkPost = await checkPostCallUnsetExist();
+        if (checkQC.length > 0) {
+          msg = "Existing quick calls, kindly complete or remove any data";
+          Alert.alert(msg);
+          setLoading(false);
+          return;
+        }
+        if (checkPost) {
+          msg = "Existing empty post calls, kindly complete all post calls";
+          Alert.alert(msg);
+          setLoading(false);
+          return;
+        }
+        if (!userInfo) {
+          msg = "Server Error : User information is missing.";
+          Alert.alert(msg);
+          setLoading(false);
+          return;
+        }
 
-    //       if (!hasError) {
-    //         await saveUserSyncHistoryLocalDb(userInfo, 3);
-    //       }
-    //     } catch (error) {
-    //       msg = "Server Error : Failed to mid sync please contact admin.";
-    //       Alert.alert(msg);
-    //     }
-    //   } catch (error) {
-    //     Alert.alert(
-    //       "Server Error",
-    //       " Failed to mid sync please contact admin."
-    //     );
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // } else {
-    //   customToast("Mid sync is available between 12pm and 1pm");
-    // }
+        try {
+          let hasError = false;
+          try {
+            await syncUser(userInfo);
+          } catch (error) {
+            hasError = true;
+            msg = "Server Error : Failed to mid sync please contact admin.";
+            Alert.alert(msg);
+            throw error;
+          }
+
+          if (!hasError) {
+            await saveUserSyncHistoryLocalDb(userInfo, 3);
+          }
+        } catch (error) {
+          msg = "Server Error : Failed to mid sync please contact admin.";
+          Alert.alert(msg);
+        }
+      } catch (error) {
+        Alert.alert(
+          "Server Error",
+          " Failed to mid sync please contact admin."
+        );
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      customToast("Mid sync is available between 12pm and 1pm");
+    }
   };
 
   useEffect(() => {

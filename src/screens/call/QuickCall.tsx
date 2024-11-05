@@ -252,7 +252,9 @@ const QuickCall = () => {
           call_start: call.call_start,
           call_end: call.call_end,
           signature: call.signature,
-          signature_attempts: call.signature_attempts.toString(),
+          signature_attempts: call.signature_attempts
+            ? call.signature_attempts.toString()
+            : "0",
           signature_location: call.signature_location,
           photo: call.photo,
           photo_location: call.photo_location,

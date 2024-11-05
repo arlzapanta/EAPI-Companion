@@ -1,14 +1,23 @@
 // Login.tsx
 import React, { useState } from "react";
-import { View, TextInput, TouchableOpacity, Text, Alert } from "react-native";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  Alert,
+  StyleSheet,
+} from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { getStyleUtil } from "../utils/styleUtil";
 import { API_URL_ENV, TOKEN_PASSWORD_ENV, TOKEN_USERNAME_ENV } from "@env";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { onLogin } = useAuth();
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const dynamicStyles = getStyleUtil({});
 
@@ -57,13 +66,26 @@ const Login = () => {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <TextInput
-            placeholder="Enter your password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            style={dynamicStyles.input}
-          />
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={dynamicStyles.inputPWicon}
+              secureTextEntry={!isPasswordVisible}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+              style={styles.iconContainer}>
+              <Ionicons
+                name={isPasswordVisible ? "eye-off" : "eye"}
+                size={24}
+                color="gray"
+              />
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
             style={dynamicStyles.buttonContainer}
             onPress={handleLogin}>
@@ -76,3 +98,15 @@ const Login = () => {
 };
 
 export default Login;
+
+const styles = StyleSheet.create({
+  passwordContainer: {
+    flexDirection: "row",
+  },
+  iconContainer: {
+    position: "absolute",
+    right: 15,
+    top: 12,
+    zIndex: 100,
+  },
+});

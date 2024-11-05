@@ -93,7 +93,9 @@ const AttendanceTable: React.FC<AttendanceTableProps> = ({ data }) => {
                     <DataTable.Cell>
                       {user.type === "in" ? "Time In" : "Time Out"}
                     </DataTable.Cell>
-                    <DataTable.Cell>{formatDateTime(user.date)}</DataTable.Cell>
+                    <DataTable.Cell>
+                      {formatDateTime(user.dateTime)}
+                    </DataTable.Cell>
                   </DataTable.Row>
                 ))}
               </DataTable>

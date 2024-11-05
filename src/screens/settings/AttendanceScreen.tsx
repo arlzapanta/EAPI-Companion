@@ -197,8 +197,16 @@ const Attendance: React.FC = () => {
         }
 
         if (!hasError) {
-          await saveUserSyncHistoryLocalDb(userInfo, 1);
-          await saveUserAttendanceLocalDb(userInfo, "in");
+          await saveUserSyncHistoryLocalDb(
+            userInfo,
+            1,
+            timeInIsProceed.DateTime
+          );
+          await saveUserAttendanceLocalDb(
+            userInfo,
+            "in",
+            timeInIsProceed.DateTime
+          );
           await fetchAttendanceData();
         }
       } else {
@@ -253,8 +261,16 @@ const Attendance: React.FC = () => {
         }
 
         if (!hasError) {
-          await saveUserSyncHistoryLocalDb(userInfo, 2);
-          await saveUserAttendanceLocalDb(userInfo, "out");
+          await saveUserSyncHistoryLocalDb(
+            userInfo,
+            2,
+            timeOutIsProceed.DateTime
+          );
+          await saveUserAttendanceLocalDb(
+            userInfo,
+            "out",
+            timeOutIsProceed.DateTime
+          );
           await fetchAttendanceData();
         }
       } else {

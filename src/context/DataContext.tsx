@@ -9,6 +9,7 @@ import {
   fetchAllDetailers,
   fetchChartDataLocalDb,
   fetchDetailersDataLocalDb,
+  getDailyChartsData,
   getDatesAndTypeForCalendarView,
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
@@ -20,7 +21,10 @@ interface DataContextProps<T> {
   chartData: ChartDashboardRecord[];
   dailyDataCompletion: chartData[];
   dailyData: chartData[];
+  dailyTargetVal: number;
+  monthlyTargetVal: number;
   monthlyData: chartData[];
+  yearlyTargetVal: number;
   yearlyData: chartData[];
   ytdData: chartYtdData[];
   isLoading: boolean;
@@ -63,6 +67,10 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     { value: 0, color: "#046E37" },
     { value: 100, color: "lightgray" },
   ]);
+  const [dailyTargetVal, setDailyTargetVal] = useState<number>(0);
+  const [monthlyTargetVal, setMonthlyTargetVal] = useState<number>(0);
+  const [yearlyTargetVal, setYearlyTargetVal] = useState<number>(0);
+
   const [dailyData, setDailyData] = useState<chartData[]>([
     { value: 0, color: "#6ED7A5" },
     { value: 0, color: "#046E37" },
@@ -125,15 +133,15 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           },
         }));
 
-        const dailyPlottingCount = parseInt(
-          transformedData[0].daily.plottingCount.toString(),
-          10
-        );
-        const dailyCallsCount = parseInt(
-          transformedData[0].daily.callsCount.toString(),
-          10
-        );
-        const dailyTargetCount = transformedData[0].daily.targetCount;
+        // const dailyPlottingCount = parseInt(
+        //   transformedData[0].daily.plottingCount.toString(),
+        //   10
+        // );
+        // const dailyCallsCount = parseInt(
+        //   transformedData[0].daily.callsCount.toString(),
+        //   10
+        // );
+        // const dailyTargetCount = transformedData[0].daily.targetCount;
 
         const monthlyPlottingCount = parseInt(
           transformedData[0].monthly.plottingCount.toString(),
@@ -159,30 +167,53 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         const ytdCallsCount = transformedData[0].ytd.callsCount;
         const ytdTargetCount = transformedData[0].ytd.targetCount;
 
-        const completedPercentage = (dailyCallsCount / dailyTargetCount) * 100;
+        // const completedPercentage = (dailyCallsCount / dailyTargetCount) * 100;
+        // const remainingPercentage = 100 - completedPercentage;
+
+        const dailyCompData: DailyChartData[] = await getDailyChartsData();
+        const completedPercentage =
+          (dailyCompData[0].calls_count / dailyCompData[0].schedule_api_count) *
+          100;
         const remainingPercentage = 100 - completedPercentage;
+
+        const dailyPlottingCount = parseInt(
+          dailyCompData[0].schedule_api_count.toString(),
+          10
+        );
+        const dailyCallsCount = parseInt(
+          dailyCompData[0].calls_count.toString(),
+          10
+        );
+        const dailyTargetCount = dailyCompData[0].schedule_api_count;
 
         const dailyDataCompletion: chartData[] = [
           { value: completedPercentage, color: "#046E37" },
           { value: remainingPercentage, color: "lightgray" },
         ];
 
+        setDailyTargetVal(dailyCompData[0].schedule_api_count);
         const dailyData: chartData[] = [
-          { value: dailyPlottingCount - dailyCallsCount, color: "#6ED7A5" },
+          {
+            value: dailyPlottingCount - dailyCallsCount,
+            color: "#6ED7A5",
+          },
           { value: dailyCallsCount, color: "#046E37" },
-          { value: dailyTargetCount, color: "lightgray" },
         ];
-
+        setMonthlyTargetVal(monthlyTargetCount);
         const monthlyData: chartData[] = [
-          { value: monthlyPlottingCount - monthlyCallsCount, color: "#6ED7A5" },
+          {
+            value: monthlyPlottingCount - monthlyCallsCount,
+            color: "lightgray",
+          },
           { value: monthlyCallsCount, color: "#046E37" },
-          { value: monthlyTargetCount, color: "lightgray" },
+          // { value: monthlyTargetCount, color: "lightgray" },
         ];
-
+        setYearlyTargetVal(yearlyTargetCount);
         const yearlyData: chartData[] = [
-          { value: yearlyPlottingCount - yearlyCallsCount, color: "#6ED7A5" },
+          // { value: yearlyPlottingCount - yearlyCallsCount, color: "#6ED7A5" },
+          { value: yearlyPlottingCount - yearlyCallsCount, color: "lightgray" },
           { value: yearlyCallsCount, color: "#046E37" },
-          { value: yearlyTargetCount, color: "lightgray" },
+          // { value: yearlyTargetCount, color: "lightgray" },
         ];
 
         const ytdData: chartYtdData[] = ytdPlottingCount.map((_, index) => ({
@@ -303,6 +334,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     },
     { value: ytdData[11]?.value[1] ?? 0, frontColor: plottedColor },
   ];
+
   useEffect(() => {
     fetchDashboardData();
   }, [getCurrentDate, getDatesAndTypeForCalendarView, fetchChartDataLocalDb]);
@@ -397,8 +429,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         calendarData,
         chartData,
         dailyDataCompletion,
+        dailyTargetVal,
         dailyData,
+        monthlyTargetVal,
         monthlyData,
+        yearlyTargetVal,
         yearlyData,
         ytdData,
         isLoading,

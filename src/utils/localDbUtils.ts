@@ -131,6 +131,7 @@ const createIfNE_userAttendance = `
     email TEXT NOT NULL, 
     sales_portal_id TEXT NOT NULL, 
     type TEXT NOT NULL,
+    dateTime TEXT,
     date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 `;
@@ -140,6 +141,7 @@ const createIfNE_userSyncHistory = `
     id INTEGER PRIMARY KEY NOT NULL, 
     sales_portal_id TEXT NOT NULL, 
     type NUMBER NOT NULL,
+    dateTime TEXT,
     date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 `;
@@ -278,8 +280,10 @@ const createIfNEDetailers = `
 
 export const saveUserAttendanceLocalDb = async (
   user: User,
-  type: string
+  type: string,
+  dateTime: { Date: string; Time: string }
 ): Promise<number> => {
+  const dateTimeString = `${dateTime.Date} ${dateTime.Time}`;
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -288,7 +292,6 @@ export const saveUserAttendanceLocalDb = async (
   await db.execAsync(createIfNE_userAttendance);
 
   let result: number;
-
   if (type === "in") {
     const existingRow = await db.getFirstAsync(
       `SELECT * FROM user_attendance_tbl WHERE DATE(date) = ? AND type = ?`,
@@ -297,8 +300,8 @@ export const saveUserAttendanceLocalDb = async (
 
     if (!existingRow) {
       await db.runAsync(
-        `INSERT INTO user_attendance_tbl (email, type, sales_portal_id) VALUES (?,?,?)`,
-        [user.email, type, user.sales_portal_id]
+        `INSERT INTO user_attendance_tbl (email, type, sales_portal_id, dateTime) VALUES (?,?,?,?)`,
+        [user.email, type, user.sales_portal_id, dateTimeString]
       );
       result = 0;
     } else {
@@ -313,8 +316,8 @@ export const saveUserAttendanceLocalDb = async (
 
     if (!existingRow) {
       await db.runAsync(
-        `INSERT INTO user_attendance_tbl (email, type, sales_portal_id) VALUES (?,?,?)`,
-        [user.email, type, user.sales_portal_id]
+        `INSERT INTO user_attendance_tbl (email, type, sales_portal_id, dateTime) VALUES (?,?,?,?)`,
+        [user.email, type, user.sales_portal_id, dateTimeString]
       );
       result = 0; // Successfully recorded
     } else {
@@ -332,8 +335,10 @@ export const saveUserAttendanceLocalDb = async (
 
 export const saveUserSyncHistoryLocalDb = async (
   user: User,
-  type: number
+  type: number,
+  dateTime: { Date: string; Time: string }
 ): Promise<string> => {
+  const dateTimeString = `${dateTime.Date} ${dateTime.Time}`;
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
@@ -353,8 +358,8 @@ export const saveUserSyncHistoryLocalDb = async (
   // if (existingRow) { //for testing
   if (!existingRow) {
     await db.runAsync(
-      `INSERT INTO user_sync_history_tbl (type, sales_portal_id) VALUES (?,?)`,
-      [type, user.sales_portal_id]
+      `INSERT INTO user_sync_history_tbl (type, sales_portal_id, dateTime) VALUES (?,?,?)`,
+      [type, user.sales_portal_id, dateTimeString]
     );
     result = "Success";
   } else {
@@ -1359,6 +1364,7 @@ export const getActualFilterLocalDb = async (
   await db.execAsync(createIfNECalls);
   const formattedDate = moment(date).format("YYYY-MM-DD");
   const query = `SELECT * FROM calls_tbl WHERE DATE(created_at) = ?`;
+
   try {
     const result = await db.getAllAsync(query, [formattedDate]);
     const existingRows = result as ScheduleRecord[];
@@ -1382,9 +1388,10 @@ export const getAllSchedulesFilterLocalDb = async (): Promise<
   });
 
   await db.execAsync(createIfNEscheduleAPI);
-  const query = `SELECT * FROM schedule_API_tbl`;
+  const currentDate = await getCurrentDatePH();
+  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) != ?`;
   try {
-    const result = await db.getAllAsync(query);
+    const result = await db.getAllAsync(query, [currentDate]);
     const existingRows = result as ScheduleAPIRecord[];
     // const testRecords = await db.getAllAsync('SELECT * FROM schedule_API_tbl');
     // console.log(testRecords,existingRows,'asdasd asdasdas');
@@ -1625,6 +1632,34 @@ export const getDoctorsWeekSchedLocalDb = async (): Promise<
   }
 };
 
+export const getDailyChartsData = async (): Promise<DailyChartData[]> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNECalls);
+  await db.execAsync(createIfNEscheduleAPI);
+
+  const currentDate = await getCurrentDatePH();
+  const query = `
+  SELECT 
+    COUNT(*) AS calls_count,
+    (SELECT COUNT(*) FROM schedule_API_tbl WHERE DATE(date) = ?) AS schedule_api_count
+  FROM calls_tbl
+  WHERE DATE(created_at) = ?
+`;
+
+  try {
+    const result = await db.getAllAsync(query, [currentDate, currentDate]);
+    return result as DailyChartData[];
+  } catch (error) {
+    console.error("Error fetching data for getCallsLocalDb:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
 export const getCallsLocalDb = async (): Promise<ScheduleRecord[]> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
@@ -1827,13 +1862,19 @@ export const saveCallsDoneFromSchedules = async (
 
   try {
     await db.execAsync(createIfNECalls);
+    await db.execAsync(createIfNEscheduleAPI);
+
+    const getDateSched: { date: string }[] = await db.getAllAsync(
+      "SELECT date FROM schedule_API_tbl WHERE schedule_id = ?",
+      [scheduleId]
+    );
 
     await db.runAsync(
       `INSERT INTO calls_tbl (
         schedule_id, call_start, call_end,
         signature, signature_attempts, signature_location,
-        photo, photo_location, doctors_name, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        photo, photo_location, doctors_name, created_at, date
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`,
       [
         callDetails.schedule_id,
         callDetails.call_start,
@@ -1845,6 +1886,7 @@ export const saveCallsDoneFromSchedules = async (
         callDetails.photo_location,
         callDetails.doctors_name,
         callDetails.created_at,
+        getDateSched[0].date,
       ]
     );
 
@@ -2290,6 +2332,7 @@ export const dropLocalTablesDb = async () => {
 
   await db.closeAsync();
 };
+
 export const dropLocalTable = async (tableName: string) => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
