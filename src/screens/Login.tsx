@@ -7,6 +7,7 @@ import {
   Text,
   Alert,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { getStyleUtil } from "../utils/styleUtil";
@@ -18,6 +19,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const { onLogin } = useAuth();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState<boolean>(false);
 
   const dynamicStyles = getStyleUtil({});
 
@@ -33,7 +35,24 @@ const Login = () => {
       return;
     }
 
+    // try {
+    //   const result = await onLogin!(email, password);
+    //   if (result && result.error) {
+    //     Alert.alert("Login Error", result.msg);
+    //   }
+    // } catch (error: any) {
+    //   const result = await onLogin!(email, password);
+    //   Alert.alert(
+    //     "Login Error",
+    //     `${API_URL_ENV} ${result} An error occurred during login. Please try again.`
+    //     // `${TOKEN_USERNAME_ENV} ${TOKEN_PASSWORD_ENV} ${API_URL_ENV} ${result} An error occurred during login. Please try again.`
+    //   );
+    //   console.error(error);
+    // }
+
     try {
+      setIsLoginLoading(true);
+      console.log(isLoginLoading, "isLoginLoading");
       const result = await onLogin!(email, password);
       if (result && result.error) {
         Alert.alert("Login Error", result.msg);
@@ -43,9 +62,10 @@ const Login = () => {
       Alert.alert(
         "Login Error",
         `${API_URL_ENV} ${result} An error occurred during login. Please try again.`
-        // `${TOKEN_USERNAME_ENV} ${TOKEN_PASSWORD_ENV} ${API_URL_ENV} ${result} An error occurred during login. Please try again.`
       );
       console.error(error);
+    } finally {
+      setIsLoginLoading(false);
     }
   };
 
@@ -87,9 +107,17 @@ const Login = () => {
           </View>
 
           <TouchableOpacity
-            style={dynamicStyles.buttonContainer}
+            disabled={isLoginLoading}
+            style={[
+              dynamicStyles.buttonContainer,
+              isLoginLoading && dynamicStyles.isLoadingButtonContainer,
+            ]}
             onPress={handleLogin}>
-            <Text style={dynamicStyles.buttonText}>Login</Text>
+            {isLoginLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={dynamicStyles.buttonText}>Login</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>

@@ -339,6 +339,15 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       maxWidth: 450,
       marginTop: 10,
     } as ViewStyle,
+    isLoadingButtonContainer: {
+      width: "100%",
+      padding: 15,
+      backgroundColor: currentTheme.containerSecondaryBackgroundColor,
+      borderRadius: 4,
+      alignItems: "center",
+      maxWidth: 450,
+      marginTop: 10,
+    } as ViewStyle,
     textWhite: {
       color: "white",
     } as TextStyle,
