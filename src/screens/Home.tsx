@@ -86,34 +86,40 @@ const Home = () => {
           iconName="house-circle-exclamation"
           onPress={() => setSelectedScreen("dashboard")}
           active={selectedScreen === "dashboard"}
+          text={"HOME"}
         />
         <NavLinkComponent
           iconName="user-gear"
           onPress={() => setSelectedScreen("settings")}
           active={selectedScreen === "settings"}
+          text={"SETTINGS"}
         />
         <NavLinkComponent
           iconName="calendar-alt"
           onPress={() => setSelectedScreen("schedules")}
           active={selectedScreen === "schedules"}
+          text={"SCHEDULES"}
         />
 
         <NavLinkComponent
           iconName="calendar-check"
           onPress={() => setSelectedScreen("actualcalls")}
           active={selectedScreen === "actualcalls"}
+          text={"ACTUAL"}
         />
 
         <NavLinkComponent
           iconName="user-doctor"
           onPress={() => setSelectedScreen("doctors")}
           active={selectedScreen === "doctors"}
+          text={"DOCTORS"}
         />
 
         <NavLinkComponent
-          iconName="pen"
+          iconName="bolt-lightning"
           onPress={() => setSelectedScreen("quickcall")}
           active={selectedScreen === "quickcall"}
+          text={"QUICK CALL"}
         />
       </View>
       <View style={dynamicStyles.components_container}>{renderContent()}</View>

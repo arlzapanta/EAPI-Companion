@@ -33,6 +33,7 @@ const dropCreateCallsTable = `
     photo TEXT, 
     photo_location TEXT,
     created_at TEXT,
+    done TEXT,
     created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
   );
 `;
@@ -261,6 +262,7 @@ const createIfNECalls = `
       signature_location TEXT,
       signature_attempts TEXT,
       created_at TEXT,
+      done TEXT,
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `;
@@ -1256,6 +1258,30 @@ export const getStatusRescheduleHistoryRecords = async (request_id: string) => {
   }
 };
 
+export const getScheduleByIDLocalDb = async ({
+  scheduleId,
+}: {
+  scheduleId: string;
+}): Promise<ScheduleAPIRecord> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNEscheduleAPI);
+  const query = `SELECT * FROM schedule_API_tbl WHERE schedule_id = ?`;
+
+  try {
+    const result = await db.getFirstAsync(query, [scheduleId]);
+    const existingRows = result as ScheduleAPIRecord;
+    return existingRows;
+  } catch (error) {
+    console.error("Error fetching schedule records data1:", error);
+    throw new Error("Failed to fetch schedule data");
+  } finally {
+    await db.closeAsync();
+  }
+};
+
 export const getSchedulesLocalDb = async (): Promise<ScheduleAPIRecord[]> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
@@ -1729,7 +1755,6 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
     const testRecords = await db.getAllAsync(
       "SELECT schedule_id, created_date, created_at FROM calls_tbl"
     );
-    console.log("CHECK NEW CALL IN CALLS_TBL", testRecords);
 
     return existingRows;
   } catch (error) {

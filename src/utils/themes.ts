@@ -1,4 +1,5 @@
 export const lightTheme = {
+  mainContainerBG: "white",
   containerBackgroundColor: "#046E37",
   containerSubBackgroundColor: "#97C99D",
   containerSecondaryBackgroundColor: "#6ED7A5",
@@ -14,6 +15,7 @@ export const lightTheme = {
 };
 
 export const darkTheme = {
+  mainContainerBG: "white",
   containerBackgroundColor: "#1a1a1a",
   containerSubBackgroundColor: "#97C99D",
   containerSecondaryBackgroundColor: "#6ED7A5",

@@ -19,7 +19,6 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     // ***************************************************************************************
     container: {
       flex: 1,
-      // paddingTop: width * 0.002,
       paddingTop: width >= 1280 ? width * 0.02 : width * 0.002,
       backgroundColor: currentTheme.containerSubBackgroundColor,
     } as ViewStyle,
@@ -242,6 +241,12 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       alignItems: "center",
       backgroundColor: currentTheme.containerSubBackgroundColor,
     } as ViewStyle,
+    containerSubLoading: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: currentTheme.mainContainerBG,
+    } as ViewStyle,
     scrollViewContent: {
       flexGrow: 1,
       paddingBottom: 60,
@@ -334,6 +339,15 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       width: "100%",
       padding: 15,
       backgroundColor: currentTheme.buttonColor,
+      borderRadius: 4,
+      alignItems: "center",
+      maxWidth: 450,
+      marginTop: 10,
+    } as ViewStyle,
+    buttonLogout: {
+      width: "100%",
+      padding: 15,
+      backgroundColor: "#d9534f",
       borderRadius: 4,
       alignItems: "center",
       maxWidth: 450,
@@ -650,19 +664,19 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     navLink: {
       backgroundColor: currentTheme.containerBackgroundColor,
       // backgroundColor: "black",
-      padding: 15,
-      marginVertical: 15,
-      marginStart: 10,
-      marginEnd: 10,
+      paddingTop: width >= 835 ? 15 : 0,
+      marginVertical: width >= 835 ? 15 : 2,
+      marginStart: width >= 835 ? 10 : 2,
+      marginEnd: width >= 835 ? 10 : 2,
       alignItems: "center",
       justifyContent: "center",
     } as ViewStyle,
     activeNavLink: {
       backgroundColor: currentTheme.containerSecondaryBackgroundColor,
-      // paddingVertical: 15,
-      marginVertical: 15,
-      marginStart: 10,
-      minWidth: 70,
+      paddingVertical: width >= 835 ? 15 : 6,
+      marginVertical: width >= 835 ? 15 : 6,
+      marginStart: width >= 835 ? 10 : 3,
+      minWidth: width >= 835 ? 80 : 50,
       borderRadius: 10,
     },
     navLinkBox: {
@@ -676,13 +690,20 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       // marginEnd: -10,
     } as ViewStyle,
     navIcon: {
-      fontSize: 32,
+      fontSize: width >= 835 ? 32 : 25,
       color: currentTheme.containerSubBackgroundColor,
     },
     activeNavIcon: {
       color: currentTheme.containerBackgroundColor,
-      fontSize: 30,
+      fontSize: width >= 835 ? 30 : 22,
     },
+    navText: {
+      fontSize: 8,
+      color: currentTheme.mainContainerBG,
+    } as TextStyle,
+    activeNavText: {
+      display: "none",
+    } as TextStyle,
     navLinkBoxTopDesign: {
       height: 0,
     } as ViewStyle,

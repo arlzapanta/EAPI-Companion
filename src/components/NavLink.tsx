@@ -1,9 +1,14 @@
 import React from "react";
-import { TouchableOpacity, View } from "react-native";
+import { TouchableOpacity, View, Text } from "react-native";
 import { Ionicons, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
 import { getStyleUtil } from "../utils/styleUtil";
 const dynamicStyles = getStyleUtil({});
-const NavLink: React.FC<NavLinkProps> = ({ iconName, onPress, active }) => {
+const NavLink: React.FC<NavLinkProps> = ({
+  iconName,
+  onPress,
+  active,
+  text,
+}) => {
   return (
     <View
       style={[
@@ -22,6 +27,13 @@ const NavLink: React.FC<NavLinkProps> = ({ iconName, onPress, active }) => {
           name={iconName}
           style={[dynamicStyles.navIcon, active && dynamicStyles.activeNavIcon]}
         />
+        <Text
+          style={[
+            dynamicStyles.navText,
+            active && dynamicStyles.activeNavText,
+          ]}>
+          {text}
+        </Text>
       </TouchableOpacity>
       <View
         style={[

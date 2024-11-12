@@ -19,6 +19,7 @@ import SyncSettingsScreen from "./src/screens/settings/SyncSettingsScreen";
 import RescheduleScreen from "./src/screens/settings/RescheduleScreen";
 import AttendanceScreen from "./src/screens/settings/AttendanceScreen";
 import OnCallScreen from "./src/screens/call/OnCallScreen";
+import SharedCallScreen from "./src/screens/call/SharedCallScreen";
 import { DataProvider } from "./src/context/DataContext";
 import * as Location from "expo-location";
 import { Camera } from "expo-camera";
@@ -107,6 +108,11 @@ const Layout = () => {
             <Stack.Screen
               name="OnCall"
               component={OnCallScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="SharedCall"
+              component={SharedCallScreen}
               options={{ headerShown: false }}
             />
           </>

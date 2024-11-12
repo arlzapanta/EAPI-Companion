@@ -129,6 +129,7 @@ declare global {
     iconName: string;
     onPress: () => void;
     active: boolean;
+    text: string;
   }
 
   export interface SignatureCaptureProps {
@@ -289,6 +290,14 @@ declare global {
 
   export interface AttendanceTableProps {
     data: AttendanceRecord[];
+  }
+  export interface LoadingSubRecords {
+    progress: number;
+    text: string;
+  }
+
+  export interface LoadingSubProps {
+    data: LoadingSubRecords;
   }
   export interface RescheduleTableProps {
     data: RescheduleRecord[];

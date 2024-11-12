@@ -5,13 +5,34 @@ import * as SecureStore from "expo-secure-store";
 // import { format, parseISO } from "date-fns";
 import { format } from "date-fns";
 
-export const formatDateTime = (dateString: string) => {
-  const thisDate = moment(dateString).tz("Asia/Manila").format("YYYY-MM-DD");
-  const thisDateWithTime = moment(dateString)
-    .tz("Asia/Manila")
-    .format("YYYY-MM-DD HH:mm:ss");
-  return format(thisDateWithTime, "MMM d, yyyy | hh:mma | EE ");
-};
+// export const formatDateTime = (dateString: string) => {
+//   const thisDate = moment(dateString).tz("Asia/Manila").format("YYYY-MM-DD");
+//   const thisDateWithTime = moment(dateString)
+//     .tz("Asia/Manila")
+//     .format("YYYY-MM-DD HH:mm:ss");
+//   return format(thisDateWithTime, "MMM d, yyyy | hh:mma | EE ");
+// };
+
+export function formatDateTime(datetimeString: string): string {
+  try {
+    const date = new Date(datetimeString);
+    const options: Intl.DateTimeFormatOptions = {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+    };
+    const formattedDate = new Intl.DateTimeFormat("en-US", options).format(
+      date
+    );
+    return formattedDate;
+  } catch (error) {
+    console.error("Error formatting date:", error);
+    return "Unknown Date";
+  }
+}
 
 const DATE_KEY = "current_date_ph";
 export const getCurrentDatePH = async (): Promise<string> => {
