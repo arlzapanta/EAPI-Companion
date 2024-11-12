@@ -32,6 +32,7 @@ import Loading from "../components/Loading";
 import { useDataContext } from "../context/DataContext";
 import { Picker } from "@react-native-picker/picker";
 import { calculateDuration, getBase64StringFormat } from "../utils/commonUtil";
+import LoadingSub from "../components/LoadingSub";
 const dynamicStyles = getStyleUtil({});
 // todo : add date filter to view actual details (whole month)
 // todo : fix design
@@ -408,7 +409,7 @@ const ActualCalls = () => {
                   </View>
                 </>
               ) : isInternalActualLoading ? (
-                <Loading />
+                <LoadingSub />
               ) : (
                 <NoActualCallSelected />
               )}
