@@ -1,48 +1,47 @@
 import React from "react";
-import { TouchableOpacity, StyleSheet } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
-
-const NavLink: React.FC<NavLinkProps> = ({ iconName, onPress, active }) => {
+import { TouchableOpacity, View, Text } from "react-native";
+import { Ionicons, FontAwesome5, FontAwesome6 } from "@expo/vector-icons";
+import { getStyleUtil } from "../utils/styleUtil";
+const dynamicStyles = getStyleUtil({});
+const NavLink: React.FC<NavLinkProps> = ({
+  iconName,
+  onPress,
+  active,
+  text,
+}) => {
   return (
-    <TouchableOpacity
-      style={[styles.navLink, active && styles.activeNavLink]}
-      onPress={onPress}>
-      <Icon
-        name={iconName}
-        style={[styles.navIcon, active && styles.activeNavIcon]}
-      />
-    </TouchableOpacity>
+    <View
+      style={[
+        dynamicStyles.navLinkBox,
+        active && dynamicStyles.navLinkBoxActive,
+      ]}>
+      <View
+        style={[
+          dynamicStyles.navLinkBoxTopDesign,
+          active && dynamicStyles.navLinkBoxTopDesignActive,
+        ]}></View>
+      <TouchableOpacity
+        style={[dynamicStyles.navLink, active && dynamicStyles.activeNavLink]}
+        onPress={onPress}>
+        <FontAwesome6
+          name={iconName}
+          style={[dynamicStyles.navIcon, active && dynamicStyles.activeNavIcon]}
+        />
+        <Text
+          style={[
+            dynamicStyles.navText,
+            active && dynamicStyles.activeNavText,
+          ]}>
+          {text}
+        </Text>
+      </TouchableOpacity>
+      <View
+        style={[
+          dynamicStyles.navLinkBoxBottomDesign,
+          active && dynamicStyles.navLinkBoxBottomDesignActive,
+        ]}></View>
+    </View>
   );
 };
-
-const styles = StyleSheet.create({
-  navLink: {
-    backgroundColor: "#F0F0F0",
-    padding: 13,
-    borderRadius: 20,
-    margin: 8,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    borderWidth: 2,
-    borderColor: "#F0F0F0",
-  },
-  activeNavLink: {
-    backgroundColor: "rgba(4, 110, 55, 0.9)",
-    shadowColor: "#046E37",
-    shadowOpacity: 0.3,
-    borderWidth: 3,
-  },
-  navIcon: {
-    fontSize: 30,
-    color: "lightgray",
-  },
-  activeNavIcon: {
-    color: "#FFFFFF",
-  },
-});
 
 export default NavLink;

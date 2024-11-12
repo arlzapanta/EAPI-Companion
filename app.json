@@ -8,7 +8,7 @@
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/test-logo.png",
-      "resizeMode": "cover",
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
@@ -20,10 +20,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000"
       },
-      "permissions": [
-        "ACCESS_NETWORK_STATE",
-        "INTERNET"
-      ],
+      "permissions": ["ACCESS_NETWORK_STATE", "INTERNET"],
       "package": "com.akainzapantadev.EAPICompanion"
     },
     "web": {
@@ -37,7 +34,7 @@
           "initialOrientation": "landscape"
         }
       ],
-      [ "expo-build-properties", { "android": { "usesCleartextTraffic": true } } ]
+      ["expo-build-properties", { "android": { "usesCleartextTraffic": true } }]
     ],
     "extra": {
       "eas": {

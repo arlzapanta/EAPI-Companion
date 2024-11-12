@@ -7,12 +7,34 @@ import { useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../type/navigation";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
+  dropLocalTable,
   dropLocalTablesDb,
+  getCallsTodayLocalDb,
+  getDailyChartsData,
+  getDoctorsSchedLocalDb,
   insertDummyRecords,
   saveUserSyncHistoryLocalDb,
 } from "../utils/localDbUtils";
-import { doctorRecordsSync, syncUser } from "../utils/apiUtility";
-import { getCurrentTimePH, isTimeBetween12and1PM } from "../utils/dateUtils";
+import {
+  doctorRecordsSync,
+  getDetailersData,
+  syncUser,
+  syncUserMid,
+} from "../utils/apiUtility";
+import {
+  getCurrentDatePH,
+  getCurrentTimePH,
+  isTimeBetween12and1PM,
+} from "../utils/dateUtils";
+import Loading from "../components/Loading";
+import { getLocation } from "../utils/currentLocation";
+import { showConfirmAlert } from "../utils/commonUtil";
+import { getQuickCalls } from "../utils/quickCallUtil";
+import {
+  checkPostCallUnsetExist,
+  getPostCallNotesLocalDb,
+  getPreCallNotesLocalDb,
+} from "../utils/callComponentsUtil";
 
 type SettingsScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -34,7 +56,7 @@ const Settings = () => {
     created_at: string;
     updated_at: string;
   } | null>(null);
-  // const styles = getStyleUtil({});
+  const dynamicStyle = getStyleUtil({});
   const navigation = useNavigation<SettingsScreenNavigationProp>();
 
   const handleLogout = () => {
@@ -76,47 +98,98 @@ const Settings = () => {
     navigation.navigate("Attendance");
   };
 
-  const showConfirmAlert = (action: () => void, actionName: string) => {
-    Alert.alert(
-      `Confirm ${actionName}`,
-      `Are you sure you want to ${actionName.toLowerCase()}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "OK",
-          onPress: action,
-        },
-      ],
-      { cancelable: false }
-    );
-  };
-
-  const MidSync = async () => {
+  const MidSync_old = async () => {
     if (!userInfo) {
-      Alert.alert("Error", "User information is missing.");
+      Alert.alert("Server Error", "User information is missing.");
       return;
     }
-
-    const isValidMidSync = isTimeBetween12and1PM();
-
-    setLoading(true);
-    if (isValidMidSync) {
+    if (isTimeBetween12and1PM()) {
       try {
-        const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
+        setLoading(true);
         const syncLocalToAPI = await syncUser(userInfo);
         if (syncLocalToAPI !== "No records to sync") {
-          Alert.alert("Success", "Successfully Sync data to server");
+          customToast("Successfully Sync data to server");
+          // await saveUserSyncHistoryLocalDb(userInfo, 2);
         } else {
-          Alert.alert("No records", "No records to sync");
+          customToast("No records [actual calls] to sync");
           console.log(
             "SettingScreen > MidSync > syncUser > res : No records to sync"
           );
         }
       } catch (error) {
-        Alert.alert("Error", "Failed to Mid Sync.");
+        Alert.alert("Server Error", "Failed to Mid Sync.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      customToast("Mid sync is available between 12pm and 1pm");
+    }
+  };
+
+  const MidSync = async () => {
+    // const localRecords = await getCallsTodayLocalDb();
+    // localRecords.forEach(async (record) => {
+    //   const scheduleId = record.schedule_id.toString();
+    //   const postCallsPerScheduleId = await getPostCallNotesLocalDb(scheduleId);
+    //   const preCallsPerScheduleId = await getPreCallNotesLocalDb(scheduleId);
+
+    //   console.log("scheduleId", scheduleId);
+    //   console.log("postCallsPerScheduleId", postCallsPerScheduleId);
+    //   console.log("preCallsPerScheduleId", preCallsPerScheduleId);
+    // });
+
+    let msg = "";
+    if (isTimeBetween12and1PM()) {
+      try {
+        setLoading(true);
+        const checkQC = await getQuickCalls();
+        const checkPost = await checkPostCallUnsetExist();
+        if (checkQC.length > 0) {
+          msg = "Existing quick calls, kindly complete or remove any data";
+          Alert.alert(msg);
+          setLoading(false);
+          return;
+        }
+        if (checkPost) {
+          msg = "Existing empty post calls, kindly complete all post calls";
+          Alert.alert(msg);
+          setLoading(false);
+          return;
+        }
+        if (!userInfo) {
+          msg = "Server Error : User information is missing.";
+          Alert.alert(msg);
+          setLoading(false);
+          return;
+        }
+
+        try {
+          let hasError = false;
+          try {
+            // await syncUser(userInfo);
+            await syncUserMid(userInfo);
+          } catch (error) {
+            hasError = true;
+            msg = "Server Error : Failed to mid sync please contact admin.";
+            Alert.alert(msg);
+            throw error;
+          }
+
+          if (!hasError) {
+            await saveUserSyncHistoryLocalDb(userInfo, 3, {
+              Date: await getCurrentDatePH(),
+              Time: "mid sync",
+            });
+          }
+        } catch (error) {
+          msg = "Server Error : Failed to mid sync please contact admin.";
+          Alert.alert(msg);
+        }
+      } catch (error) {
+        Alert.alert(
+          "Server Error",
+          " Failed to mid sync please contact admin."
+        );
       } finally {
         setLoading(false);
       }
@@ -157,62 +230,75 @@ const Settings = () => {
     await dropLocalTablesDb();
   };
 
+  const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeOutLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>Settings</Text>
+    <View style={dynamicStyle.container}>
+      {timeOutLoading ? (
+        <Loading />
+      ) : (
+        <>
+          <View style={dynamicStyle.card}>
+            <Text style={styles.title}>Settings</Text>
+            <View style={styles.centerItems}>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleAttendanceOnPress}>
+                <Text style={styles.buttonText}>Attendance</Text>
+              </TouchableOpacity>
 
-        <View style={styles.centerItems}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleAttendanceOnPress}>
-            <Text style={styles.buttonText}>Attendance</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleSyncSettingsOnPress}>
+                <Text style={styles.buttonText}>Sync History</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSyncSettingsOnPress}>
-            <Text style={styles.buttonText}>Sync History</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
+                style={styles.button}>
+                <Text style={styles.buttonText}>Mid Sync</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
-            style={styles.button}>
-            <Text style={styles.buttonText}>Mid Sync</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleRequestreschedOnPress}>
+                <Text style={styles.buttonText}>Request Reschedule</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleRequestreschedOnPress}>
-            <Text style={styles.buttonText}>Request Reschedule</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.buttonLogout}
+                onPress={handleLogout}>
+                <Text style={styles.buttonTextLogout}>Logout</Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity style={styles.buttonLogout} onPress={handleLogout}>
-            <Text style={styles.buttonTextLogout}>Logout</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.buttonTest} onPress={dropLocalTables}>
-            <Text style={styles.buttonTextTest}>
-              DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+              <TouchableOpacity
+                style={styles.buttonTest}
+                onPress={dropLocalTables}>
+                <Text style={styles.buttonTextTest}>
+                  DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F0F0F0",
-  },
   centerItems: {
     alignContent: "center",
     alignItems: "center",
   },
   card: {
-    flex: 1,
+    height: 740,
     padding: 40,
     backgroundColor: "#ffffff",
     borderRadius: 10,
@@ -221,9 +307,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 6,
     elevation: 5,
-    marginVertical: 10,
     marginStart: 20,
     marginEnd: 10,
+    marginBottom: 5,
   },
   title: {
     fontSize: 24,
@@ -270,7 +356,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 400,
+    marginTop: 100,
     width: 600,
   },
   buttonTextTest: {

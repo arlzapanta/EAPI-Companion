@@ -11,7 +11,6 @@ export const RefreshFetchDataProvider: React.FC<{ children: ReactNode }> = ({
   let [refresh, setShouldRefresh] = useState(0);
 
   const refreshSchedData = () => {
-    console.log("Refreshing schedule data...");
     setShouldRefresh(refresh + 1);
   };
 

@@ -1,5 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Animated, ScrollView } from "react-native";
+import React, { useState, useRef } from "react";
+import {
+  View,
+  Text,
+  Animated,
+  ScrollView,
+  TouchableOpacity,
+} from "react-native";
 import Dashboard from "./Dashboard";
 import SettingsScreen from "./SettingsScreen";
 import Schedules from "./Schedules";
@@ -7,8 +13,12 @@ import ActualCalls from "./ActualCalls";
 import QuickCall from "./call/QuickCall";
 import DoctorScreen from "./DoctorScreen";
 import NavLinkComponent from "../components/NavLink";
+import RBSheet from "react-native-raw-bottom-sheet";
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import { getStyleUtil } from "../utils/styleUtil";
+import QuickCallBottomSheet from "./call/QuickCallBottomSheet";
 
 const defaultDoctor: DoctorRecord = {
   doctors_id: "",
@@ -27,9 +37,14 @@ const defaultDoctor: DoctorRecord = {
   notes_names: "",
   notes_values: "",
   update_date: "",
+  SecretaryPhone: "",
+  OfficePhone: "",
+  MobilePhone: "",
+  City_Municipality: "",
 };
 
 const Home = () => {
+  const refRBSheet = useRef<RBSheet>(null);
   const [selectedScreen, setSelectedScreen] = useState<
     | "dashboard"
     | "settings"
@@ -38,7 +53,7 @@ const Home = () => {
     | "quickcall"
     | "doctors"
   >("dashboard");
-  const [fadeAnim] = useState(new Animated.Value(1));
+  const [fadeAnim] = useState(new Animated.Value(0));
 
   const dynamicStyles = getStyleUtil({});
 
@@ -61,63 +76,90 @@ const Home = () => {
     }
   };
 
-  useEffect(() => {
-    Animated.timing(fadeAnim, {
-      toValue: 0.8,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true,
-      }).start();
-    });
-  }, [selectedScreen]);
+  const openSheet = () => refRBSheet.current?.open();
+  const closeSheet = () => refRBSheet.current?.close();
 
   return (
     <View style={dynamicStyles.homeContainer_home}>
       <View style={dynamicStyles.navContainer_home}>
         <NavLinkComponent
-          iconName="home"
+          iconName="house-circle-exclamation"
           onPress={() => setSelectedScreen("dashboard")}
           active={selectedScreen === "dashboard"}
+          text={"HOME"}
         />
         <NavLinkComponent
-          iconName="settings"
+          iconName="user-gear"
           onPress={() => setSelectedScreen("settings")}
           active={selectedScreen === "settings"}
+          text={"SETTINGS"}
         />
         <NavLinkComponent
-          iconName="calendar-clear"
+          iconName="calendar-alt"
           onPress={() => setSelectedScreen("schedules")}
           active={selectedScreen === "schedules"}
+          text={"SCHEDULES"}
         />
 
         <NavLinkComponent
-          iconName="calendar"
+          iconName="calendar-check"
           onPress={() => setSelectedScreen("actualcalls")}
           active={selectedScreen === "actualcalls"}
+          text={"ACTUAL"}
         />
 
         <NavLinkComponent
-          iconName="medkit"
+          iconName="user-doctor"
           onPress={() => setSelectedScreen("doctors")}
           active={selectedScreen === "doctors"}
+          text={"DOCTORS"}
         />
 
         <NavLinkComponent
-          iconName="flame"
+          iconName="bolt-lightning"
           onPress={() => setSelectedScreen("quickcall")}
           active={selectedScreen === "quickcall"}
+          text={"QUICK CALL"}
         />
       </View>
-      <Animated.View
-        style={[dynamicStyles.contentContainer_home, { opacity: fadeAnim }]}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-          {renderContent()}
-        </ScrollView>
-      </Animated.View>
+      <View style={dynamicStyles.components_container}>{renderContent()}</View>
+      <TouchableOpacity
+        onLongPress={() => {
+          setSelectedScreen("dashboard");
+          openSheet();
+        }}
+        style={dynamicStyles.floatingButtonContainer}>
+        <View style={dynamicStyles.floatingButton}>
+          {/* <MaterialIcons name="add-call" size={24} color="white" /> */}
+          <MaterialCommunityIcons
+            name="lightning-bolt-circle"
+            size={24}
+            color="white"
+          />
+          <Text style={dynamicStyles.textWhite}>QUICK CALL</Text>
+          <Text style={dynamicStyles.textWhite}>[hold]</Text>
+        </View>
+      </TouchableOpacity>
+      <RBSheet
+        ref={refRBSheet}
+        height={900}
+        closeOnPressBack={true}
+        draggable={true}
+        closeOnPressMask={true}
+        customStyles={{
+          wrapper: {
+            backgroundColor: "rgba(0, 0, 0, .5)",
+          },
+          draggableIcon: {
+            backgroundColor: "#046E37",
+          },
+        }}
+        customModalProps={{
+          animationType: "slide",
+          statusBarTranslucent: true,
+        }}>
+        <QuickCallBottomSheet closeSheet={closeSheet} />
+      </RBSheet>
     </View>
   );
 };

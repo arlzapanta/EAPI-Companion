@@ -9,25 +9,34 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { RescheduleScreenNavigationProp } from "navigation";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 import {
   cancelRescheduleReqLocalDb,
   deleteRescheduleReqLocalDb,
   getDoctorsWeekSchedLocalDb,
+  getDoctorsSchedLocalDb,
   getRescheduleListLocalDb,
   insertRescheduleRequest,
   undoCancelRescheduleReqLocalDb,
-} from "../utils/localDbUtils";
+  getDoctorsSchedGTtodayLocalDb,
+} from "../../utils/localDbUtils";
 import { Picker } from "@react-native-picker/picker";
-import { generateFutureDates, isWithinWeekOrAdvance } from "../utils/dateUtils";
-import { customToast } from "../utils/customToast";
-import RescheduleTable from "../screens/tables/RescheduleTable";
-import { getStatusText, showConfirmAlert } from "../utils/commonUtil";
+import {
+  generateFutureDates,
+  getDateRangeGTToday,
+  getMonthRangeExGTToday,
+  isWithinWeekOrAdvance,
+} from "../../utils/dateUtils";
+import { customToast } from "../../utils/customToast";
+import RescheduleTable from "../tables/RescheduleTable";
+import { AntDesign } from "@expo/vector-icons";
+import { getStyleUtil } from "../../utils/styleUtil";
+import { lightTheme, darkTheme } from "../../utils/themes";
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const RescheduleScreen: React.FC = () => {
   const navigation = useNavigation<RescheduleScreenNavigationProp>();
   const { authState } = useAuth();
-  const [loading, setLoading] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     first_name: string;
     last_name: string;
@@ -115,6 +124,7 @@ const RescheduleScreen: React.FC = () => {
         status: "0",
         type,
         sales_portal_id: userInfo.sales_portal_id,
+        fromServer: false,
       };
 
       const result1 = await insertRescheduleRequest(reschedDetails);
@@ -134,9 +144,10 @@ const RescheduleScreen: React.FC = () => {
     }
   };
 
+  // todo : filter doctors from reschedule (approved) and from schedules within the week.
   const fetchDoctorSchedules = async () => {
     try {
-      const schedules = await getDoctorsWeekSchedLocalDb();
+      const schedules = await getDoctorsSchedLocalDb();
       setDoctorScheduleList(schedules);
       const localFromAPIdata = await getRescheduleListLocalDb();
       setRescheduleData(localFromAPIdata);
@@ -205,30 +216,34 @@ const RescheduleScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={dynamicStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <View style={styles.content}>
           <View style={styles.requestContainer}>
             <Text style={styles.title}>Reschedule Request</Text>
             <View style={styles.dropdownContainer}>
-              <Text style={styles.signatureLabel}>Select schedule/doctor</Text>
+              <Text style={dynamicStyles.mainText}>Select schedule/doctor</Text>
               <Picker
                 style={styles.picker}
                 selectedValue={selectedDoctor}
-                onValueChange={(itemValue: ScheduleAPIRecord | null) => {
+                onValueChange={async (itemValue: ScheduleAPIRecord | null) => {
                   setSelectedDateTo("selectedate");
                   if (itemValue !== selectedDoctor) {
                     setSelectedDoctor(itemValue);
                     if (itemValue && itemValue.date) {
                       setSelectedDateTo(itemValue.date);
-                      const futureDates = generateFutureDates(itemValue.date);
-                      setAvailableDates(futureDates);
+                      const dateToAvail = await getDateRangeGTToday(
+                        itemValue.date
+                      );
+                      setAvailableDates(dateToAvail);
                     }
                   } else {
                     if (itemValue && itemValue.date) {
                       setSelectedDateTo(itemValue.date);
-                      const futureDates = generateFutureDates(itemValue.date);
-                      setAvailableDates(futureDates);
+                      const dateToAvail = await getDateRangeGTToday(
+                        itemValue.date
+                      );
+                      setAvailableDates(dateToAvail);
                     }
                   }
                 }}>
@@ -248,7 +263,7 @@ const RescheduleScreen: React.FC = () => {
                   ))}
               </Picker>
 
-              <Text style={styles.signatureLabel}>Date to</Text>
+              <Text style={dynamicStyles.mainText}>Date to</Text>
               <Picker
                 selectedValue={selectedDateTo}
                 onValueChange={(itemValue) => setSelectedDateTo(itemValue)}
@@ -270,18 +285,28 @@ const RescheduleScreen: React.FC = () => {
                   />
                 )}
 
-                {availableDates.map((date) => (
-                  <Picker.Item
-                    label={date}
-                    value={date}
-                    key={date}
-                    style={styles.pickerLabel}
-                  />
-                ))}
+                {availableDates
+                  .filter((date) => {
+                    const selectedDate = new Date(date);
+                    const today = new Date();
+                    const twoDaysLater = new Date(
+                      today.getTime() + 1 * 24 * 60 * 60 * 1000
+                    );
+                    today.setHours(0, 0, 0, 0);
+                    return selectedDate > twoDaysLater;
+                  })
+                  .map((date) => (
+                    <Picker.Item
+                      label={date}
+                      value={date}
+                      key={date}
+                      style={styles.pickerLabel}
+                    />
+                  ))}
               </Picker>
 
               <TouchableOpacity
-                style={styles.saveButton}
+                style={[styles.saveButton, dynamicStyles.mainBgColor]}
                 disabled={!selectedDateTo}
                 onPress={handleSaveReschedule}>
                 <Text style={styles.buttonText}>Add Request</Text>
@@ -302,9 +327,9 @@ const RescheduleScreen: React.FC = () => {
       </ScrollView>
       <TouchableOpacity
         onPress={handleBack}
-        style={styles.floatingButtonContainer}>
-        <View style={styles.floatingButton}>
-          <Icon name="arrow-back" size={20} color="#fff" />
+        style={dynamicStyles.floatingButtonContainer}>
+        <View style={dynamicStyles.floatingButton}>
+          <AntDesign name="back" size={24} color="white" />
         </View>
       </TouchableOpacity>
     </View>
@@ -352,13 +377,11 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     flex: 1,
     flexGrow: 1,
-    paddingTop: 30,
     paddingVertical: 10,
     paddingHorizontal: 10,
     paddingBottom: 10,
     marginVertical: 10,
-    marginStart: 20,
-    marginEnd: 20,
+    marginHorizontal: 10,
     flexDirection: "row",
   },
   content: {

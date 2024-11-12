@@ -3,28 +3,26 @@ import { View, StyleSheet, Dimensions, ActivityIndicator } from "react-native";
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
-import { dropLocalTablesDb } from "../../utils/localDbUtils";
+import { AntDesign } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/Ionicons";
+import { getStyleUtil } from "../../utils/styleUtil";
+import { formatDate, formatDateTime } from "../../utils/dateUtils";
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true); // Added loading state
-  const itemsPerPage = 8;
+  const itemsPerPage = 6;
 
   useEffect(() => {
     // Simulate loading delay
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1000); // Adjust the time as needed
+    }, 300); // Adjust the time as needed
 
     return () => clearTimeout(timer);
   }, []);
-
-  const formatDate = (dateString: string) => {
-    const date = parseISO(dateString);
-    return format(date, "MMM d, yyyy EEEE");
-  };
 
   const uniqueDates = Array.from(
     new Set(data.map((item) => formatDate(item.date)))
@@ -82,18 +80,18 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
               <Button
                 mode="contained"
                 onPress={clearDateSelection}
-                style={styles.clearButton}>
-                Reset
+                style={dynamicStyles.resetButton}>
+                Clear Filter
               </Button>
             </View>
-            <Card style={styles.card}>
+            <Card style={dynamicStyles.tableCard}>
               <DataTable>
-                <DataTable.Header style={styles.tableHeader}>
+                <DataTable.Header style={dynamicStyles.tableHeader}>
                   <DataTable.Title>Type</DataTable.Title>
-                  <DataTable.Title>Date</DataTable.Title>
+                  <DataTable.Title>Date Time</DataTable.Title>
                 </DataTable.Header>
                 {currentData.map((user) => (
-                  <DataTable.Row style={styles.tableRow} key={user.id}>
+                  <DataTable.Row style={dynamicStyles.tableRow} key={user.id}>
                     <DataTable.Cell>
                       {user.type === 1 ? (
                         <>
@@ -109,45 +107,47 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
                         <Text>Mid Sync</Text>
                       )}
                     </DataTable.Cell>
-                    <DataTable.Cell>{formatDate(user.date)}</DataTable.Cell>
+                    {/* <DataTable.Cell>{formatDateTime(user.date)}</DataTable.Cell> */}
+                    <DataTable.Cell>
+                      {user.dateTime}
+                      {/* {formatDateTime(user.dateTime)} */}
+                    </DataTable.Cell>
                   </DataTable.Row>
                 ))}
               </DataTable>
             </Card>
-            <View style={styles.paginationContainer}>
+            <View style={dynamicStyles.paginationContainer}>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 style={[
-                  styles.paginationButton,
+                  dynamicStyles.paginationButton,
                   currentPage === 1 && styles.disabledButton,
                 ]}>
                 <Text
                   style={[
-                    styles.paginationText,
+                    dynamicStyles.paginationText,
                     currentPage === 1 && styles.disabledText,
                   ]}>
-                  Previous
+                  <AntDesign name="leftcircle" size={20} color="#046E37" />
                 </Text>
               </Button>
-              <Text style={styles.paginationText}>
+              <Text style={dynamicStyles.paginationText}>
                 Page {currentPage} of {totalPages}
               </Text>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 style={[
-                  styles.paginationButton,
+                  dynamicStyles.paginationButton,
                   currentPage === totalPages && styles.disabledButton,
                 ]}>
                 <Text
                   style={[
-                    styles.paginationText,
+                    dynamicStyles.paginationText,
                     currentPage === totalPages && styles.disabledText,
                   ]}>
-                  Next
+                  <AntDesign name="rightcircle" size={20} color="#046E37" />
                 </Text>
               </Button>
             </View>
@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   paginationText: {
     flex: 2,
     textAlign: "center",
-    color: "#046E37",
+    color: "black",
   },
   disabledButton: {
     borderColor: "gray",

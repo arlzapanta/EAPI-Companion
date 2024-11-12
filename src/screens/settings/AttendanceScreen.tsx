@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   View,
+  Image,
   Text,
   TouchableOpacity,
   Alert,
@@ -10,18 +11,22 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { useAuth } from "../../context/AuthContext";
 import { AttendanceScreenNavigationProp } from "../../type/navigation";
-import Icon from "react-native-vector-icons/Ionicons";
 import {
   saveUserAttendanceLocalDb,
   getUserAttendanceRecordsLocalDb,
   saveUserSyncHistoryLocalDb,
   saveSchedulesAPILocalDb,
+  saveCallsAPILocalDb,
+  dropLocalTable,
+  dropLocalTables,
 } from "../../utils/localDbUtils";
 import {
   apiTimeIn,
   apiTimeOut,
   doctorRecordsSync,
   getCallsAPI,
+  getChartData,
+  getDetailersData,
   getDoctors,
   getReschedulesData,
   getSChedulesAPI,
@@ -30,6 +35,19 @@ import {
 } from "../../utils/apiUtility";
 import AttendanceTable from "../tables/AttendanceTable";
 import { getQuickCalls } from "../../utils/quickCallUtil";
+import SignatureCapture from "../../components/SignatureCapture";
+import { useImagePicker } from "../../hook/useImagePicker";
+import { getLocation } from "../../utils/currentLocation";
+import { showConfirmAlert } from "../../utils/commonUtil";
+import { AntDesign } from "@expo/vector-icons";
+import { getStyleUtil } from "../../utils/styleUtil";
+import Loading from "../../components/Loading";
+import { customToast } from "../../utils/customToast";
+import { checkPostCallUnsetExist } from "../../utils/callComponentsUtil";
+import { useDataContext } from "../../context/DataContext";
+import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
+
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const Attendance: React.FC = () => {
   const navigation = useNavigation<AttendanceScreenNavigationProp>();
@@ -54,6 +72,18 @@ const Attendance: React.FC = () => {
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusColor, setStatusColor] = useState<string>("");
+  // added 10-5-24
+  const [signatureVal, setSignatureVal] = useState<string>("");
+  const [signatureLoc, setSignatureLoc] = useState<string>("");
+  const [selfieVal, setSelfieVal] = useState<string>("");
+  const [selfieLoc, setSelfieLoc] = useState<string>("");
+
+  const { detailersRecord, setDetailersRecord } = useDataContext();
+  const { refreshSchedData } = useRefreshFetchDataContext();
+
+  const handleUpdateDetailers = (newDetailersData: DetailersRecord[]) => {
+    setDetailersRecord(newDetailersData);
+  };
 
   useEffect(() => {
     if (authState.authenticated && authState.user) {
@@ -90,9 +120,9 @@ const Attendance: React.FC = () => {
         )) as AttendanceRecord[];
         setAttendanceData(data);
 
-        const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        const today = new Date().toISOString().split("T")[0];
         const recordsToday = data.filter((record) => {
-          const recordDate = record.date.split(" ")[0]; // Extract 'YYYY-MM-DD' from 'YYYY-MM-DD HH:MM:SS'
+          const recordDate = record.date.split(" ")[0];
           return recordDate === today;
         });
 
@@ -132,153 +162,270 @@ const Attendance: React.FC = () => {
   }, [userInfo]);
 
   const timeIn = async () => {
+    setLoading(true);
     if (!userInfo) {
       Alert.alert("Error", "User information is missing.");
       return;
     }
-    setLoading(true);
+
     try {
       const timeInIsProceed = await apiTimeIn(userInfo);
       if (timeInIsProceed.isProceed) {
-        const checkIfTimedIn = await saveUserAttendanceLocalDb(userInfo, "in");
-        if (checkIfTimedIn === 1) {
-          Alert.alert("Failed", "Already timed In today");
-        } else {
-          await fetchAttendanceData();
-          const scheduleData = await getSChedulesAPI(userInfo);
-          if (scheduleData) {
-            const result = await saveSchedulesAPILocalDb(scheduleData);
-            await getDoctors(userInfo);
-            await getReschedulesData(userInfo);
-            {
-              result == "Success"
-                ? Alert.alert("Success", "Successfully synced data from server")
-                : Alert.alert("Failed", "Error syncing");
-            }
-            const res = await saveUserSyncHistoryLocalDb(userInfo, 1);
-            console.log(
-              "AttendanceScreen > timeIn > saveUserSyncHistoryLocalDb > res : ",
-              res
-            );
-          }
+        let hasError = false;
+        try {
+          await getDoctors(userInfo);
+          await getReschedulesData(userInfo);
+          await getChartData(userInfo);
+          const getDetailersRes = await getDetailersData();
+          handleUpdateDetailers(getDetailersRes);
+          await getCallsAPI(userInfo);
+          await getSChedulesAPI(userInfo);
+        } catch (error) {
+          await dropLocalTables([
+            "detailers_tbl",
+            "quick_call_tbl",
+            "reschedule_req_tbl",
+            "schedule_API_tbl",
+            "calls_tbl",
+            "doctors_tbl",
+            "pre_call_notes_tbl",
+            "post_call_notes_tbl",
+            "chart_data_tbl",
+            // "reschedule_history_tbl",
+            // "user_sync_history_tbl",
+            // "user_attendance_tbl",
+          ]);
+          hasError = true;
         }
-      } else if (!timeInIsProceed.isProceed) {
-        console.log("timeInIsProceed", timeInIsProceed);
-        console.log(timeInIsProceed);
+
+        if (!hasError) {
+          await saveUserSyncHistoryLocalDb(
+            userInfo,
+            1,
+            timeInIsProceed.DateTime
+          );
+          await saveUserAttendanceLocalDb(
+            userInfo,
+            "in",
+            timeInIsProceed.DateTime
+          );
+          await fetchAttendanceData();
+          refreshSchedData();
+        }
+      } else {
+        customToast("Already timed in, please contact admin [time in api]");
       }
     } catch (error) {
-      Alert.alert("Error", "Failed to time in.");
+      Alert.alert("Server Error", "Failed to time in. Please contact admin");
+      throw error;
     } finally {
       setLoading(false);
     }
   };
 
   const timeOut = async () => {
-    // add logic here if post call are all filled up already
+    let msg = "";
+
+    setLoading(true);
     const checkQC = await getQuickCalls();
+    const checkPost = await checkPostCallUnsetExist();
     if (checkQC.length > 0) {
-      Alert.alert("Error", "Please check quick calls.");
+      msg = "Existing quick calls, kindly complete or remove any data";
+      Alert.alert(msg);
+      setLoading(false);
+      return;
+    }
+    if (checkPost) {
+      msg = "Existing empty post calls, kindly complete all post calls";
+      Alert.alert(msg);
+      setLoading(false);
       return;
     }
     if (!userInfo) {
-      Alert.alert("Error", "User information is missing.");
+      msg = "Server Error : User information is missing.";
+      Alert.alert(msg);
+      setLoading(false);
       return;
     }
-    setLoading(true);
 
-    const timeOutIsProceed = await apiTimeOut(userInfo);
-    if (timeOutIsProceed.isProceed) {
-      const checkIfTimedOut = await saveUserAttendanceLocalDb(userInfo, "out");
-      if (checkIfTimedOut === 1) {
-        Alert.alert("Failed", "Already timed out today");
-      } else {
-        await doctorRecordsSync(userInfo);
-        const reqRecordSync = await requestRecordSync(userInfo);
-        console.log(reqRecordSync, "reqRecordSync");
-        await fetchAttendanceData();
-        const res = await saveUserSyncHistoryLocalDb(userInfo, 2);
-        {
-          res == "Success"
-            ? Alert.alert(
-                "Success time out!",
-                "Successfully synced data from server"
-              )
-            : Alert.alert("Failed", "Error syncing");
+    try {
+      let hasError = false;
+      const timeOutIsProceed = await apiTimeOut(userInfo);
+      if (timeOutIsProceed.isProceed) {
+        try {
+          await doctorRecordsSync(userInfo);
+          await requestRecordSync(userInfo);
+          await syncUser(userInfo);
+        } catch (error) {
+          hasError = true;
+          msg = "Server Error : Failed to time out please contact admin.";
+          Alert.alert(msg);
+          throw error;
         }
-        console.log(
-          "AttendanceScreen > timeOut > saveUserSyncHistoryLocalDb > res : ",
-          res
-        );
-        const syncLocalToAPI = await syncUser(userInfo);
-        if (syncLocalToAPI != "No records to sync") {
-          Alert.alert("Success", "Successfully Sync data to server");
-        } else {
-          console.log(
-            "AttendanceScreen > timeOut > syncUser > res : No records to sync"
+
+        if (!hasError) {
+          await saveUserSyncHistoryLocalDb(
+            userInfo,
+            2,
+            timeOutIsProceed.DateTime
           );
+          await saveUserAttendanceLocalDb(
+            userInfo,
+            "out",
+            timeOutIsProceed.DateTime
+          );
+          await fetchAttendanceData();
         }
+      } else {
+        customToast("Already timed out, please contact admin [time out api]");
       }
+    } catch (error) {
+      msg = "Server Error : Failed to time out please contact admin.";
+      Alert.alert(msg);
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const showConfirmAlert = (action: () => void, actionName: string) => {
-    Alert.alert(
-      `Confirm ${actionName}`,
-      `Are you sure you want to ${actionName.toLowerCase()}?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "OK",
-          onPress: action,
-        },
-      ],
-      { cancelable: false }
-    );
   };
 
   const handleBack = () => {
     navigation.goBack();
   };
 
+  const handlePhotoCaptured = async (
+    base64: string,
+    location: { latitude: number; longitude: number }
+  ) => {
+    try {
+      const loc = await getLocation();
+      setSelfieVal(base64);
+      setSelfieLoc(loc);
+    } catch (error) {
+      console.log("handlePhotoCaptured error", error);
+    }
+  };
+
+  const { imageBase64, location, handleImagePicker } = useImagePicker({
+    onPhotoCaptured: handlePhotoCaptured,
+  });
+
+  const handleSignatureUpdate = async (
+    base64Signature: string,
+    location: string,
+    attempts: string | number
+  ): Promise<void> => {
+    const attemptCount =
+      typeof attempts === "string" ? parseInt(attempts, 10) : attempts;
+
+    if (isNaN(attemptCount)) {
+      console.error(
+        "Invalid attempt count : handleSignatureUpdate > onCallScreen"
+      );
+      return;
+    }
+
+    if (base64Signature) {
+      const loc = await getLocation();
+      setSignatureVal(base64Signature);
+      setSignatureLoc(loc);
+    } else {
+      console.error("Signature update failed: No base64 data");
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
-        <View style={styles.content}>
-          <Text style={styles.title_stack_settings}>Attendance</Text>
-          {statusMessage && (
-            <Text style={[styles.statusLabel, { color: statusColor }]}>
-              {statusMessage}
-            </Text>
-          )}
-          <View style={styles.centerItems}>
-            {!hasTimedIn && !loading && (
-              <TouchableOpacity
-                onPress={() => showConfirmAlert(timeIn, "Time In")}
-                style={styles.buttonContainer}>
-                <Text style={styles.buttonText}>Time In</Text>
-              </TouchableOpacity>
-            )}
-            {!hasTimedOut && hasTimedIn && !loading && (
-              <TouchableOpacity
-                onPress={() => showConfirmAlert(timeOut, "Time Out")}
-                style={styles.buttonContainer}>
-                <Text style={styles.buttonText}>Time Out</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          <AttendanceTable data={attendanceData} />
-        </View>
-      </ScrollView>
-      <TouchableOpacity
-        onPress={handleBack}
-        style={styles.floatingButtonContainer}>
-        <View style={styles.floatingButton}>
-          <Icon name="arrow-back" size={20} color="#fff" />
-        </View>
-      </TouchableOpacity>
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          <ScrollView contentContainerStyle={styles.scrollViewContent}>
+            <View style={styles.content}>
+              <Text style={styles.title_stack_settings}>Attendance</Text>
+              {statusMessage && (
+                <Text style={[styles.statusLabel, { color: statusColor }]}>
+                  {statusMessage}
+                </Text>
+              )}
+              <View style={styles.centerItems}>
+                {/* <TouchableOpacity
+                  onPress={() => showConfirmAlert(timeIn, "Time In")}
+                  style={styles.buttonContainer}>
+                  <Text style={styles.buttonText}>Time In</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => showConfirmAlert(timeOut, "Time Out")}
+                  style={styles.buttonContainer}>
+                  <Text style={styles.buttonText}>Time Out</Text>
+                </TouchableOpacity> */}
+                {!hasTimedIn && !loading && (
+                  <>
+                    <TouchableOpacity
+                      onPress={
+                        signatureVal && selfieVal
+                          ? () => showConfirmAlert(timeIn, "Time In")
+                          : undefined
+                      }
+                      disabled={!(signatureVal && selfieVal)}
+                      style={[
+                        styles.buttonContainer,
+                        !(signatureVal && selfieVal) &&
+                          styles.buttonContainerDisabled,
+                      ]}>
+                      <AntDesign
+                        name="clockcircle"
+                        size={24}
+                        color="white"
+                        style={{ alignSelf: "center" }}
+                      />
+                      <Text style={styles.buttonText}>Time In</Text>
+                    </TouchableOpacity>
+
+                    {signatureVal ? (
+                      <></>
+                    ) : (
+                      <SignatureCapture
+                        callId={12340000}
+                        onSignatureUpdate={handleSignatureUpdate}
+                      />
+                    )}
+
+                    {!selfieVal ? (
+                      <TouchableOpacity
+                        style={dynamicStyles.buttonContainer1}
+                        onPress={handleImagePicker}>
+                        <Text style={styles.buttonText1}>Take a photo</Text>
+                      </TouchableOpacity>
+                    ) : (
+                      <></>
+                    )}
+                  </>
+                )}
+                {!hasTimedOut && hasTimedIn && !loading && (
+                  <TouchableOpacity
+                    onPress={() => showConfirmAlert(timeOut, "Time Out")}
+                    style={styles.buttonContainer}>
+                    <AntDesign
+                      name="clockcircle"
+                      size={24}
+                      color="white"
+                      style={{ alignSelf: "center" }}
+                    />
+                    <Text style={styles.buttonText}> Time Out</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+              <AttendanceTable data={attendanceData} />
+            </View>
+          </ScrollView>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={dynamicStyles.floatingButtonContainer}>
+            <View style={dynamicStyles.floatingButton}>
+              <AntDesign name="back" size={24} color="white" />
+            </View>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 };
@@ -292,25 +439,44 @@ const styles = StyleSheet.create({
   },
   scrollViewContent: {
     flex: 1,
-    flexGrow: 1,
-    paddingTop: 30,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    paddingBottom: 10,
-    marginVertical: 10,
-    marginStart: 20,
-    marginEnd: 20,
   },
   content: {
     flex: 1,
     backgroundColor: "#fff",
-    borderRadius: 10,
     padding: 40,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 5,
+  },
+  signImage: {
+    marginVertical: 15,
+    width: "100%",
+    height: 200,
+    resizeMode: "contain",
+  },
+  image: {
+    width: 400,
+    height: 260,
+    marginTop: 10,
+    resizeMode: "contain",
+  },
+  signatureLabel: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#007bff",
+  },
+  takePhotoButton: {
+    padding: 10,
+    backgroundColor: "#007BFF",
+    borderRadius: 5,
+    width: 200,
+    alignItems: "center",
+  },
+  imageContainer: {
+    marginTop: 20,
+    alignItems: "center",
   },
   title_stack_settings: {
     fontSize: 24,
@@ -335,10 +501,31 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     elevation: 5,
   },
+  buttonContainerDisabled: {
+    backgroundColor: "lightgray",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    marginBottom: 10,
+    elevation: 5,
+  },
+  buttonContainer1: {
+    backgroundColor: "#046E37",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    elevation: 5,
+    minWidth: 165,
+  },
   buttonText: {
     color: "#fff",
     fontSize: 25,
     fontWeight: "600",
+  },
+  buttonText1: {
+    color: "#FFF",
+    fontWeight: "bold",
+    alignSelf: "center",
   },
   floatingButtonContainer: {
     position: "absolute",
@@ -352,10 +539,11 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    elevation: 3,
+    elevation: 5,
   },
   floatingButton: {
     alignItems: "center",
     justifyContent: "center",
+    minWidth: 60,
   },
 });

@@ -11,7 +11,12 @@ import {
   Alert,
 } from "react-native";
 import moment from "moment";
-import { getCurrentDatePH } from "../../utils/dateUtils";
+import {
+  formatDate,
+  formatTimeHoursMinutes,
+  getCurrentDatePH,
+  getFormattedDateToday,
+} from "../../utils/dateUtils";
 import {
   addQuickCall,
   getQuickCalls,
@@ -27,13 +32,31 @@ import { customToast } from "../../utils/customToast";
 import { Picker } from "@react-native-picker/picker";
 import {
   getDoctorsTodaySchedLocalDb,
+  getDoctorsWeekSchedLocalDb,
   saveCallsDoneFromSchedules,
 } from "../../utils/localDbUtils";
+import { useDataContext } from "../../context/DataContext";
+import Loading from "../../components/Loading";
+import Octicons from "@expo/vector-icons/Octicons";
+import { getStyleUtil } from "../../utils/styleUtil";
+import { getLocation } from "../../utils/currentLocation";
+import {
+  getBase64StringFormat,
+  showConfirmAlert,
+} from "../../utils/commonUtil";
+import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
+const dynamicStyles = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
-
 const QuickCall = () => {
-  const [currentDate, setCurrentDate] = useState("");
+  const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
+  const { isQuickLoading, currentDate, quickCallData } = useDataContext();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeOutLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
   const [callData, setCallData] = useState<Call[]>([]);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [selectedCallIdValue, setSelectedCallIdValue] = useState<number>(0);
@@ -45,8 +68,6 @@ const QuickCall = () => {
 
   const fetchCallsData = async () => {
     try {
-      const getDate = await getCurrentDatePH();
-      setCurrentDate(moment(getDate).format("MMMM DD, dddd"));
       const data = await getQuickCalls();
       if (Array.isArray(data)) {
         setCallData(data);
@@ -67,7 +88,7 @@ const QuickCall = () => {
 
   const fetchDoctorSchedules = async () => {
     try {
-      const schedules = await getDoctorsTodaySchedLocalDb();
+      const schedules = await getDoctorsWeekSchedLocalDb();
       setDoctorScheduleList(schedules);
     } catch (error) {
       console.error("Error fetching doctor schedules:", error);
@@ -84,11 +105,9 @@ const QuickCall = () => {
     location: { latitude: number; longitude: number }
   ) => {
     try {
-      await updateCallPhoto(
-        selectedCallIdValue,
-        base64,
-        `${location.latitude},${location.longitude}`
-      );
+      const loc = await getLocation();
+
+      await updateCallPhoto(selectedCallIdValue, base64, loc);
       await fetchCallsData();
     } catch (error) {
       console.log("handlePhotoCaptured error", error);
@@ -113,9 +132,12 @@ const QuickCall = () => {
         photo_location: "",
         signature: "",
         signature_location: "",
+        signature_attempts: 0,
         notes: "",
         id: 0,
         full_name: "",
+        call_start: "",
+        call_end: "",
       };
       const addedCall = await addQuickCall(newCall);
       if (addedCall === "Success") {
@@ -133,7 +155,6 @@ const QuickCall = () => {
       [
         {
           text: "Cancel",
-          onPress: () => console.log("Removal cancelled"),
           style: "cancel",
         },
         {
@@ -205,7 +226,7 @@ const QuickCall = () => {
 
     useEffect(() => {
       if (call) {
-        setNote(call.notes); // Set the initial value of note based on the selected call
+        setNote(call.notes);
       }
     }, [call]);
 
@@ -220,18 +241,32 @@ const QuickCall = () => {
     };
 
     const handleSaveQuickCall = async () => {
+      if (!selectedDoctor || selectedDoctor.full_name === undefined) {
+        customToast("Please select doctor");
+        return;
+      }
+
       if (selectedDoctor) {
         const callDetails = {
           schedule_id: selectedDoctor.schedule_id,
-          call_start: "test",
-          call_end: "test",
+          call_start: call.call_start,
+          call_end: call.call_end,
           signature: call.signature,
-          signature_attempts: "0",
+          signature_attempts: call.signature_attempts
+            ? call.signature_attempts.toString()
+            : "0",
           signature_location: call.signature_location,
           photo: call.photo,
           photo_location: call.photo_location,
-          doctor_name: call.full_name,
+          doctors_name: selectedDoctor.full_name,
+          created_at: await getFormattedDateToday(),
         };
+
+        await savePostCallNotesLocalDb({
+          mood: "",
+          feedback: "",
+          scheduleId: selectedDoctor.schedule_id,
+        });
 
         const result = await saveCallsDoneFromSchedules(
           selectedDoctor.schedule_id,
@@ -247,110 +282,161 @@ const QuickCall = () => {
     };
 
     return (
-      <View style={styles.callDetailsContainer}>
-        <Text>{`Call ID: ${call.id}`}</Text>
-        <View style={styles.noteContainer}>
-          <TextInput
-            style={styles.noteInput}
-            value={note}
-            onChangeText={setNote}
-            placeholder="Enter a note..."
-          />
-          <TouchableOpacity
-            style={styles.updateButton}
-            onPress={handleUpdateNote}>
-            <Text style={styles.updateButtonText}>Update</Text>
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.signatureLabel}>Signature Capture</Text>
-        {call.signature ? (
-          <Image
-            source={{ uri: `data:image/png;base64,${call.signature}` }}
-            style={styles.signImage}
-          />
-        ) : (
-          <SignatureCapture
-            callId={call.id}
-            onSignatureUpdate={onSignatureUpdate}
-          />
-        )}
-        {!call.photo ? (
-          <TouchableOpacity
-            style={styles.takePhotoButton}
-            onPress={handleImagePicker}>
-            <Text style={styles.buttonText}>Take a photo</Text>
-          </TouchableOpacity>
-        ) : (
-          <View style={styles.imageContainer}>
-            <Text style={styles.signatureLabel}>Photo Capture</Text>
-            <Image
-              source={{ uri: `data:image/png;base64,${call.photo}` }}
-              style={styles.image}
+      <ScrollView>
+        <View style={styles.callDetailsContainer}>
+          <View style={[styles.noteContainer, dynamicStyles.centerItems]}>
+            <TextInput
+              style={styles.noteInput}
+              value={note}
+              onChangeText={setNote}
+              placeholder="Enter doctor's name or any note ..."
             />
+            <TouchableOpacity
+              style={[
+                dynamicStyles.buttonSubContainer1,
+                dynamicStyles.subBgColor,
+              ]}
+              onPress={handleUpdateNote}>
+              <Text style={styles.updateButtonText}>Save Note</Text>
+            </TouchableOpacity>
           </View>
-        )}
+          <View style={styles.dropdownContainer}>
+            <Text style={styles.signatureLabel}>Select doctor</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                style={styles.picker}
+                selectedValue={selectedDoctor}
+                onValueChange={(itemValue: ScheduleAPIRecord | null) => {
+                  setSelectedDoctor(null);
+                  if (itemValue !== selectedDoctor) {
+                    setSelectedDoctor(itemValue);
+                    if (itemValue && itemValue.date) {
+                      console.log(selectedDoctor);
+                    }
+                  } else {
+                    if (itemValue && itemValue.date) {
+                    }
+                  }
+                }}>
+                <Picker.Item
+                  label="Select doctor"
+                  value="selectdoc"
+                  style={styles.pickerInitialLabel}
+                />
+                {doctorScheduleList
+                  .filter((schedule) => schedule.full_name !== null)
+                  .map((schedule) => (
+                    <Picker.Item
+                      key={schedule.id}
+                      label={
+                        `${schedule.full_name} - ${formatDate(
+                          schedule.date
+                        )}` || "Unknown Name"
+                      }
+                      value={schedule}
+                    />
+                  ))}
+              </Picker>
+            </View>
+            {/* <TouchableOpacity
+              style={styles.saveButton}
+              onLongPress={handleSaveQuickCall}>
+              <Text style={styles.buttonText}>Save (hold)</Text>
+            </TouchableOpacity> */}
 
-        <View style={styles.dropdownContainer}>
-          <Text style={styles.signatureLabel}>Select doctor</Text>
-          <View style={styles.pickerContainer}>
-            <Picker
-              style={styles.picker}
-              selectedValue={selectedDoctor}
-              onValueChange={(itemValue) => setSelectedDoctor(itemValue)}>
-              {doctorScheduleList
-                .filter((schedule) => schedule.full_name !== null) // Filter out null names
-                .map((schedule) => (
-                  <Picker.Item
-                    key={schedule.id}
-                    label={schedule.full_name || "Unknown Name"} // Provide a default value
-                    value={schedule}
-                  />
-                ))}
-            </Picker>
+            <TouchableOpacity
+              onPress={
+                call.signature || call.photo
+                  ? () => showConfirmAlert(handleSaveQuickCall, "End Call")
+                  : undefined
+              }
+              disabled={!(call.signature || call.photo)}
+              style={[
+                styles.saveButton,
+                !(call.signature || call.photo) &&
+                  dynamicStyles.buttonContainerDisabled,
+              ]}>
+              <View style={dynamicStyles.floatingButton}>
+                <Icon name="exit" size={24} color="#fff" />
+                <Text style={dynamicStyles.buttonText}>Save</Text>
+              </View>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={styles.saveButton}
-            onLongPress={handleSaveQuickCall}>
-            <Text style={styles.buttonText}>Save</Text>
-          </TouchableOpacity>
+          {!call.photo ? (
+            <>
+              <TouchableOpacity
+                style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
+                onPress={handleImagePicker}>
+                <Octicons name="device-camera" size={20} color="white" />
+                <Text style={styles.buttonText}>Take a photo</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <View style={styles.imageContainer}>
+              <Text style={styles.signatureLabel}>Photo Capture</Text>
+              <Image
+                source={{ uri: `${getBase64StringFormat()}${call.photo}` }}
+                style={styles.image}
+              />
+            </View>
+          )}
+          {call.signature ? (
+            <Image
+              source={{ uri: `${getBase64StringFormat()}${call.signature}` }}
+              style={styles.signImage}
+            />
+          ) : (
+            <SignatureCapture
+              callId={call.id}
+              onSignatureUpdate={onSignatureUpdate}
+            />
+          )}
         </View>
-      </View>
+      </ScrollView>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.row}>
-        <View style={styles.column1}>
-          <View style={styles.innerCard}>
-            <Text style={styles.columnTitle}>Quick Calls</Text>
-            <Text style={styles.columnSubTitle}>{currentDate}</Text>
-            <TouchableOpacity style={styles.addButton} onPress={handleAddCall}>
-              <Text style={styles.addButtonText}>+</Text>
-            </TouchableOpacity>
-            <ScrollView contentContainerStyle={styles.scrollViewContainer}>
-              {Array.isArray(callData) && callData.length > 0 ? (
-                callData.map((call) => <CallItem key={call.id} call={call} />)
+    <View style={dynamicStyles.container}>
+      {isQuickLoading || timeOutLoading ? (
+        <Loading />
+      ) : (
+        <View style={dynamicStyles.row}>
+          <View style={dynamicStyles.column1}>
+            <View style={dynamicStyles.card1Col}>
+              <Text style={dynamicStyles.columnTitle}>Quick Calls</Text>
+              <Text style={dynamicStyles.columnSubTitle}>
+                {moment(currentDate).format("MMMM DD, dddd")}
+              </Text>
+              <TouchableOpacity
+                style={[styles.addButton, dynamicStyles.subBgColor]}
+                onPress={handleAddCall}>
+                <Text style={styles.addButtonText}>+</Text>
+              </TouchableOpacity>
+              <ScrollView
+                contentContainerStyle={dynamicStyles.scrollViewQuickContainer}>
+                {Array.isArray(callData) && callData.length > 0 ? (
+                  callData.map((call) => <CallItem key={call.id} call={call} />)
+                ) : (
+                  <Text style={{ marginTop: 20 }}>No calls available</Text>
+                )}
+              </ScrollView>
+            </View>
+          </View>
+          <View style={dynamicStyles.column2}>
+            <View style={dynamicStyles.card2Col}>
+              {selectedCall ? (
+                <CallDetails
+                  call={selectedCall}
+                  onSignatureUpdate={handleSignatureUpdate}
+                />
               ) : (
-                <Text>No calls available</Text>
+                <NoCallSelected />
               )}
-            </ScrollView>
+            </View>
           </View>
         </View>
-
-        <View style={styles.column2}>
-          <View style={styles.innerCard}>
-            {selectedCall ? (
-              <CallDetails
-                call={selectedCall}
-                onSignatureUpdate={handleSignatureUpdate}
-              />
-            ) : (
-              <NoCallSelected />
-            )}
-          </View>
-        </View>
-      </View>
+      )}
     </View>
   );
 };
@@ -360,19 +446,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F0F0F0",
   },
-  row: {
-    flexDirection: "row",
-    flex: 1,
-    marginVertical: 10,
-    marginStart: 20,
-    marginEnd: 20,
-  },
   column1: {
     width: "30%",
     marginEnd: 10,
   },
   column2: {
     width: "70%",
+  },
+  pickerInitialLabel: {
+    color: "#888",
   },
   innerCard: {
     flex: 1,
@@ -386,23 +468,17 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
   },
-  columnTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#343a40",
-    marginBottom: 8,
-  },
-  columnSubTitle: {
-    fontSize: 16,
-    color: "#6c757d",
-  },
   callItem: {
-    backgroundColor: "rgba(0,0,0,0.2)",
-    paddingVertical: 12,
-    paddingHorizontal: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    elevation: 1,
+    marginVertical: 5,
+    width: "80%",
   },
   signImage: {
-    marginVertical: 15,
     width: "100%",
     height: 200,
     resizeMode: "contain",
@@ -424,19 +500,16 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   callItemContainer: {
+    marginTop: 15,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: 4,
-    paddingHorizontal: 14,
-    backgroundColor: "#f1f1f1",
+    backgroundColor: "white",
     borderRadius: 5,
   },
   callText: {
-    fontSize: 18,
-    color: "#fff",
-    fontWeight: "bold",
-    // color: "#495057",
+    fontSize: 14,
+    color: "black",
   },
   containerNoCallData: {
     flex: 1,
@@ -479,9 +552,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
   },
-  scrollViewContainer: {
-    flexGrow: 1,
-  },
   iconNoSched: {
     marginBottom: 10,
     color: "#046E37",
@@ -510,17 +580,17 @@ const styles = StyleSheet.create({
   signatureLabel: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#007bff",
+    color: "#046E37",
+    marginTop: 30,
   },
   imageContainer: {
-    marginTop: 20,
     alignItems: "center",
   },
   image: {
-    width: 400,
-    height: 260,
+    width: 650,
+    height: 300,
     marginTop: 10,
-    resizeMode: "contain",
+    resizeMode: "cover",
   },
   locationText: {
     marginTop: 10,
@@ -542,7 +612,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   updateButton: {
-    backgroundColor: "#007BFF",
+    backgroundColor: "lightgray",
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderRadius: 5,
@@ -556,12 +626,12 @@ const styles = StyleSheet.create({
   },
   dropdownContainer: {
     width: 400,
-    padding: 20,
+    padding: 10,
   },
   saveButton: {
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#007BFF",
+    backgroundColor: "#046E37",
     padding: 10,
     borderRadius: 5,
     marginTop: 10,

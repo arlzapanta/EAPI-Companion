@@ -1,14 +1,25 @@
 // Login.tsx
 import React, { useState } from "react";
-import { View, TextInput, TouchableOpacity, Text, Alert } from "react-native";
+import {
+  View,
+  TextInput,
+  TouchableOpacity,
+  Text,
+  Alert,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { getStyleUtil } from "../utils/styleUtil";
 import { API_URL_ENV, TOKEN_PASSWORD_ENV, TOKEN_USERNAME_ENV } from "@env";
+import Ionicons from "react-native-vector-icons/Ionicons";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { onLogin } = useAuth();
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  const [isLoginLoading, setIsLoginLoading] = useState<boolean>(false);
 
   const dynamicStyles = getStyleUtil({});
 
@@ -24,18 +35,37 @@ const Login = () => {
       return;
     }
 
+    // try {
+    //   const result = await onLogin!(email, password);
+    //   if (result && result.error) {
+    //     Alert.alert("Login Error", result.msg);
+    //   }
+    // } catch (error: any) {
+    //   const result = await onLogin!(email, password);
+    //   Alert.alert(
+    //     "Login Error",
+    //     `${API_URL_ENV} ${result} An error occurred during login. Please try again.`
+    //     // `${TOKEN_USERNAME_ENV} ${TOKEN_PASSWORD_ENV} ${API_URL_ENV} ${result} An error occurred during login. Please try again.`
+    //   );
+    //   console.error(error);
+    // }
+
     try {
+      setIsLoginLoading(true);
+      console.log(isLoginLoading, "isLoginLoading");
       const result = await onLogin!(email, password);
       if (result && result.error) {
-        Alert.alert("Login Error", result.msg, result.error);
+        Alert.alert("Login Error", result.msg);
       }
     } catch (error: any) {
       const result = await onLogin!(email, password);
       Alert.alert(
         "Login Error",
-        `${TOKEN_USERNAME_ENV} ${TOKEN_PASSWORD_ENV} ${API_URL_ENV} ${result} An error occurred during login. Please try again.`
+        `${API_URL_ENV} ${result} An error occurred during login. Please try again.`
       );
       console.error(error);
+    } finally {
+      setIsLoginLoading(false);
     }
   };
 
@@ -56,17 +86,38 @@ const Login = () => {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <TextInput
-            placeholder="Enter your password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            style={dynamicStyles.input}
-          />
+
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={dynamicStyles.inputPWicon}
+              secureTextEntry={!isPasswordVisible}
+              placeholder="Password"
+              value={password}
+              onChangeText={setPassword}
+            />
+            <TouchableOpacity
+              onPress={() => setIsPasswordVisible(!isPasswordVisible)}
+              style={styles.iconContainer}>
+              <Ionicons
+                name={isPasswordVisible ? "eye-off" : "eye"}
+                size={24}
+                color="gray"
+              />
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity
-            style={dynamicStyles.buttonContainer}
+            disabled={isLoginLoading}
+            style={[
+              dynamicStyles.buttonContainer,
+              isLoginLoading && dynamicStyles.isLoadingButtonContainer,
+            ]}
             onPress={handleLogin}>
-            <Text style={dynamicStyles.buttonText}>Login</Text>
+            {isLoginLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={dynamicStyles.buttonText}>Login</Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -75,3 +126,15 @@ const Login = () => {
 };
 
 export default Login;
+
+const styles = StyleSheet.create({
+  passwordContainer: {
+    flexDirection: "row",
+  },
+  iconContainer: {
+    position: "absolute",
+    right: 15,
+    top: 12,
+    zIndex: 100,
+  },
+});

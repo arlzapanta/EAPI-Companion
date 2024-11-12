@@ -16,6 +16,9 @@ import {
 import { getStatusText, showConfirmAlert } from "../../utils/commonUtil";
 import { Ionicons } from "@expo/vector-icons";
 import { customToast } from "../../utils/customToast";
+import { AntDesign } from "@expo/vector-icons";
+import { getStyleUtil } from "../../utils/styleUtil";
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const RescheduleTable: React.FC<
   RescheduleTableProps & {
@@ -27,12 +30,12 @@ const RescheduleTable: React.FC<
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);
-  const itemsPerPage = 8;
+  const itemsPerPage = 5;
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1000);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, []);
@@ -93,7 +96,7 @@ const RescheduleTable: React.FC<
     <Provider>
       <View style={styles.container}>
         {loading ? (
-          <View style={styles.loadingOverlay}>
+          <View style={dynamicStyles.loadingOverlay}>
             <ActivityIndicator size="large" color="#046E37" />
           </View>
         ) : (
@@ -120,34 +123,32 @@ const RescheduleTable: React.FC<
               <Button
                 mode="contained"
                 onPress={clearDateSelection}
-                style={styles.resetButton}>
-                Reset
+                style={dynamicStyles.resetButton}>
+                Clear Filter
               </Button>
             </View>
-            <Card style={styles.card}>
+            <Card style={dynamicStyles.tableCard}>
               <DataTable>
-                <DataTable.Header>
+                <DataTable.Header style={dynamicStyles.tableHeader}>
                   <DataTable.Title style={{ flex: 1.5 }}>
                     Doctor Name
                   </DataTable.Title>
                   <DataTable.Title style={{ flex: 1 }}>
                     Scheduled
                   </DataTable.Title>
-                  <DataTable.Title style={{ flex: 1 }}>
+                  <DataTable.Title style={{ flex: 1.5 }}>
                     Reschedule to
                   </DataTable.Title>
                   <DataTable.Title style={{ flex: 1 }}>Type</DataTable.Title>
                   <DataTable.Title style={{ flex: 1 }}>Status</DataTable.Title>
-                  <DataTable.Title style={{ flex: 1 }}>
-                    Date Created
-                  </DataTable.Title>
+                  <DataTable.Title style={{ flex: 1 }}>Created</DataTable.Title>
                   <DataTable.Title style={{ flex: 0.5 }}>
                     Action
                   </DataTable.Title>
                 </DataTable.Header>
                 {currentData.map((data, index) => (
                   <DataTable.Row
-                    style={styles.dataTableRow}
+                    style={dynamicStyles.tableRow}
                     key={data.request_id ? data.request_id : `row-${index}`}>
                     <DataTable.Cell style={{ flex: 1.5 }}>
                       {data.full_name}
@@ -155,7 +156,7 @@ const RescheduleTable: React.FC<
                     <DataTable.Cell style={{ flex: 1 }}>
                       {formatShortDate(data.date_from)}
                     </DataTable.Cell>
-                    <DataTable.Cell style={{ flex: 1 }}>
+                    <DataTable.Cell style={{ flex: 1.3 }}>
                       {formatShortDate(data.date_to)}
                     </DataTable.Cell>
                     <DataTable.Cell style={{ flex: 1 }}>
@@ -169,7 +170,7 @@ const RescheduleTable: React.FC<
                     </DataTable.Cell>
                     <DataTable.Cell style={{ flex: 0.5 }}>
                       {new Date(data.created_at).toDateString() ===
-                      new Date().toDateString() ? (
+                        new Date().toDateString() && data.fromServer != true ? (
                         <TouchableOpacity onPress={() => handleDelete(data.id)}>
                           <Ionicons
                             name="trash-outline"
@@ -179,7 +180,8 @@ const RescheduleTable: React.FC<
                         </TouchableOpacity>
                       ) : (
                         <>
-                          {data.status == "0" || data.status == "1" ? (
+                          {/* {data.status == "0" || data.status == "1" ? ( */}
+                          {data.status == "0" ? (
                             <TouchableOpacity
                               onPress={() => handleCancel(data.id)}>
                               <Ionicons name="close" size={24} color="red" />
@@ -195,6 +197,14 @@ const RescheduleTable: React.FC<
                               )}
 
                               {data.status == "2" && (
+                                <Ionicons
+                                  name="cloud-done"
+                                  size={24}
+                                  color="lightgray"
+                                />
+                              )}
+
+                              {data.status == "1" && (
                                 <Ionicons
                                   name="cloud-done"
                                   size={24}
@@ -225,27 +235,25 @@ const RescheduleTable: React.FC<
             </Card>
             <View style={styles.paginationContainer}>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage - 1)}
                 disabled={currentPage === 1}
                 style={[
                   styles.paginationButton,
                   currentPage === 1 && styles.disabledButton,
                 ]}>
-                Previous
+                <AntDesign name="leftcircle" size={20} color="#046E37" />
               </Button>
               <Text style={styles.paginationText}>
                 Page {currentPage} of {totalPages}
               </Text>
               <Button
-                mode="outlined"
                 onPress={() => goToPage(currentPage + 1)}
                 disabled={currentPage === totalPages}
                 style={[
                   styles.paginationButton,
                   currentPage === totalPages && styles.disabledButton,
                 ]}>
-                Next
+                <AntDesign name="rightcircle" size={20} color="#046E37" />
               </Button>
             </View>
           </>
@@ -257,14 +265,13 @@ const RescheduleTable: React.FC<
 
 const styles = StyleSheet.create({
   container: {
-    margin: 15,
     flex: 1,
   },
   filterContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 15,
     justifyContent: "space-between",
+    paddingVertical: 10,
   },
   picker: {
     width: Dimensions.get("window").width * 0.25,
@@ -315,7 +322,7 @@ const styles = StyleSheet.create({
   paginationText: {
     flex: 2,
     textAlign: "center",
-    color: "#046E37",
+    color: "black",
   },
   disabledButton: {
     borderColor: "gray",

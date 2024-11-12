@@ -24,7 +24,7 @@ export const useImagePicker = ({ onPhotoCaptured }: UseImagePickerOptions = {}) 
     // Open camera and capture image
     const result = await ImagePicker.launchCameraAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      // allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
       base64: true,
@@ -34,20 +34,20 @@ export const useImagePicker = ({ onPhotoCaptured }: UseImagePickerOptions = {}) 
       const base64Image = result.assets[0].base64 || null;
       setImageBase64(base64Image);
 
-      // Get current location
-      const locationResult = await Location.getCurrentPositionAsync({
+      const { coords } = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High, 
         timeInterval: 10000
       });
+      
       const currentLocation = {
-        latitude: locationResult.coords.latitude,
-        longitude: locationResult.coords.longitude,
+        latitude: coords.latitude,
+        longitude: coords.longitude,
       };
+      
       setLocation(currentLocation);
 
       // Execute the callback function if provided
       if (onPhotoCaptured && base64Image && currentLocation) {
-        console.log("Triggering callback with base64Image and location");
         onPhotoCaptured(base64Image, currentLocation);
       }
     }

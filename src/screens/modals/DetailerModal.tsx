@@ -10,13 +10,25 @@ import {
   Image,
   ScrollView,
   Dimensions,
-  Button,
+  ActivityIndicator,
 } from "react-native";
-import { createShimmerPlaceHolder } from "expo-shimmer-placeholder";
-import { LinearGradient } from "expo-linear-gradient";
-import { fetchDetailerImages } from "../../utils/localDbUtils";
+import { useDataContext } from "../../context/DataContext";
+import { getStyleUtil } from "../../utils/styleUtil";
+import { getBase64StringFormat } from "../../utils/commonUtil";
+const dynamicStyles = getStyleUtil({});
 
-const ShimmerPlaceHolder = createShimmerPlaceHolder(LinearGradient);
+const CustomLoading = () => {
+  return (
+    <View style={styles.noImagesContainer}>
+      <ActivityIndicator size="large" color="#046E37" />
+      <Text style={styles.noImagesText}>
+        Image is loading or the{" "}
+        <Text style={dynamicStyles.mainTextRed}>image format is invalid</Text>.
+        Please contact your DSM or admin for assistance.
+      </Text>
+    </View>
+  );
+};
 
 const DetailerModal: React.FC<DetailerModalProps> = ({
   isVisible,
@@ -26,13 +38,12 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
   const scaleAnim = React.useRef(new Animated.Value(0)).current;
   const [loadingStates, setLoadingStates] = useState<boolean[]>([]);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const { detailersRecord } = useDataContext();
 
   const handleImageLoad = (index: number) => {
-    setTimeout(() => {
-      const updatedLoadingStates = [...loadingStates];
-      updatedLoadingStates[index] = false;
-      setLoadingStates(updatedLoadingStates);
-    }, 100);
+    const updatedLoadingStates = [...loadingStates];
+    updatedLoadingStates[index] = true;
+    setLoadingStates(updatedLoadingStates);
   };
 
   useEffect(() => {
@@ -44,24 +55,39 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
         useNativeDriver: true,
       }).start();
 
-      const fetchImages = async () => {
-        const fetchedImages = await fetchDetailerImages(
-          detailerNumber.toString()
+      const fetchDetailers = async () => {
+        const matchingDetailer = detailersRecord.find(
+          (test) => test.category === detailerNumber.toString()
         );
-        setImageUrls(fetchedImages);
-        setLoadingStates(Array(fetchedImages.length).fill(true));
-      };
 
-      fetchImages();
+        if (matchingDetailer) {
+          const detailersArray = matchingDetailer.detailers.split(",");
+          if (detailersArray.length === 0 || detailersArray[0] === "") {
+            setImageUrls([]);
+          } else {
+            setImageUrls(detailersArray);
+          }
+        } else {
+          setImageUrls([]);
+        }
+      };
+      fetchDetailers();
     } else {
       Animated.timing(scaleAnim, {
         toValue: 0,
-        duration: 300,
+        duration: 2000,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start();
     }
   }, [isVisible, detailerNumber]);
+
+  useEffect(() => {
+    if (imageUrls.length > 0) {
+      const initialStates = new Array(imageUrls.length).fill(true);
+      setLoadingStates(initialStates);
+    }
+  }, [imageUrls]);
 
   return (
     <Modal
@@ -78,16 +104,16 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
               contentContainerStyle={styles.imageGallery}>
               {imageUrls.map((url, index) => (
                 <View key={index} style={styles.imageContainer}>
-                  {loadingStates[index] ? (
-                    <ShimmerPlaceHolder
-                      visible={true}
-                      style={styles.shimmerPlaceholder}
-                    />
-                  ) : null}
+                  {loadingStates[index] && (
+                    <View style={styles.imageContainer}>
+                      <CustomLoading />
+                    </View>
+                  )}
                   <Image
-                    source={{ uri: url }}
+                    source={{ uri: `${getBase64StringFormat()}${url}` }}
                     style={styles.fullImage}
                     onLoadStart={() => handleImageLoad(index)}
+                    onLoad={() => handleImageLoad(index)}
                   />
                 </View>
               ))}
@@ -95,8 +121,8 @@ const DetailerModal: React.FC<DetailerModalProps> = ({
           ) : (
             <View style={styles.noImagesContainer}>
               <Text style={styles.noImagesText}>
-                No images available. Please contact your DSM for further
-                details.
+                No images available. Please contact your DSM or admin for
+                assistance.
               </Text>
             </View>
           )}
@@ -138,13 +164,18 @@ const styles = StyleSheet.create({
   fullImage: {
     width: width,
     height: height,
-    resizeMode: "cover",
+    resizeMode: "stretch",
     position: "absolute",
   },
   shimmerPlaceholder: {
     width: width,
     height: height,
-    position: "absolute",
+    borderRadius: 8,
+  },
+  circularShimmer: {
+    height: 100,
+    width: 100,
+    borderRadius: 50, // Circular shimmer
   },
   noImagesContainer: {
     justifyContent: "center",
@@ -157,12 +188,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   closeButton: {
-    backgroundColor: "#046E37",
+    // backgroundColor: "#046E37",
+    backgroundColor: "red",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
+    elevation: 10,
+    minWidth: 100,
+    alignItems: "center",
+    justifyContent: "center",
     position: "absolute",
-    bottom: 60, // Adjusted to fit above the upload button
+    bottom: 20,
     left: "50%",
     transform: [{ translateX: -50 }],
   },

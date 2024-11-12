@@ -12,16 +12,18 @@ import {
 import { captureRef } from "react-native-view-shot";
 import Svg, { Path } from "react-native-svg";
 import { getLocation } from "../utils/currentLocation";
-import { updateCallSignature } from "../utils/quickCallUtil";
+import { updateCallPhoto, updateCallSignature } from "../utils/quickCallUtil";
 import { getStyleUtil } from "../utils/styleUtil";
+import Foundation from "@expo/vector-icons/Foundation";
 import Loading from "./Loading";
-import { getBase64StringFormat } from "../utils/commonUtil";
+import { getBase64StringFormat, showConfirmAlert } from "../utils/commonUtil";
+import { useImagePicker } from "../hook/useImagePicker";
+import Octicons from "@expo/vector-icons/Octicons";
 import { formatTimeHoursMinutes } from "../utils/dateUtils";
-import { customToast } from "../utils/customToast";
 const dynamicStyle = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
-const SignatureCapture: React.FC<SignatureCaptureProps> = ({
+const SignatureCaptureDisplay: React.FC<SignatureCaptureProps> = ({
   callId,
   onSignatureUpdate,
 }) => {
@@ -32,7 +34,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   );
   const [isModalVisible, setIsModalVisible] = useState(false);
   const viewRef = useRef<View>(null);
-  const canvasWidth = width - 40;
+  const canvasWidth = width - 50;
   const canvasHeight = 300;
   const [attemptCount, setAttemptCount] = useState<number>(0);
 
@@ -40,6 +42,25 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   const [timer, setTimer] = useState<number>(0);
   const [callStartTime, setCallStartTime] = useState<string>("");
   const [callEndTime, setCallEndTime] = useState<string>("");
+
+  const [photoVal, setPhotoVal] = useState<string>("");
+
+  const handlePhotoCaptured = async (
+    base64: string,
+    location: { latitude: number; longitude: number }
+  ) => {
+    try {
+      const loc = await getLocation();
+      setPhotoVal(base64);
+      await updateCallPhoto(callId, base64, loc);
+    } catch (error) {
+      console.log("handlePhotoCaptured error", error);
+    }
+  };
+
+  const { imageBase64, location, handleImagePicker } = useImagePicker({
+    onPhotoCaptured: handlePhotoCaptured,
+  });
 
   const startTimer = () => {
     setCallStartTime(formatTimeHoursMinutes(new Date()));
@@ -113,7 +134,9 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   };
 
   const captureSignature = async () => {
-    if (viewRef.current && paths.length > 0) {
+    const loc = await getLocation();
+    console.log(paths.length);
+    if (viewRef.current) {
       stopTimer();
       setIsSignatureLoading(true);
       try {
@@ -124,8 +147,6 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
         });
         const base64Signature = `${uri}`;
         setSignature(base64Signature);
-
-        const loc = await getLocation();
         try {
           if (callId !== 12340000) {
             await updateCallSignature(
@@ -145,73 +166,94 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
         console.error("Error capturing the view:", error);
       }
     } else {
-      customToast("Please sign first");
+      onSignatureUpdate("", loc, 0);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={dynamicStyle.buttonContainer1}
-        onPress={() => setIsModalVisible(true)}>
-        <Text style={styles.buttonText}>Open Signature Pad</Text>
-      </TouchableOpacity>
+    <View>
+      {!photoVal ? (
+        <View
+          ref={viewRef}
+          style={[styles.canvas, { width: canvasWidth, height: canvasHeight }]}
+          {...panResponder.panHandlers}>
+          <Svg
+            width={canvasWidth}
+            height={canvasHeight}
+            style={{ position: "absolute", top: 0, left: 0 }}>
+            {paths.map((path, index) => (
+              <Path
+                key={index}
+                d={createPathString(path)}
+                stroke="black"
+                strokeWidth="2"
+                fill="none"
+              />
+            ))}
+          </Svg>
+        </View>
+      ) : null}
 
-      <Modal
-        visible={isModalVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setIsModalVisible(false)}>
-        <View style={styles.modalContainer}>
-          <View
-            ref={viewRef}
-            style={[
-              styles.canvas,
-              { width: canvasWidth, height: canvasHeight },
-            ]}
-            {...panResponder.panHandlers}>
-            <Svg
-              width={canvasWidth}
-              height={canvasHeight}
-              style={{ position: "absolute", top: 0, left: 0 }}>
-              {paths.map((path, index) => (
-                <Path
-                  key={index}
-                  d={createPathString(path)}
-                  stroke="black"
-                  strokeWidth="2"
-                  fill="none"
-                />
-              ))}
-            </Svg>
-          </View>
-          <View style={dynamicStyle.centerItems}>
+      <View style={dynamicStyle.centerItems}>
+        {!photoVal ? (
+          <>
             <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
-            <SpacerH size={30} />
-          </View>
-          <View style={[dynamicStyle.trioBtnRow]}>
-            <TouchableOpacity
-              style={[dynamicStyle.buttonContainer1, dynamicStyle.subBgColor]}
-              onPress={clearSignature}>
-              <Text style={dynamicStyle.buttonText}>Clear Signature</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={dynamicStyle.buttonContainer1}
-              onPress={captureSignature}>
-              <Text style={dynamicStyle.buttonText}>Capture Signature</Text>
-            </TouchableOpacity>
+            <View style={dynamicStyle.centerItems}>
+              <Text style={dynamicStyle.textBlack}>Or ..</Text>
+            </View>
+          </>
+        ) : null}
 
+        <View
+          style={[
+            styles.noteContainer,
+            dynamicStyle.centerItems,
+            { marginBottom: 10 },
+            { marginTop: 5 },
+          ]}>
+          {!photoVal ? (
+            <TouchableOpacity
+              style={[styles.takePhotoButton, dynamicStyle.mainBgColor]}
+              onPress={handleImagePicker}>
+              <Octicons name="device-camera" size={30} color="white" />
+              <Text style={dynamicStyle.buttonText}>Take a photo</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={dynamicStyle.imageContainer}>
+              <Text style={dynamicStyle.mainText}>Photo Capture</Text>
+              <Image
+                source={{ uri: `${getBase64StringFormat()}${photoVal}` }}
+                style={dynamicStyle.image}
+              />
+            </View>
+          )}
+        </View>
+        <SpacerH size={5} />
+      </View>
+      <View style={dynamicStyle.centerItems}>
+        <View style={[dynamicStyle.trioBtnRow]}>
+          {!photoVal ? (
             <TouchableOpacity
               style={[
                 dynamicStyle.buttonContainer1,
-                { backgroundColor: "red" },
+                { marginEnd: 5 },
+                dynamicStyle.subBgColor,
               ]}
-              onPress={() => setIsModalVisible(false)}>
-              <Text style={dynamicStyle.buttonText}>Close</Text>
+              onPress={clearSignature}>
+              <Text style={dynamicStyle.buttonText}>Clear Signature</Text>
             </TouchableOpacity>
-          </View>
+          ) : null}
+
+          <TouchableOpacity
+            style={dynamicStyle.buttonContainer1}
+            onPress={() =>
+              showConfirmAlert(captureSignature, "save quick call")
+            }>
+            <Text style={dynamicStyle.buttonText}>Save Quick Call</Text>
+          </TouchableOpacity>
         </View>
-      </Modal>
+        <SpacerH size={20} />
+      </View>
 
       <Modal
         visible={signature !== null}
@@ -231,41 +273,9 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-  },
-  buttonContainer1: {
-    backgroundColor: "#046E37",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 5,
-    elevation: 5,
-    maxWidth: 200,
-    minWidth: 200,
-    marginBottom: 2,
-    alignItems: "center",
-  },
-  buttonText1: {
-    color: "#FFF",
-    fontWeight: "bold",
-    alignSelf: "center",
-  },
-  buttonText: {
-    color: "#FFF",
-    fontWeight: "bold",
-  },
-  modalContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(255, 255, 255,1)",
-    padding: 20,
-  },
   canvas: {
     borderWidth: 1,
-    marginBottom: 10,
+    marginBottom: 5,
     backgroundColor: "#FFF",
   },
   signatureImage: {
@@ -274,41 +284,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     backgroundColor: "#FFF",
   },
-  clearButton: {
-    marginTop: 10,
-    width: "100%",
-    alignItems: "center",
-    backgroundColor: "#FF5722",
-    padding: 10,
-    borderRadius: 5,
-  },
-  saveButton: {
-    marginTop: 10,
-    width: "100%",
-    alignItems: "center",
-    backgroundColor: "#4CAF50",
-    padding: 10,
-    borderRadius: 5,
-  },
-  closeButton: {
-    marginTop: 10,
-    width: "100%",
-    alignItems: "center",
-    backgroundColor: "#FF0000",
-    padding: 10,
-    borderRadius: 5,
-  },
+
   signatureModalContainer: {
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     padding: 20,
   },
-  buttonContainer: {
-    backgroundColor: "#046E37",
-    paddingVertical: 20,
-    paddingHorizontal: 40,
+  takePhotoButton: {
+    backgroundColor: "#007BFF",
     borderRadius: 5,
-    elevation: 5,
+    width: 300,
+    alignItems: "center",
+    justifyContent: "center",
+    height: 60,
+  },
+  noteContainer: {
+    flexDirection: "row",
+  },
+  noteInput: {
+    flex: 1,
+    borderColor: "#ddd",
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    marginRight: 10,
+    maxWidth: 500,
+    marginStart: 90,
+  },
+  updateButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
+    fontSize: 14,
   },
 });
 
-export default SignatureCapture;
+export default SignatureCaptureDisplay;

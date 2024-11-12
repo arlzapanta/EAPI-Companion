@@ -16,11 +16,24 @@ import { RootStackParamList } from "../../type/navigation";
 import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
 import { saveCallsDoneFromSchedules } from "../../utils/localDbUtils";
 import Detailers from "../modals/DetailersOnCallModal";
-import { formatTimeHoursMinutes } from "../../utils/dateUtils";
+import {
+  formatDate,
+  formatTimeHoursMinutes,
+  getCurrentDatePH,
+  getFormattedDateToday,
+} from "../../utils/dateUtils";
 import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
 import { getLocation } from "../../utils/currentLocation";
 import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
+import {
+  getBase64StringFormat,
+  showConfirmAlert,
+} from "../../utils/commonUtil";
+import DetailersOnCallModal from "../modals/DetailersOnCallModal";
+import Entypo from "@expo/vector-icons/Entypo";
+import { getStyleUtil } from "../../utils/styleUtil";
+const dynamicStyles = getStyleUtil({ theme: "light" });
 
 type OnCallScreenRouteProp = RouteProp<RootStackParamList, "OnCall">;
 type OnCallScreenNavigationProp = NativeStackNavigationProp<
@@ -51,6 +64,14 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
   const [photoValue, setPhotoValue] = useState<string>("");
   const [photoLocation, setPhotoLocation] = useState<string>("");
 
+  const moodToIconMap = {
+    hot: "emoji-happy",
+    warm: "emoji-neutral",
+    cold: "emoji-sad",
+  };
+
+  const moodOptions = [{ mood: "hot" }, { mood: "warm" }, { mood: "cold" }];
+
   useEffect(() => {
     startTimer();
     return () => {
@@ -73,6 +94,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
 
   const [callsData, setCallsData] = useState({});
 
+  // todo : fix on call design
   const endCall = async () => {
     setCallEndTime(formatTimeHoursMinutes(new Date()));
     stopTimer();
@@ -88,10 +110,11 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         signature_location: signatureLocation,
         photo: photoValue,
         photo_location: photoLocation,
-        doctor_name: docName,
+        doctors_name: docName,
+        created_at: await getCurrentDatePH(),
       };
 
-      setCallsData(callDetails); // This sets the callDetails to your state
+      setCallsData(callDetails);
 
       const result = await saveCallsDoneFromSchedules(
         scheduleIdValue,
@@ -130,8 +153,9 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
     location: { latitude: number; longitude: number }
   ) => {
     try {
+      const loc = await getLocation();
       setPhotoValue(base64);
-      setPhotoLocation(JSON.stringify(location));
+      setPhotoLocation(loc);
     } catch (error) {
       console.log("handlePhotoCaptured error", error);
     }
@@ -141,18 +165,25 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
     onPhotoCaptured: handlePhotoCaptured,
   });
 
-  const handleSignatureUpdate = async (base64Signature: string) => {
+  const handleSignatureUpdate = async (
+    base64Signature: string,
+    location: string,
+    attempts: string | number
+  ): Promise<void> => {
+    const attemptCount =
+      typeof attempts === "string" ? parseInt(attempts, 10) : attempts;
+
+    if (isNaN(attemptCount)) {
+      console.error(
+        "Invalid attempt count : handleSignatureUpdate > onCallScreen"
+      );
+      return;
+    }
+
+    setSignatureAttempts(attemptCount);
     setSignatureValue(base64Signature);
     const loc = await getLocation();
-    setSignatureLocation(JSON.stringify(loc));
-    console.log("signatureValue", base64Signature.slice(0, 20));
-    console.log("signatureValue", signatureValue.slice(0, 20));
-    console.log("signatureValue", signatureLocation.slice(0, 20));
-  };
-
-  const handleSignatureClear = () => {
-    setSignatureAttempts((prevAttempts) => prevAttempts + 1);
-    console.log("Signature cleared. Total attempts:", signatureAttempts + 1);
+    setSignatureLocation(loc);
   };
 
   return (
@@ -172,20 +203,22 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         ))}
       </View>
       <View style={styles.cardContainer}>
-        <TouchableOpacity onPress={openModal} style={styles.openModalButton}>
-          <Text style={styles.buttonText}>START DETAILERS</Text>
+        <TouchableOpacity
+          onPress={openModal}
+          style={[styles.openModalButton, dynamicStyles.mainBgColor]}>
+          <Text style={styles.buttonText}>START DETAILING</Text>
         </TouchableOpacity>
 
         {/* Render DetailerModal and pass isVisible and onClose */}
-        <Detailers isVisible={isModalVisible} onClose={closeModal} />
+        <DetailersOnCallModal isVisible={isModalVisible} onClose={closeModal} />
       </View>
 
       <View style={styles.cardContainer}>
         <View style={styles.centerItems}>
-          <Text style={styles.signatureLabel}>Signature Capture</Text>
+          <Text style={dynamicStyles.mainText}>Signature Capture</Text>
           {signatureValue ? (
             <Image
-              source={{ uri: `${signatureValue}` }}
+              source={{ uri: `${getBase64StringFormat()}${signatureValue}` }}
               style={styles.signImage}
             />
           ) : (
@@ -196,15 +229,15 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
           )}
           {!imageBase64 ? (
             <TouchableOpacity
-              style={styles.takePhotoButton}
+              style={dynamicStyles.buttonContainer1}
               onPress={handleImagePicker}>
-              <Text style={styles.buttonText}>Take a photo</Text>
+              <Text style={dynamicStyles.buttonText}>Take a photo</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.imageContainer}>
-              <Text style={styles.signatureLabel}>Photo Capture</Text>
+              <Text style={dynamicStyles.mainText}>Photo Capture</Text>
               <Image
-                source={{ uri: `data:image/png;base64,${imageBase64}` }}
+                source={{ uri: `${getBase64StringFormat()}${imageBase64}` }}
                 style={styles.image}
               />
             </View>
@@ -225,29 +258,43 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         />
         <Text style={styles.moodLabel}>Doctor's Mood:</Text>
         <View style={styles.radioGroup}>
-          {["cold", "warm", "hot"].map((mood) => (
+          {moodOptions.map((option) => (
             <TouchableOpacity
-              key={mood}
+              key={option.mood}
               style={[
                 styles.radioButtonContainer,
-                selectedMood === mood && styles.radioButtonSelected,
+                selectedMood === option.mood && styles.radioButtonSelected,
               ]}
-              onPress={() => setSelectedMood(mood)}>
+              onPress={() => setSelectedMood(option.mood)}>
+              <Entypo
+                name={(moodToIconMap as any)[option.mood]}
+                size={20}
+                color="black"
+              />
               <Text
                 style={[
                   styles.radioButtonText,
-                  selectedMood === mood && styles.radioButtonTextSelected,
+                  selectedMood === option.mood &&
+                    styles.radioButtonTextSelected,
                 ]}>
-                {mood.charAt(0).toUpperCase() + mood.slice(1)}
+                {option.mood.charAt(0).toUpperCase() + option.mood.slice(1)}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
-
       <TouchableOpacity
-        onLongPress={endCall}
-        style={styles.floatingButtonContainer}>
+        onPress={
+          signatureValue || photoValue
+            ? () => showConfirmAlert(endCall, "End Call")
+            : undefined
+        }
+        disabled={!(signatureValue || photoValue)}
+        style={[
+          styles.floatingButtonContainer,
+          !(signatureValue || photoValue) &&
+            dynamicStyles.buttonContainerDisabled,
+        ]}>
         <View style={styles.floatingButton}>
           <Icon name="exit" size={24} color="#fff" />
           <Text style={styles.buttonText}>End Call</Text>
@@ -313,7 +360,7 @@ const styles = StyleSheet.create({
     color: "#333",
   },
   input: {
-    height: 50,
+    height: 70,
     borderColor: "#ddd",
     borderWidth: 1,
     borderRadius: 8,
