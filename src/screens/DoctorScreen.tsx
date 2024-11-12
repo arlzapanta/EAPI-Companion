@@ -24,6 +24,7 @@ import { customToast } from "../utils/customToast";
 import { getStyleUtil } from "../utils/styleUtil";
 import Loading from "../components/Loading";
 import { useDataContext } from "../context/DataContext";
+import LoadingSub from "../components/LoadingSub";
 
 const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const { isDoctorLoading } = useDataContext();
@@ -396,7 +397,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
               {selectedDoctor && !isInternalDoctorLoading ? (
                 <DoctorDetails doc={selectedDoctor} />
               ) : isInternalDoctorLoading ? (
-                <Loading />
+                <LoadingSub />
               ) : (
                 <NoDoctorSelected />
               )}
