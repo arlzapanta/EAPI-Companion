@@ -26,6 +26,7 @@ import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import Loading from "../components/Loading";
 import { useDataContext } from "../context/DataContext";
 import { Picker } from "@react-native-picker/picker";
+import LoadingSub from "../components/LoadingSub";
 
 const Schedules = () => {
   const { isScheduleLoading, detailersRecord } = useDataContext();
@@ -538,7 +539,7 @@ const Schedules = () => {
                   ) : null}
                 </>
               ) : isInternalSchedLoading ? (
-                <Loading />
+                <LoadingSub />
               ) : (
                 <NoScheduleSelected />
               )}
