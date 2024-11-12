@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -22,6 +23,8 @@ import {
 } from "../../utils/localDbUtils";
 import { Picker } from "@react-native-picker/picker";
 import {
+  formatDatev1,
+  formatDateYMD,
   generateFutureDates,
   getDateRangeGTToday,
   getMonthRangeExGTToday,
@@ -53,6 +56,7 @@ const RescheduleScreen: React.FC = () => {
 
   const [rescheduleData, setRescheduleData] = useState<any[]>([]); //for table
   const [selectedDateTo, setSelectedDateTo] = useState<string>("");
+  const [isReschedLoading, setIsReschedLoading] = useState<boolean>(false);
   const [doctorScheduleList, setDoctorScheduleList] = useState<
     ScheduleAPIRecord[]
   >([]);
@@ -110,37 +114,44 @@ const RescheduleScreen: React.FC = () => {
       customToast("Please select valid date");
       return;
     }
-    if (selectedDoctor) {
-      const type = isWithinWeekOrAdvance(selectedDateTo);
-      const reschedDetails = {
-        id: "",
-        request_id: "",
-        created_at: "",
-        schedule_id: selectedDoctor.schedule_id,
-        date_to: selectedDateTo,
-        date_from: selectedDoctor.date,
-        doctors_id: selectedDoctor.doctors_id,
-        full_name: selectedDoctor.full_name,
-        status: "0",
-        type,
-        sales_portal_id: userInfo.sales_portal_id,
-        fromServer: false,
-      };
 
-      const result1 = await insertRescheduleRequest(reschedDetails);
-      if (result1 == "Success") {
-        await fetchDoctorSchedules();
-        setSelectedDateTo("selectdate");
-        setSelectedDoctor(null);
-      } else if (result1 == "Existing") {
-        setSelectedDateTo("selectdate");
-        setSelectedDoctor(null);
-        customToast(
-          "Existing request, kindly delete it first if it needs to be changed"
-        );
+    try {
+      setIsReschedLoading(true);
+      if (selectedDoctor) {
+        const type = isWithinWeekOrAdvance(selectedDateTo);
+        const reschedDetails = {
+          id: "",
+          request_id: "",
+          created_at: "",
+          schedule_id: selectedDoctor.schedule_id,
+          date_to: selectedDateTo,
+          date_from: selectedDoctor.date,
+          doctors_id: selectedDoctor.doctors_id,
+          full_name: selectedDoctor.full_name,
+          status: "0",
+          type,
+          sales_portal_id: userInfo.sales_portal_id,
+          fromServer: false,
+        };
+
+        const result1 = await insertRescheduleRequest(reschedDetails);
+        if (result1 == "Success") {
+          await fetchDoctorSchedules();
+          setSelectedDateTo("selectdate");
+          setSelectedDoctor(null);
+        } else if (result1 == "Existing") {
+          setSelectedDateTo("selectdate");
+          setSelectedDoctor(null);
+          customToast(
+            "Existing request, kindly delete it first if it needs to be changed"
+          );
+        }
+      } else {
+        console.log("No doctor selected");
       }
-    } else {
-      console.log("No doctor selected");
+    } catch (error) {
+    } finally {
+      setIsReschedLoading(false);
     }
   };
 
@@ -257,7 +268,9 @@ const RescheduleScreen: React.FC = () => {
                   .map((schedule) => (
                     <Picker.Item
                       key={schedule.id}
-                      label={`${schedule.full_name} - ${schedule.date}`}
+                      label={`${schedule.full_name} - ${formatDatev1(
+                        schedule.date
+                      )}`}
                       value={schedule}
                     />
                   ))}
@@ -297,7 +310,7 @@ const RescheduleScreen: React.FC = () => {
                   })
                   .map((date) => (
                     <Picker.Item
-                      label={date}
+                      label={formatDatev1(date)}
                       value={date}
                       key={date}
                       style={styles.pickerLabel}
@@ -305,11 +318,25 @@ const RescheduleScreen: React.FC = () => {
                   ))}
               </Picker>
 
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={[styles.saveButton, dynamicStyles.mainBgColor]}
                 disabled={!selectedDateTo}
                 onPress={handleSaveReschedule}>
                 <Text style={styles.buttonText}>Add Request</Text>
+              </TouchableOpacity> */}
+
+              <TouchableOpacity
+                disabled={isReschedLoading || !selectedDateTo}
+                style={[
+                  dynamicStyles.buttonContainer,
+                  isReschedLoading && dynamicStyles.isLoadingButtonContainer,
+                ]}
+                onPress={handleSaveReschedule}>
+                {isReschedLoading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={dynamicStyles.buttonText}>Add Request</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
