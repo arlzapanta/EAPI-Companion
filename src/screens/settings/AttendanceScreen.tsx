@@ -46,6 +46,7 @@ import { customToast } from "../../utils/customToast";
 import { checkPostCallUnsetExist } from "../../utils/callComponentsUtil";
 import { useDataContext } from "../../context/DataContext";
 import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
+import LoadingProgressBar from "../../components/LoadingProgressbar";
 
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
@@ -68,6 +69,11 @@ const Attendance: React.FC = () => {
   } | null>(null);
 
   const [attendanceData, setAttendanceData] = useState<AttendanceRecord[]>([]);
+  const [loadingProgressData, setLoadingProgressData] =
+    useState<LoadingSubRecords>({
+      progress: 0.001,
+      text: "Syncing data ... Please wait",
+    });
   const [hasTimedIn, setHasTimedIn] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -169,17 +175,40 @@ const Attendance: React.FC = () => {
     }
 
     try {
+      setLoading(true);
       const timeInIsProceed = await apiTimeIn(userInfo);
       if (timeInIsProceed.isProceed) {
         let hasError = false;
         try {
+          setLoading(true);
+          setLoadingProgressData({
+            progress: 0.1,
+            text: "Fetching data : reschedule requests",
+          });
           await getDoctors(userInfo);
           await getReschedulesData(userInfo);
+          setLoadingProgressData({
+            progress: 0.2,
+            text: "Fetching data : charts and calendar",
+          });
           await getChartData(userInfo);
+
+          setLoadingProgressData({
+            progress: 0.3,
+            text: "Fetching data : detailers",
+          });
           const getDetailersRes = await getDetailersData();
           handleUpdateDetailers(getDetailersRes);
           await getCallsAPI(userInfo);
+          setLoadingProgressData({
+            progress: 0.7,
+            text: "Fetching data : actual calls",
+          });
           await getSChedulesAPI(userInfo);
+          setLoadingProgressData({
+            progress: 0.7,
+            text: "Fetching data : schedules",
+          });
         } catch (error) {
           await dropLocalTables([
             "detailers_tbl",
@@ -199,16 +228,31 @@ const Attendance: React.FC = () => {
         }
 
         if (!hasError) {
+          setLoading(true);
+          setLoadingProgressData({
+            progress: 0.8,
+            text: "Saving : Sync logs",
+          });
           await saveUserSyncHistoryLocalDb(
             userInfo,
             1,
             timeInIsProceed.DateTime
           );
+
+          setLoadingProgressData({
+            progress: 0.9,
+            text: "Saving : Attendace logs",
+          });
           await saveUserAttendanceLocalDb(
             userInfo,
             "in",
             timeInIsProceed.DateTime
           );
+
+          setLoadingProgressData({
+            progress: 0.9,
+            text: "Refreshing data",
+          });
           await fetchAttendanceData();
           refreshSchedData();
         }
@@ -253,8 +297,17 @@ const Attendance: React.FC = () => {
       const timeOutIsProceed = await apiTimeOut(userInfo);
       if (timeOutIsProceed.isProceed) {
         try {
+          setLoading(true);
+          setLoadingProgressData({
+            progress: 0.1,
+            text: "Syncing data : reschedule requests",
+          });
           await doctorRecordsSync(userInfo);
           await requestRecordSync(userInfo);
+          setLoadingProgressData({
+            progress: 0.3,
+            text: "Syncing data : Actual calls",
+          });
           await syncUser(userInfo);
         } catch (error) {
           hasError = true;
@@ -264,16 +317,28 @@ const Attendance: React.FC = () => {
         }
 
         if (!hasError) {
+          setLoadingProgressData({
+            progress: 0.5,
+            text: "Saving : Sync logs",
+          });
           await saveUserSyncHistoryLocalDb(
             userInfo,
             2,
             timeOutIsProceed.DateTime
           );
+          setLoadingProgressData({
+            progress: 0.8,
+            text: "Saving : Attendance logs",
+          });
           await saveUserAttendanceLocalDb(
             userInfo,
             "out",
             timeOutIsProceed.DateTime
           );
+          setLoadingProgressData({
+            progress: 0.9,
+            text: "Saving : Attendance logs",
+          });
           await fetchAttendanceData();
         }
       } else {
@@ -335,7 +400,7 @@ const Attendance: React.FC = () => {
   return (
     <View style={styles.container}>
       {loading ? (
-        <Loading />
+        <LoadingProgressBar data={loadingProgressData} />
       ) : (
         <>
           <ScrollView contentContainerStyle={styles.scrollViewContent}>

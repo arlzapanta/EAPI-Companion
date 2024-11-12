@@ -109,8 +109,7 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
                     </DataTable.Cell>
                     {/* <DataTable.Cell>{formatDateTime(user.date)}</DataTable.Cell> */}
                     <DataTable.Cell>
-                      {user.dateTime}
-                      {/* {formatDateTime(user.dateTime)} */}
+                      {formatDateTime(user.dateTime)}
                     </DataTable.Cell>
                   </DataTable.Row>
                 ))}

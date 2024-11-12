@@ -1,4 +1,11 @@
-import { View, Text, Alert, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  Alert,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import React, { useState, useEffect } from "react";
 import { customToast } from "../utils/customToast";
 import { useAuth } from "../context/AuthContext";
@@ -127,75 +134,63 @@ const Settings = () => {
   };
 
   const MidSync = async () => {
-    // const localRecords = await getCallsTodayLocalDb();
-    // localRecords.forEach(async (record) => {
-    //   const scheduleId = record.schedule_id.toString();
-    //   const postCallsPerScheduleId = await getPostCallNotesLocalDb(scheduleId);
-    //   const preCallsPerScheduleId = await getPreCallNotesLocalDb(scheduleId);
-
-    //   console.log("scheduleId", scheduleId);
-    //   console.log("postCallsPerScheduleId", postCallsPerScheduleId);
-    //   console.log("preCallsPerScheduleId", preCallsPerScheduleId);
-    // });
-
     let msg = "";
-    if (isTimeBetween12and1PM()) {
+    // if (isTimeBetween12and1PM()) {
+    try {
+      setLoading(true);
+      const checkQC = await getQuickCalls();
+      const checkPost = await checkPostCallUnsetExist();
+      if (checkQC.length > 0) {
+        msg = "Existing quick calls, kindly complete or remove any data";
+        Alert.alert(msg);
+        return;
+      }
+      if (checkPost) {
+        msg = "Existing empty post calls, kindly complete all post calls";
+        Alert.alert(msg);
+        return;
+      }
+      if (!userInfo) {
+        msg = "Server Error : User information is missing.";
+        Alert.alert(msg);
+        return;
+      }
+
       try {
         setLoading(true);
-        const checkQC = await getQuickCalls();
-        const checkPost = await checkPostCallUnsetExist();
-        if (checkQC.length > 0) {
-          msg = "Existing quick calls, kindly complete or remove any data";
-          Alert.alert(msg);
-          setLoading(false);
-          return;
-        }
-        if (checkPost) {
-          msg = "Existing empty post calls, kindly complete all post calls";
-          Alert.alert(msg);
-          setLoading(false);
-          return;
-        }
-        if (!userInfo) {
-          msg = "Server Error : User information is missing.";
-          Alert.alert(msg);
-          setLoading(false);
-          return;
-        }
-
+        let hasError = false;
         try {
-          let hasError = false;
-          try {
-            // await syncUser(userInfo);
-            await syncUserMid(userInfo);
-          } catch (error) {
-            hasError = true;
-            msg = "Server Error : Failed to mid sync please contact admin.";
-            Alert.alert(msg);
-            throw error;
-          }
-
-          if (!hasError) {
-            await saveUserSyncHistoryLocalDb(userInfo, 3, {
-              Date: await getCurrentDatePH(),
-              Time: "mid sync",
-            });
-          }
+          setLoading(true);
+          await syncUserMid(userInfo);
         } catch (error) {
+          hasError = true;
           msg = "Server Error : Failed to mid sync please contact admin.";
           Alert.alert(msg);
+          throw error;
+        } finally {
+          setLoading(false);
+        }
+
+        if (!hasError) {
+          await saveUserSyncHistoryLocalDb(userInfo, 3, {
+            Date: await getCurrentDatePH(),
+            Time: await getCurrentTimePH(),
+          });
         }
       } catch (error) {
-        Alert.alert(
-          "Server Error",
-          " Failed to mid sync please contact admin."
-        );
+        msg = "Server Error : Failed to mid sync please contact admin.";
+        Alert.alert(msg);
       } finally {
         setLoading(false);
       }
-    } else {
-      customToast("Mid sync is available between 12pm and 1pm");
+    } catch (error) {
+      Alert.alert("Server Error", " Failed to mid sync please contact admin.");
+    } finally {
+      setLoading(false);
     }
+    // } else {
+    //   customToast("Mid sync is available between 12pm and 1pm");
+    // }
   };
 
   useEffect(() => {
@@ -248,31 +243,45 @@ const Settings = () => {
             <Text style={styles.title}>Settings</Text>
             <View style={styles.centerItems}>
               <TouchableOpacity
-                style={styles.button}
+                style={dynamicStyle.buttonContainer}
                 onPress={handleAttendanceOnPress}>
                 <Text style={styles.buttonText}>Attendance</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.button}
+                style={dynamicStyle.buttonContainer}
                 onPress={handleSyncSettingsOnPress}>
                 <Text style={styles.buttonText}>Sync History</Text>
               </TouchableOpacity>
-
+              {/* 
               <TouchableOpacity
                 onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
                 style={styles.button}>
                 <Text style={styles.buttonText}>Mid Sync</Text>
+              </TouchableOpacity> */}
+
+              <TouchableOpacity
+                disabled={loading}
+                style={[
+                  dynamicStyle.buttonContainer,
+                  loading && dynamicStyle.isLoadingButtonContainer,
+                ]}
+                onPress={() => showConfirmAlert(MidSync, "Mid Sync")}>
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={dynamicStyle.buttonText}>Mid Sync</Text>
+                )}
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.button}
+                style={dynamicStyle.buttonContainer}
                 onPress={handleRequestreschedOnPress}>
                 <Text style={styles.buttonText}>Request Reschedule</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
-                style={styles.buttonLogout}
+                style={[styles.buttonLogout, dynamicStyle.buttonLogout]}
                 onPress={handleLogout}>
                 <Text style={styles.buttonTextLogout}>Logout</Text>
               </TouchableOpacity>
