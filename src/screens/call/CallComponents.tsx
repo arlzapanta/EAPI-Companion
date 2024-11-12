@@ -35,6 +35,8 @@ import { getStyleUtil } from "../../utils/styleUtil";
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
 type OnCallScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type SharedCallScreenNavigationProp =
+  NativeStackNavigationProp<RootStackParamList>;
 
 const CallComponents: React.FC<CallComponentsProps> = ({
   scheduleId,
@@ -42,6 +44,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({
   canStartCall,
 }) => {
   const navigation = useNavigation<OnCallScreenNavigationProp>();
+  const navigation1 = useNavigation<SharedCallScreenNavigationProp>();
   const [note, setNote] = useState<string>("");
   const [notes, setNotes] = useState<string[]>([]);
   const [selectedMood, setSelectedMood] = useState<string>("cold");
@@ -117,6 +120,12 @@ const CallComponents: React.FC<CallComponentsProps> = ({
       docName,
     });
     startTimer();
+  };
+
+  const executeSharedCall = () => {
+    navigation1.navigate("SharedCall", {
+      scheduleIdValue: scheduleId,
+    });
   };
 
   const savePostCallNotes = async () => {
@@ -217,11 +226,21 @@ const CallComponents: React.FC<CallComponentsProps> = ({
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.startCallContainer}>
         {canStartCall && (
-          <TouchableOpacity
-            style={[styles.buttonStartCall, dynamicStyles.mainBgColor]}
-            onPress={executeStartCall}>
-            <Text style={styles.buttonTextSave}>START CALL</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={[styles.buttonStartCall, dynamicStyles.mainBgColor]}
+              onPress={executeStartCall}>
+              <Text style={styles.buttonTextSave}>START CALL</Text>
+            </TouchableOpacity>
+            <View style={[dynamicStyles.centerItems]}>
+              <Text style={dynamicStyles.mainTextBig}>or</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.buttonSharedCall, dynamicStyles.mainBgColor]}
+              onPress={executeSharedCall}>
+              <Text style={styles.buttonTextSave}>Set shared call</Text>
+            </TouchableOpacity>
+          </>
         )}
         {/* <TouchableOpacity
           style={styles.buttonStartCall}
@@ -346,13 +365,13 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     backgroundColor: "transparent",
     borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: "lightgray",
+    // shadowColor: "#000",
+    // shadowOffset: { width: 0, height: 4 },
+    // shadowOpacity: 0.2,
+    // shadowRadius: 8,
+    // elevation: 5,
+    // borderWidth: 1,
+    // borderColor: "lightgray",
     marginBottom: 10,
   },
   headerContainer: {
@@ -453,6 +472,16 @@ const styles = StyleSheet.create({
   buttonStartCall: {
     color: "white",
     padding: 30,
+    elevation: 5,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonSharedCall: {
+    color: "white",
+    marginTop: 10,
+    padding: 10,
     elevation: 5,
     borderRadius: 8,
     flexDirection: "row",

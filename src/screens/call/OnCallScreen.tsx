@@ -214,7 +214,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
       </View>
 
       <View style={styles.cardContainer}>
-        <View style={styles.centerItems}>
+        <View style={dynamicStyles.centerItems}>
           <Text style={dynamicStyles.mainText}>Signature Capture</Text>
           {signatureValue ? (
             <Image
@@ -311,15 +311,6 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#f5f5f5",
     position: "relative",
-  },
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f5f5f5",
-  },
-  centerItems: {
-    alignItems: "center",
-    justifyContent: "center",
   },
   timerText: {
     fontSize: 36,
