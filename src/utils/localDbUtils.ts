@@ -33,7 +33,7 @@ const dropCreateCallsTable = `
     photo TEXT, 
     photo_location TEXT,
     created_at TEXT,
-    done TEXT,
+    done Number DEFAULT 0,
     created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP 
   );
 `;
@@ -115,6 +115,7 @@ const dropCreate_chartData = `
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `;
+
 const dropCreate_detailersData = `
     DROP TABLE IF EXISTS detailers_tbl;
     PRAGMA journal_mode = WAL;
@@ -125,6 +126,20 @@ const dropCreate_detailersData = `
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `;
+
+const dropCreate_productsData = `
+    DROP TABLE IF EXISTS products_tbl;
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE products_tbl (
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      item_code TEXT,
+      product_id TEXT,
+      item_description TEXT,
+      detailer TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+`;
+
 const createIfNE_userAttendance = `
   PRAGMA journal_mode = WAL;
   CREATE TABLE IF NOT EXISTS user_attendance_tbl (
@@ -262,7 +277,7 @@ const createIfNECalls = `
       signature_location TEXT,
       signature_attempts TEXT,
       created_at TEXT,
-      done TEXT,
+      done Number DEFAULT 0,
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `;
@@ -1021,6 +1036,39 @@ export const saveDetailersDataLocalDb = async (
   }
 };
 
+export const saveProductsLocalDb = async (
+  productsData: ProductRecord | ProductRecord[]
+): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(dropCreate_productsData);
+  const insertPromises = Array.isArray(productsData)
+    ? productsData
+    : [productsData];
+
+  try {
+    await Promise.all(
+      insertPromises.map(async (prod) => {
+        await db.runAsync(
+          `INSERT INTO products_tbl (product_id, item_code, item_description, detailer) VALUES (?, ?, ?, ?)`,
+          [prod.id, prod.item_code, prod.item_description, prod.detailer]
+        );
+      })
+    );
+
+    const query = `SELECT product_id FROM products_tbl`;
+    const existingRows = await db.getAllAsync(query);
+    console.log("GUMANA productsproductsproducts:", existingRows);
+
+    return "Success";
+  } catch (error) {
+    console.error("Error saving products data:", error);
+    return "Error saving products data";
+  }
+};
+
 export const fetchChartDataLocalDb = async (): Promise<
   ChartDashboardRecord[]
 > => {
@@ -1072,6 +1120,27 @@ export const getDoctorRecordsLocalDb = async () => {
   await db.execAsync(createIfNEDoctors);
 
   const query = `SELECT * FROM doctors_tbl`;
+
+  try {
+    const existingRows = await db.getAllAsync(query);
+    // console.log('existingRows getDoctorRecordsLocalDb', existingRows);
+    return existingRows;
+  } catch (error) {
+    console.error("Error fetching attendance data:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getProductRecordsLocalDb = async () => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNEDoctors);
+
+  const query = `SELECT * FROM products_tbl`;
 
   try {
     const existingRows = await db.getAllAsync(query);
@@ -1481,6 +1550,7 @@ export const getDatesAndTypeForCalendarView = async (): Promise<
 
   const qMakeup = `SELECT date_to FROM reschedule_req_tbl WHERE type = ? AND status = ?`;
   const qAdvance = `SELECT date_to FROM reschedule_req_tbl WHERE type = ? AND status = ?`;
+  const today = new Date();
 
   try {
     const qMakeupResult: { date_to: string }[] = await db.getAllAsync(qMakeup, [
@@ -1502,7 +1572,7 @@ export const getDatesAndTypeForCalendarView = async (): Promise<
       plotData: Array.from(
         new Set(
           qSched.map((record) =>
-            parseInt((record.date || "0000-00-00").split("-")[2])
+            parseInt(record.date ? record.date.split("-")[2] : "0000-00-00")
           )
         )
       ).map(String),
@@ -1511,15 +1581,15 @@ export const getDatesAndTypeForCalendarView = async (): Promise<
           ...qAdvanceResult.map((record) =>
             parseInt((record.date_to || "0000-00-00").split("-")[2])
           ),
-          ...qCalls
-            .filter(
-              (record) =>
-                new Date(record.created_at) <
-                new Date(record.date || "0000-00-00")
-            )
-            .map((record) =>
-              parseInt((record.created_at || "0000-00-00").split("-")[2])
-            ),
+          // ...qCalls
+          //   .filter(
+          //     (record) =>
+          //       new Date(record.created_at) <
+          //       new Date(record.date || "0000-00-00")
+          //   )
+          //   .map((record) =>
+          //     parseInt((record.created_at || "0000-00-00").split("-")[2])
+          //   ),
         ])
       ).map(String),
       makeupData: Array.from(
@@ -1532,11 +1602,11 @@ export const getDatesAndTypeForCalendarView = async (): Promise<
       actualData: Array.from(
         new Set(
           qCalls
-            .filter(
-              (record) =>
-                new Date(record.created_at) >
-                new Date(record.date || "0000-00-00")
-            )
+            // .filter(
+            //   (record) =>
+            //     new Date(record.created_at) >=
+            //     new Date(record.date || "0000-00-00")
+            // )
             .map((record) =>
               parseInt((record.created_at || "0000-00-00").split("-")[2])
             )
@@ -1597,6 +1667,7 @@ export const getDoctorsSchedLocalDb = async (): Promise<
       LEFT JOIN reschedule_req_tbl
       ON schedule_API_tbl.schedule_id = reschedule_req_tbl.schedule_id
       WHERE reschedule_req_tbl.request_id IS NULL OR (reschedule_req_tbl.request_id IS NOT NULL AND reschedule_req_tbl.status = 1)
+      ORDER BY schedule_API_tbl.date ASC
       `;
   // const query = `SELECT schedule_API_tbl.*
   //     FROM schedule_API_tbl
@@ -1703,15 +1774,54 @@ export const getCallsLocalDb = async (): Promise<ScheduleRecord[]> => {
   await db.execAsync(createIfNECalls);
 
   const query = `SELECT * FROM calls_tbl`;
+  const query1 = `SELECT schedule_id, photo_location, done FROM calls_tbl`;
 
   try {
     const result = await db.getAllAsync(query);
     const existingRows = result as ScheduleRecord[];
-    // console.log(existingRows,'getCallsLocaldb');
     return existingRows;
   } catch (error) {
     console.error("Error fetching data for getCallsLocalDb:", error);
     return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getActualCallsCount = async (): Promise<any> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNECalls);
+
+  try {
+    const query = await db.getAllAsync(`SELECT * FROM calls_tbl`);
+
+    if (query) {
+      return query;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching quick calls:", error);
+    return null;
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const updateActualCallsToDone = async () => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  try {
+    await db.execAsync(`UPDATE calls_tbl SET done = 1`);
+    // const test = await db.getAllAsync(`SELECT * FROM reschedule_req_tbl`);
+    // console.log(test);
+  } catch (error) {
+    console.error("Error updating calls_tblcalls_tbl status:", error);
   } finally {
     await db.closeAsync();
   }
@@ -1746,15 +1856,15 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
   await db.execAsync(createIfNECalls);
 
   const currentDate = await getCurrentDatePH();
-  const query = `SELECT * FROM calls_tbl WHERE DATE(created_at) = ?`;
+  const query = `SELECT * FROM calls_tbl WHERE DATE(created_at) = ? AND done != ?`;
 
   try {
-    const result = await db.getAllAsync(query, [currentDate]);
+    const result = await db.getAllAsync(query, [currentDate, 1]);
     const existingRows = result as ScheduleRecord[];
 
-    const testRecords = await db.getAllAsync(
-      "SELECT schedule_id, created_date, created_at FROM calls_tbl"
-    );
+    // const testRecords = await db.getAllAsync(
+    //   "SELECT schedule_id, created_date, created_at FROM calls_tbl"
+    // );
 
     return existingRows;
   } catch (error) {
@@ -1785,6 +1895,28 @@ export const deleteCallByScheduleIdLocalDb = async ({
     );
   } catch (error) {
     console.error("Error deleting records for today:", error);
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getSchedDatesByDocId = async ({
+  doctors_id,
+}: {
+  doctors_id: string;
+}) => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNECalls);
+
+  try {
+    const checkDocData = `SELECT date FROM schedule_API_tbl WHERE doctors_id = ?`;
+    const result = await db.getAllAsync(checkDocData, [doctors_id]);
+    return result;
+  } catch (error) {
+    console.error("Error getSchedDatesByDocId records :", error);
   } finally {
     await db.closeAsync();
   }
@@ -1910,7 +2042,7 @@ export const saveCallsDoneFromSchedules = async (
         schedule_id, call_start, call_end,
         signature, signature_attempts, signature_location,
         photo, photo_location, doctors_name, created_at, date
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         callDetails.schedule_id,
         callDetails.call_start,

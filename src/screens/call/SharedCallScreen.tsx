@@ -11,6 +11,7 @@ import { RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../type/navigation";
 import { getStyleUtil } from "../../utils/styleUtil";
+import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
 import {
   getBase64StringFormat,
   showConfirmAlert,
@@ -26,6 +27,7 @@ import {
 } from "../../utils/localDbUtils";
 import { getAllActualDatesFilter } from "../../utils/localDbUtils";
 import moment from "moment";
+import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
 type SharedCallScreenRouteProp = RouteProp<RootStackParamList, "SharedCall">;
@@ -39,30 +41,35 @@ interface Props {
 }
 
 const SharedCallScreen: React.FC<Props> = ({ route, navigation }) => {
-  const { scheduleIdValue } = route.params;
+  const { scheduleIdValue, doctorsName } = route.params;
   const [photoValue, setPhotoValue] = useState<string>("");
   const [photoLocation, setPhotoLocation] = useState<string>("");
   const [isLoading, setLoading] = useState<boolean>(false);
   const { authState } = useAuth();
   const [callData, setCallsDate] = useState<any[]>([]);
   const [actualDatesFilterData, setActualDatesFilterData] = useState<any[]>([]);
+  const { refreshSchedData } = useRefreshFetchDataContext();
 
   const handleSelectCall = async (call: any) => {
     try {
-      console.log(scheduleIdValue, "callcallcallcall");
       const callDetails = {
-        schedule_id: call.schedule_id,
+        schedule_id: scheduleIdValue,
         call_start: call.call_start,
         call_end: call.call_end,
         signature: "",
         signature_attempts: "",
         signature_location: "",
-        // photo: call.photo,
-        photo: "call.photo",
+        photo: call.photo,
         photo_location: call.photo_location,
-        doctors_name: call.doctors_name,
+        doctors_name: doctorsName,
         created_at: await getCurrentDatePH(),
       };
+
+      await savePostCallNotesLocalDb({
+        mood: "",
+        feedback: "",
+        scheduleId: scheduleIdValue,
+      });
 
       const result = await saveCallsDoneFromSchedules(
         scheduleIdValue,
@@ -71,6 +78,9 @@ const SharedCallScreen: React.FC<Props> = ({ route, navigation }) => {
 
       if (result === "Success") {
         navigation.navigate("Home");
+        if (refreshSchedData) {
+          refreshSchedData();
+        }
       }
     } catch (error) {
       console.error("Error fetching call data:", error);
@@ -86,8 +96,6 @@ const SharedCallScreen: React.FC<Props> = ({ route, navigation }) => {
           const schedData: ScheduleAPIRecord = await getScheduleByIDLocalDb({
             scheduleId: scheduleIdValue,
           });
-          console.log(schedData, "askdjaslkdjaks wkwikwikwiikwkiwki");
-
           // all actual calls
           const data = await getCallsLocalDb();
           setCallsDate(data);
@@ -112,12 +120,12 @@ const SharedCallScreen: React.FC<Props> = ({ route, navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContentContainer}>
       <View style={styles.cardContainer}>
-        <Text style={dynamicStyles.mainTextBig}>Select shared call</Text>
+        <Text style={dynamicStyles.mainText}>Select shared call</Text>
         {callData.map((call) => (
           <>
             {call.photo && (
               <TouchableOpacity
-                key={call.id}
+                key={call.id + call.doctors_name + call.schedule_id}
                 onPress={() =>
                   showConfirmAlert(
                     () => handleSelectCall(call),
@@ -125,16 +133,22 @@ const SharedCallScreen: React.FC<Props> = ({ route, navigation }) => {
                   )
                 }
                 style={dynamicStyles.cardItems}>
-                <Text style={dynamicStyles.cardItemText}>{`${
-                  call.doctors_name
-                } \n${moment(call.created_date).format("MMMM DD YYYY")}`}</Text>
+                <View style={dynamicStyles.centerItems}>
+                  <Text
+                    style={
+                      dynamicStyles.cardItemText
+                    }>{`${call.doctors_name} `}</Text>
+                  <Text style={dynamicStyles.cardItemText}>{`${moment(
+                    call.created_date
+                  ).format("MMMM DD YYYY")} `}</Text>
 
-                <Image
-                  source={{
-                    uri: `${getBase64StringFormat()}${call.photo}`,
-                  }}
-                  style={styles.photo}
-                />
+                  <Image
+                    source={{
+                      uri: `${getBase64StringFormat()}${call.photo}`,
+                    }}
+                    style={styles.photo}
+                  />
+                </View>
               </TouchableOpacity>
             )}
           </>
@@ -203,7 +217,7 @@ const styles = StyleSheet.create({
   photo: {
     borderRadius: 10,
     width: 600,
-    height: 300,
+    height: 200,
     marginTop: 10,
     marginHorizontal: 20,
     resizeMode: "cover",

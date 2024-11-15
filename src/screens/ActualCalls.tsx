@@ -82,8 +82,8 @@ const ActualCalls = () => {
       try {
         const getDate = await getCurrentDatePH();
         getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
-        const data = await getCallsLocalDb();
-        setCallsDate(data);
+        const actualData = await getCallsLocalDb();
+        setCallsDate(actualData);
         // filter
         const filterData = await getAllActualDatesFilter();
         setActualDatesFilterData(filterData);
@@ -272,12 +272,19 @@ const ActualCalls = () => {
                       <TouchableOpacity
                         key={call.id}
                         onPress={() => handleCallClick(call)}
-                        style={dynamicStyles.cardItems}>
-                        <Text style={dynamicStyles.cardItemText}>{`${
-                          call.doctors_name
-                        } \n${moment(call.created_date).format(
-                          "MMMM DD YYYY"
-                        )}`}</Text>
+                        style={
+                          call.done != "1"
+                            ? dynamicStyles.cardItems
+                            : dynamicStyles.cardDoneItems
+                        }>
+                        <Text
+                          style={
+                            call.done != "1"
+                              ? dynamicStyles.cardItemText
+                              : dynamicStyles.cardDoneItemText
+                          }>{`${call.doctors_name} \n${moment(
+                          call.created_date
+                        ).format("MMMM DD YYYY")}`}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -345,7 +352,7 @@ const ActualCalls = () => {
                                     selectedCall.signature
                                   }`,
                                 }}
-                                style={dynamicStyles.signatureImg}
+                                style={styles1.signature}
                               />
                             </>
                           )}
@@ -520,7 +527,7 @@ const styles1 = StyleSheet.create({
     height: 300,
     marginTop: 10,
     marginHorizontal: 20,
-    resizeMode: "cover",
+    resizeMode: "stretch",
   },
   signature: {
     marginTop: -50,

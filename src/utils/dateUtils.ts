@@ -190,6 +190,10 @@ export const formatDatev1 = (dateString: string) => {
   return moment(new Date(dateString)).format("MMMM DD, yyyy");
 };
 
+export const formatDatev2 = (dateString: string) => {
+  return moment(new Date(dateString)).format("YYYY-MM-DD");
+};
+
 export const formatDateYMD = (dateString: string) => {
   const thisDateWithTime = moment(dateString)
     .tz("Asia/Manila")
@@ -284,18 +288,55 @@ export const getMonthRangeExGTToday = async () => {
   return monthDays;
 };
 
-export const getDateRangeGTToday = async (selectedDate: string) => {
-  const currentMoment = moment(selectedDate).tz("Asia/Manila");
-  const endOfMonth = currentMoment.clone().endOf("month");
-  const endToday = currentMoment.add(2, "days");
+// export const getDateRangeGTToday = async (selectedDate: string) => {
+//   const currentMoment = moment(selectedDate).tz("Asia/Manila");
+//   const endOfMonth = currentMoment.clone().endOf("month");
+//   const endToday = currentMoment.add(2, "days");
+//   const monthDays: string[] = [];
+
+//   console.log(endOfMonth, "endOfMonth");
+//   console.log(currentMoment, "currentMoment");
+//   console.log(endToday, "endToday");
+//   console.log(monthDays, "monthDays");
+
+//   for (let day = endToday; day <= endOfMonth; day.add(1, "days")) {
+//     if (day.isoWeekday() > 5) {
+//       continue;
+//     }
+//     const dayString = day.format("YYYY-MM-DD");
+//     monthDays.push(dayString);
+//   }
+
+//   return monthDays;
+// };
+
+export const getDateRangeGTToday = (selectedDate: string) => {
+  const currentDate = new Date(selectedDate);
+
+  // Add 1 day to the current date to get the start date
+  const startDate = new Date();
+
+  const lastDayOfMonth = new Date(
+    currentDate.getFullYear(),
+    currentDate.getMonth() + 1,
+    0
+  );
+
   const monthDays: string[] = [];
 
-  for (let day = endToday; day <= endOfMonth; day.add(1, "days")) {
-    if (day.isoWeekday() > 5) {
-      continue;
+  for (
+    let day = startDate;
+    day <= lastDayOfMonth;
+    day.setDate(day.getDate() + 1)
+  ) {
+    if (
+      day.getDay() !== 0 &&
+      day.getDay() !== 6 &&
+      day.getDate() !== currentDate.getDate()
+    ) {
+      const dayString = day.toString();
+      monthDays.push(formatDatev2(dayString));
     }
-    const dayString = day.format("YYYY-MM-DD");
-    monthDays.push(dayString);
   }
 
   return monthDays;

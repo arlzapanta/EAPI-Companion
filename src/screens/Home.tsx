@@ -11,7 +11,7 @@ import SettingsScreen from "./SettingsScreen";
 import Schedules from "./Schedules";
 import ActualCalls from "./ActualCalls";
 import QuickCall from "./call/QuickCall";
-import DoctorScreen from "./DoctorScreen";
+import SpecialistTool from "./SpecialistTool";
 import NavLinkComponent from "../components/NavLink";
 import RBSheet from "react-native-raw-bottom-sheet";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
@@ -51,7 +51,7 @@ const Home = () => {
     | "schedules"
     | "actualcalls"
     | "quickcall"
-    | "doctors"
+    | "specialisttool"
   >("dashboard");
   const [fadeAnim] = useState(new Animated.Value(0));
 
@@ -69,8 +69,8 @@ const Home = () => {
         return <ActualCalls />;
       case "quickcall":
         return <QuickCall />;
-      case "doctors":
-        return <DoctorScreen doc={defaultDoctor} />;
+      case "specialisttool":
+        return <SpecialistTool doc={defaultDoctor} />;
       default:
         return <Dashboard />;
     }
@@ -86,40 +86,40 @@ const Home = () => {
           iconName="house-circle-exclamation"
           onPress={() => setSelectedScreen("dashboard")}
           active={selectedScreen === "dashboard"}
-          text={"HOME"}
+          text={"Home"}
         />
         <NavLinkComponent
           iconName="user-gear"
           onPress={() => setSelectedScreen("settings")}
           active={selectedScreen === "settings"}
-          text={"SETTINGS"}
+          text={"Account & Settings"}
         />
         <NavLinkComponent
           iconName="calendar-alt"
           onPress={() => setSelectedScreen("schedules")}
           active={selectedScreen === "schedules"}
-          text={"SCHEDULES"}
+          text={"Schedules"}
         />
 
         <NavLinkComponent
           iconName="calendar-check"
           onPress={() => setSelectedScreen("actualcalls")}
           active={selectedScreen === "actualcalls"}
-          text={"ACTUAL"}
+          text={"Actual Calls"}
         />
 
         <NavLinkComponent
-          iconName="user-doctor"
-          onPress={() => setSelectedScreen("doctors")}
-          active={selectedScreen === "doctors"}
-          text={"DOCTORS"}
+          iconName="hospital-user"
+          onPress={() => setSelectedScreen("specialisttool")}
+          active={selectedScreen === "specialisttool"}
+          text={"Specialist Toolkit"}
         />
 
         <NavLinkComponent
           iconName="bolt-lightning"
           onPress={() => setSelectedScreen("quickcall")}
           active={selectedScreen === "quickcall"}
-          text={"QUICK CALL"}
+          text={"Quick Call"}
         />
       </View>
       <View style={dynamicStyles.components_container}>{renderContent()}</View>

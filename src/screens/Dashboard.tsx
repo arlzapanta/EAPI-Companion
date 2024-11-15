@@ -36,6 +36,8 @@ const Dashboard = () => {
     chartData,
     dailyDataCompletion,
     dailyData,
+    dailyCallsVal,
+    dailySchedVal,
     dailyTargetVal,
     monthlyTargetVal,
     monthlyData,
@@ -162,7 +164,7 @@ const Dashboard = () => {
                                   justifyContent: "center",
                                   marginTop: 10,
                                 }}>
-                                <Text>Completion</Text>
+                                <Text>Target completion</Text>
                               </View>
                             </View>
                           )}
@@ -186,9 +188,7 @@ const Dashboard = () => {
                             centerLabelComponent={() => (
                               <View style={styles.centerLabelContainer}>
                                 <Text style={styles.centerLabelText}>
-                                  {`${
-                                    dailyData[1].value ?? 0
-                                  } / ${dailyTargetVal}`}
+                                  {`${dailyCallsVal ?? 0} / ${dailyTargetVal}`}
                                 </Text>
                                 <View
                                   style={{
@@ -232,7 +232,9 @@ const Dashboard = () => {
                                   />
                                   <Text
                                     style={{ color: "black", marginRight: 15 }}>
-                                    Scheduled: {dailyData[0].value ?? 0}
+                                    Scheduled:
+                                    {dailySchedVal ?? 0}
+                                    {/* {dailyData[0].value ?? 0} */}
                                   </Text>
                                 </View>
                                 <View
@@ -251,7 +253,9 @@ const Dashboard = () => {
                                   />
                                   <Text
                                     style={{ color: "black", marginRight: 15 }}>
-                                    Actual: {dailyData[1].value ?? 0}
+                                    Actual:
+                                    {dailyCallsVal ?? 0}
+                                    {/* {dailyData[1].value ?? 0} */}
                                   </Text>
                                 </View>
                                 <View

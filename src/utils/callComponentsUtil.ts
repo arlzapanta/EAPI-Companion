@@ -98,6 +98,7 @@ export const checkPostCallUnsetExist = async (): Promise<Boolean> => {
     const query = await db.getAllAsync(
       `SELECT * FROM post_call_notes_tbl WHERE mood = '' OR feedback = ''`
     );
+
     return query.length > 0 ? true : false;
   } catch (error) {
     console.error("Error fetching post-call notes:", error);

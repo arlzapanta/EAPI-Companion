@@ -20,6 +20,7 @@ import {
   insertRescheduleRequest,
   undoCancelRescheduleReqLocalDb,
   getDoctorsSchedGTtodayLocalDb,
+  getSchedDatesByDocId,
 } from "../../utils/localDbUtils";
 import { Picker } from "@react-native-picker/picker";
 import {
@@ -226,6 +227,45 @@ const RescheduleScreen: React.FC = () => {
     navigation.goBack();
   };
 
+  function mergeAndFilterDates(
+    similarDates: string[],
+    availableDates: string[]
+  ): string[] {
+    // console.log(similarDates, "inside");
+    // console.log(availableDates, "inside1");
+
+    const expandedDates = [];
+    for (const dateStr of similarDates) {
+      const [year, month, day] = dateStr.split("-").map(Number);
+
+      const previousDay = new Date(year, month - 1, day - 1);
+      const nextDay = new Date(year, month - 1, day + 1);
+
+      expandedDates.push(
+        previousDay.getFullYear() +
+          "-" +
+          (previousDay.getMonth() + 1).toString().padStart(2, "0") +
+          "-" +
+          previousDay.getDate().toString().padStart(2, "0"),
+        dateStr,
+        nextDay.getFullYear() +
+          "-" +
+          (nextDay.getMonth() + 1).toString().padStart(2, "0") +
+          "-" +
+          nextDay.getDate().toString().padStart(2, "0")
+      );
+    }
+
+    similarDates = expandedDates;
+
+    const filteredAvailableDates = availableDates.filter(
+      (date) => !similarDates.includes(date)
+    );
+
+    // console.log(filteredAvailableDates, "result");
+    return filteredAvailableDates;
+  }
+
   return (
     <View style={dynamicStyles.container}>
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
@@ -240,21 +280,40 @@ const RescheduleScreen: React.FC = () => {
                 onValueChange={async (itemValue: ScheduleAPIRecord | null) => {
                   setSelectedDateTo("selectedate");
                   if (itemValue !== selectedDoctor) {
+                    let doctors_id = selectedDoctor?.doctors_id
+                      ? selectedDoctor.doctors_id
+                      : "0";
                     setSelectedDoctor(itemValue);
                     if (itemValue && itemValue.date) {
                       setSelectedDateTo(itemValue.date);
-                      const dateToAvail = await getDateRangeGTToday(
-                        itemValue.date
+                      const dateToAvail = getDateRangeGTToday(itemValue.date);
+                      const similarDocSchedDates = await getSchedDatesByDocId({
+                        doctors_id,
+                      });
+
+                      const similarDocSchedDatesStrings: string[] =
+                        Array.isArray(similarDocSchedDates)
+                          ? similarDocSchedDates
+                              .filter(
+                                (item): item is { date: string } =>
+                                  typeof item === "object" &&
+                                  item !== null &&
+                                  "date" in item
+                              )
+                              .map((item) => item.date)
+                          : [];
+
+                      // console.log(similarDocSchedDatesStrings, "asdasd");
+                      // console.log(dateToAvail, "dateToAvail");
+
+                      const test = mergeAndFilterDates(
+                        similarDocSchedDatesStrings,
+                        dateToAvail
                       );
-                      setAvailableDates(dateToAvail);
-                    }
-                  } else {
-                    if (itemValue && itemValue.date) {
-                      setSelectedDateTo(itemValue.date);
-                      const dateToAvail = await getDateRangeGTToday(
-                        itemValue.date
-                      );
-                      setAvailableDates(dateToAvail);
+
+                      // console.log(test, "asdlkjaslkdjas");
+
+                      setAvailableDates(test);
                     }
                   }
                 }}>
@@ -302,11 +361,12 @@ const RescheduleScreen: React.FC = () => {
                   .filter((date) => {
                     const selectedDate = new Date(date);
                     const today = new Date();
-                    const twoDaysLater = new Date(
-                      today.getTime() + 1 * 24 * 60 * 60 * 1000
+                    const dateToday = new Date(
+                      today.getTime() + 0 * 24 * 60 * 60 * 1000
+                      // today.getTime()
                     );
                     today.setHours(0, 0, 0, 0);
-                    return selectedDate > twoDaysLater;
+                    return selectedDate > dateToday;
                   })
                   .map((date) => (
                     <Picker.Item
@@ -352,13 +412,13 @@ const RescheduleScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={handleBack}
         style={dynamicStyles.floatingButtonContainer}>
         <View style={dynamicStyles.floatingButton}>
           <AntDesign name="back" size={24} color="white" />
         </View>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

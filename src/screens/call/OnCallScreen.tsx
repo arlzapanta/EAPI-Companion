@@ -451,10 +451,10 @@ const styles = StyleSheet.create({
     color: "#007bff",
   },
   image: {
-    width: 400,
+    width: 830,
     height: 260,
     marginTop: 10,
-    resizeMode: "contain",
+    resizeMode: "stretch",
   },
   signImage: {
     marginVertical: 15,

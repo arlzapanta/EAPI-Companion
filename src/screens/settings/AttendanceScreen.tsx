@@ -183,25 +183,45 @@ const Attendance: React.FC = () => {
           setLoading(true);
           setLoadingProgressData({
             progress: 0.1,
+            text: "Preparing ...",
+          });
+          await dropLocalTables([
+            "detailers_tbl",
+            "quick_call_tbl",
+            "reschedule_req_tbl",
+            "schedule_API_tbl",
+            "doctors_tbl",
+            "pre_call_notes_tbl",
+            "post_call_notes_tbl",
+            "chart_data_tbl",
+            "calls_tbl",
+            // "reschedule_history_tbl",
+            // "user_sync_history_tbl",
+            // "user_attendance_tbl",
+          ]);
+
+          setLoading(true);
+          setLoadingProgressData({
+            progress: 0.2,
             text: "Fetching data : reschedule requests",
           });
           await getDoctors(userInfo);
           await getReschedulesData(userInfo);
           setLoadingProgressData({
-            progress: 0.2,
+            progress: 0.3,
             text: "Fetching data : charts and calendar",
           });
           await getChartData(userInfo);
 
           setLoadingProgressData({
-            progress: 0.3,
+            progress: 0.4,
             text: "Fetching data : detailers",
           });
           const getDetailersRes = await getDetailersData();
           handleUpdateDetailers(getDetailersRes);
           await getCallsAPI(userInfo);
           setLoadingProgressData({
-            progress: 0.7,
+            progress: 0.5,
             text: "Fetching data : actual calls",
           });
           await getSChedulesAPI(userInfo);
@@ -482,13 +502,13 @@ const Attendance: React.FC = () => {
               <AttendanceTable data={attendanceData} />
             </View>
           </ScrollView>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             onPress={handleBack}
             style={dynamicStyles.floatingButtonContainer}>
             <View style={dynamicStyles.floatingButton}>
               <AntDesign name="back" size={24} color="white" />
             </View>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </>
       )}
     </View>

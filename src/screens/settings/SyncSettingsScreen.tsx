@@ -90,13 +90,13 @@ const SyncSettingsScreen: React.FC = () => {
           <SyncTable data={syncData} />
         </View>
       </ScrollView>
-      <TouchableOpacity
+      {/* <TouchableOpacity
         onPress={handleBack}
         style={dynamicStyles.floatingButtonContainer}>
         <View style={dynamicStyles.floatingButton}>
           <AntDesign name="back" size={24} color="white" />
         </View>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

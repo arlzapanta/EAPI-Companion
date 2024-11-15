@@ -8,7 +8,6 @@ import {
 import { lightTheme, darkTheme } from "./themes";
 import { StyleSheet } from "react-native";
 const { width, height } = Dimensions.get("window");
-console.log("Window dimensions:", width, height);
 
 export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
   const currentTheme = theme === "dark" ? darkTheme : lightTheme;
@@ -444,9 +443,22 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       borderRadius: 8,
       marginVertical: 4,
     } as ViewStyle,
+    cardDoneItems: {
+      width: "100%",
+      padding: 15,
+      borderWidth: 1.5,
+      borderColor: currentTheme.containerBackgroundColor,
+      backgroundColor: currentTheme.containerBackgroundColor,
+      borderRadius: 8,
+      marginVertical: 4,
+    } as ViewStyle,
     cardItemText: {
       fontSize: 16,
       color: "#343a40",
+    } as TextStyle,
+    cardDoneItemText: {
+      fontSize: 16,
+      color: "white",
     } as TextStyle,
     detailCard: {
       flexDirection: "row",
@@ -515,6 +527,12 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       marginTop: 10,
       resizeMode: "contain",
     } as ImageStyle,
+    thumbnailImage: {
+      width: 400,
+      height: 260,
+      marginTop: 10,
+      resizeMode: "contain",
+    } as ImageStyle,
     // ***************************************************************************************
     // *  HOME STYLES
     // ***************************************************************************************
@@ -571,11 +589,10 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     // *  ACTUAL STYLES
     // ***************************************************************************************
     signatureImg: {
-      marginTop: -60,
-      marginBottom: -60,
-      width: 450,
-      height: 300,
-      resizeMode: "contain",
+      flex: 1,
+      resizeMode: "cover",
+      minHeight: 100,
+      maxWidth: 600,
     } as ImageStyle,
     inner2ActualContainer: {
       flex: 1,

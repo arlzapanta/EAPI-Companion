@@ -30,7 +30,7 @@ import {
   getPostCallNotesLocalDb,
 } from "../../utils/callComponentsUtil";
 import { customToast } from "../../utils/customToast";
-import { uploadImage } from "../../utils/localDbUtils";
+import { getActualCallsCount, uploadImage } from "../../utils/localDbUtils";
 import { getStyleUtil } from "../../utils/styleUtil";
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
@@ -122,9 +122,19 @@ const CallComponents: React.FC<CallComponentsProps> = ({
     startTimer();
   };
 
-  const executeSharedCall = () => {
+  const executeSharedCall = async () => {
+    const checkActual = await getActualCallsCount();
+    if (checkActual.length === 0) {
+      Alert.alert(
+        "No Previous Call Found",
+        "Shared calls require a previous actual call with a photo of you and the doctor"
+      );
+      return;
+    }
+
     navigation1.navigate("SharedCall", {
       scheduleIdValue: scheduleId,
+      doctorsName: docName,
     });
   };
 
@@ -225,6 +235,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.startCallContainer}>
+        {/* //TODO : ADD CONDITION SANDWICH OF DOCTORS NAME ABLE TO START CALL  */}
         {canStartCall && (
           <>
             <TouchableOpacity

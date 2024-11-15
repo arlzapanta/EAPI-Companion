@@ -11,6 +11,7 @@ import {
   fetchDetailersDataLocalDb,
   getDailyChartsData,
   getDatesAndTypeForCalendarView,
+  getProductRecordsLocalDb,
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import { getQuickCalls } from "../utils/quickCallUtil";
@@ -22,6 +23,8 @@ interface DataContextProps<T> {
   chartData: ChartDashboardRecord[];
   dailyDataCompletion: chartData[];
   dailyData: chartData[];
+  dailyCallsVal: number;
+  dailySchedVal: number;
   dailyTargetVal: number;
   monthlyTargetVal: number;
   monthlyData: chartData[];
@@ -35,6 +38,7 @@ interface DataContextProps<T> {
   isDoctorLoading: boolean;
   isQuickLoading: boolean;
   detailersRecord: T[];
+  productRecord: ProductRecord[];
   quickCallData: Call[];
   ytdDataMonthValues: Array<{
     value: number;
@@ -69,6 +73,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     { value: 100, color: "lightgray" },
   ]);
   const [dailyTargetVal, setDailyTargetVal] = useState<number>(0);
+  const [dailyCallsVal, setDailyCallsVal] = useState<number>(0);
+  const [dailySchedVal, setDailySchedVal] = useState<number>(0);
+
   const [monthlyTargetVal, setMonthlyTargetVal] = useState<number>(0);
   const [yearlyTargetVal, setYearlyTargetVal] = useState<number>(0);
 
@@ -95,6 +102,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const { getCurrentDate } = useRefreshFetchDataContext();
   const { refreshSchedData } = useRefreshFetchDataContext();
   const fetchDashboardData = async () => {
+    console.log(
+      "getDatesAndTypeForCalendarView getDatesAndTypeForCalendarView getDatesAndTypeForCalendarView"
+    );
     try {
       setIsDashboardLoading(true);
 
@@ -143,7 +153,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         //   transformedData[0].daily.callsCount.toString(),
         //   10
         // );
-        // const dailyTargetCount = transformedData[0].daily.targetCount;
 
         const monthlyPlottingCount = parseInt(
           transformedData[0].monthly.plottingCount.toString(),
@@ -169,38 +178,58 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         const ytdCallsCount = transformedData[0].ytd.callsCount;
         const ytdTargetCount = transformedData[0].ytd.targetCount;
 
-        // const completedPercentage = (dailyCallsCount / dailyTargetCount) * 100;
-        // const remainingPercentage = 100 - completedPercentage;
-
         const dailyCompData: DailyChartData[] = await getDailyChartsData();
-        const completedPercentage =
-          (dailyCompData[0].calls_count / dailyCompData[0].schedule_api_count) *
-          100;
-        const remainingPercentage = 100 - completedPercentage;
 
-        const dailyPlottingCount = parseInt(
+        let dailyPlottingCount = parseInt(
           dailyCompData[0].schedule_api_count.toString(),
           10
         );
-        const dailyCallsCount = parseInt(
+
+        let dailyCallsCount = parseInt(
           dailyCompData[0].calls_count.toString(),
           10
         );
-        const dailyTargetCount = dailyCompData[0].schedule_api_count;
+        // const completedPercentage =
+        //   (dailyCompData[0].calls_count / dailyCompData[0].schedule_api_count) *
+        //   100;
+        // const remainingPercentage = 100 - completedPercentage;
+
+        dailyPlottingCount = 20;
+        dailyCallsCount = 10;
+
+        dailyCallsCount = dailyCallsCount < 15 ? dailyCallsCount : 15;
+
+        const completedPercentage = (dailyCallsCount / 15) * 100;
+        const remainingPercentage = 100 - completedPercentage;
 
         const dailyDataCompletion: chartData[] = [
           { value: completedPercentage, color: "#046E37" },
           { value: remainingPercentage, color: "lightgray" },
         ];
 
-        setDailyTargetVal(dailyCompData[0].schedule_api_count);
+        setDailyTargetVal(15);
+        setDailyCallsVal(dailyCallsCount);
+        setDailySchedVal(dailyPlottingCount);
+
+        function calculateTargetCount(
+          dailyPlottingCount: number,
+          dailyCallsCount: number
+        ): number {
+          const totalActual = dailyPlottingCount + dailyCallsCount;
+
+          if (totalActual <= 15) {
+            return 15 - totalActual;
+          } else {
+            return 0;
+          }
+        }
+
         const dailyData: chartData[] = [
-          {
-            value: dailyPlottingCount - dailyCallsCount,
-            color: "#6ED7A5",
-          },
-          { value: dailyCallsCount, color: "#046E37" },
+          { value: completedPercentage, color: "#046E37" },
+          // { value: anotherVar, color: "#6ED7A5" },
+          { value: remainingPercentage, color: "lightgray" },
         ];
+
         setMonthlyTargetVal(monthlyTargetCount);
         const monthlyData: chartData[] = [
           {
@@ -353,13 +382,21 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // ***************************************************************************
   const [isScheduleLoading, setIsScheduleLoading] = useState<boolean>(false);
   const [detailersRecord, setDetailersRecord] = useState<DetailersRecord[]>([]);
-  const fetchDetailers = async () => {
-    const detailersData = await fetchDetailersDataLocalDb();
-    setDetailersRecord(detailersData);
+  const [productRecord, setProductRecord] = useState<ProductRecord[]>([]);
+  const fetchProducts = async () => {
+    const productData = (await getProductRecordsLocalDb()) as ProductRecord[];
+    setProductRecord(productData);
   };
   useEffect(() => {
-    fetchDetailers();
+    fetchProducts();
   }, []);
+  // const fetchDetailers = async () => {
+  //   const detailersData = await fetchDetailersDataLocalDb();
+  //   setDetailersRecord(detailersData);
+  // };
+  // useEffect(() => {
+  //   fetchDetailers();
+  // }, []);
   // ADD SCHEDULE DATA HERE
   // ***************************************************************************
   // ***************************************************************************
@@ -431,6 +468,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         calendarData,
         chartData,
         dailyDataCompletion,
+        dailyCallsVal,
+        dailySchedVal,
         dailyTargetVal,
         dailyData,
         monthlyTargetVal,
@@ -450,6 +489,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         // ***************************************************************************
         isScheduleLoading,
         detailersRecord,
+        productRecord,
         setDetailersRecord,
         // ***************************************************************************
         // SCHEDULE DATA END

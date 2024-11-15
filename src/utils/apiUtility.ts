@@ -12,9 +12,11 @@ import {
   saveChartDataLocalDb,
   saveDetailersDataLocalDb,
   saveDoctorListLocalDb,
+  saveProductsLocalDb,
   saveRescheduleHistoryLocalDb,
   saveRescheduleListLocalDb,
   saveSchedulesAPILocalDb,
+  updateActualCallsToDone,
 } from "../utils/localDbUtils";
 import { formatDateYMD, getCurrentDatePH } from "./dateUtils";
 import { getLocation, getLocationAttendance } from "../utils/currentLocation";
@@ -151,17 +153,17 @@ export const syncUser = async (user: User): Promise<any> => {
     });
 
     if (response.data.isProceed) {
-      // await deleteCallsTodayLocalDb();
+      await updateActualCallsToDone();
       await dropLocalTables([
         "detailers_tbl",
         "quick_call_tbl",
         "reschedule_req_tbl",
         "schedule_API_tbl",
-        "calls_tbl",
         "doctors_tbl",
         "pre_call_notes_tbl",
         "post_call_notes_tbl",
         "chart_data_tbl",
+        // "calls_tbl",
         // "reschedule_history_tbl",
         // "user_sync_history_tbl",
         // "user_attendance_tbl",
@@ -231,7 +233,9 @@ export const syncUserMid = async (user: User): Promise<any> => {
 
     if (response.data.isProceed) {
       // await deleteCallsTodayLocalDb();
-      await dropLocalTable("calls_tbl");
+      // await dropLocalTable("calls_tbl");`
+      // CONVERT ALL ACTUAL CALLS TO DONE == 1
+      await updateActualCallsToDone();
     }
 
     return response.data;
@@ -291,6 +295,41 @@ export const doctorRecordsSync = async (user: User): Promise<any> => {
       console.error("API Error response status:", response?.status);
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred:", error);
+    }
+    throw error;
+  }
+};
+
+export const syncProducts = async () => {
+  try {
+    const responseDoc = await axios.post(
+      `${API_URL_ENV}/getAllProductDetailers`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    if (responseDoc.data.isProceed) {
+      await saveProductsLocalDb(responseDoc.data.data);
+    }
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API syncProducts Error message:", message);
+      console.error("API syncProducts Error response data:", response?.data);
+      console.error(
+        "API syncProducts Error response status:",
+        response?.status
+      );
+      console.error(
+        "API syncProducts Error response headers:",
+        response?.headers
+      );
+      console.error("API syncProducts Error request:", request);
     } else {
       console.error("An unexpected error occurred:", error);
     }
@@ -570,6 +609,7 @@ export const getDetailersData = async (): Promise<any[]> => {
         "Content-Type": "application/json",
       },
     });
+
     await saveDetailersDataLocalDb(response.data);
 
     const query = `SELECT * FROM detailers_tbl`;

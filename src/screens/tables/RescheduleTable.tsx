@@ -181,7 +181,7 @@ const RescheduleTable: React.FC<
                       ) : (
                         <>
                           {/* {data.status == "0" || data.status == "1" ? ( */}
-                          {data.status == "0" ? (
+                          {data.status == "0" || data.status == "1" ? (
                             <TouchableOpacity
                               onPress={() => handleCancel(data.id)}>
                               <Ionicons name="close" size={24} color="red" />

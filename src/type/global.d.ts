@@ -25,6 +25,13 @@ declare global {
     notes_values: string;
     update_date: string;
   }
+  export interface ProductRecord {
+    id: string;
+    product_id: string;
+    item_code: string;
+    item_description: string;
+    detailer: string;
+  }
   interface DetailCardProps {
     details: {
       label: string;
@@ -188,6 +195,11 @@ declare global {
   export interface DetailerModalProps {
     isVisible: boolean;
     detailerNumber: number;
+    onClose: () => void;
+  }
+  export interface ProductModalProps {
+    isVisible: boolean;
+    prodId: string;
     onClose: () => void;
   }
   export interface Props {

@@ -8,8 +8,8 @@ export type RootStackParamList = {
   Attendance: undefined;
   OnCall: { scheduleIdValue: string; notesArray: string[]; docName: string };
   QuickCall: undefined;
-  Doctors: undefined;
-  SharedCall: { scheduleIdValue: string };
+  SpecialistTool: undefined;
+  SharedCall: { scheduleIdValue: string; doctorsName: string };
 };
 
 export type HomeScreenNavigationProp = NativeStackNavigationProp<
@@ -40,11 +40,7 @@ export type QuickCallScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
   "QuickCall"
 >;
-export type DoctorsScreenNavigationProp = NativeStackNavigationProp<
+export type SpecialistToolScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  "Doctors"
->;
-export type SharedCallScreenNavigationProp = NativeStackNavigationProp<
-  RootStackParamList,
-  "SharedCall"
+  "SpecialistTool"
 >;
