@@ -202,6 +202,11 @@ declare global {
     prodId: string;
     onClose: () => void;
   }
+  export interface ProductMultiModalProps {
+    isVisible: boolean;
+    prodIds: string[];
+    onClose: () => void;
+  }
   export interface Props {
     route: OnCallScreenRouteProp;
     navigation: OnCallScreenNavigationProp;

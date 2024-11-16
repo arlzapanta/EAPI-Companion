@@ -140,6 +140,17 @@ const dropCreate_productsData = `
     );
 `;
 
+const createIfNE_products = `
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE IF NOT EXISTS products_tbl (
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      item_code TEXT,
+      product_id TEXT,
+      item_description TEXT,
+      detailer TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`;
 const createIfNE_userAttendance = `
   PRAGMA journal_mode = WAL;
   CREATE TABLE IF NOT EXISTS user_attendance_tbl (
@@ -1133,12 +1144,37 @@ export const getDoctorRecordsLocalDb = async () => {
   }
 };
 
+export const getMultiProductsRecordsLocalDb = async (
+  prodIds: string[]
+): Promise<ProductRecord[]> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNE_products);
+
+  const placeholders = prodIds.map(() => "?").join(", ");
+
+  const query = `SELECT * FROM products_tbl WHERE ID IN(${placeholders})`;
+
+  try {
+    const existingRows = await db.getAllAsync(query, prodIds);
+    // console.log('existingRows getDoctorRecordsLocalDb', existingRows);
+    return existingRows as ProductRecord[];
+  } catch (error) {
+    console.error("Error fetching attendance data:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
 export const getProductRecordsLocalDb = async () => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
 
-  await db.execAsync(createIfNEDoctors);
+  await db.execAsync(createIfNE_products);
 
   const query = `SELECT * FROM products_tbl`;
 

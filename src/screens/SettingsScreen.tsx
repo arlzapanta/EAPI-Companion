@@ -343,6 +343,14 @@ const Settings = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                  style={dynamicStyle.buttonContainer}
+                  onPress={handleRequestreschedOnPress}>
+                  <Text style={styles.buttonTextLogout}>
+                    Reschedule Request
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
                   style={[styles.buttonLogout, dynamicStyle.buttonLogout]}
                   onPress={handleLogout}>
                   <Text style={styles.buttonTextLogout}>Logout</Text>
