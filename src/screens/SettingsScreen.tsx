@@ -300,12 +300,17 @@ const Settings = () => {
                   onPress={handleSyncSettingsOnPress}>
                   <Text style={styles.buttonText}>Sync History</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={dynamicStyle.buttonContainer}
+                  onPress={handleRequestreschedOnPress}>
+                  <Text style={styles.buttonText}>Request Reschedule</Text>
+                </TouchableOpacity>
                 {/* 
-            <TouchableOpacity
-              onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
-              style={styles.button}>
-              <Text style={styles.buttonText}>Mid Sync</Text>
-            </TouchableOpacity> */}
+                  <TouchableOpacity
+                    onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
+                    style={styles.button}>
+                    <Text style={styles.buttonText}>Mid Sync</Text>
+                  </TouchableOpacity> */}
 
                 <TouchableOpacity
                   disabled={loading}

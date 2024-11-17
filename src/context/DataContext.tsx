@@ -47,6 +47,12 @@ interface DataContextProps<T> {
     label?: string;
   }>;
   setDetailersRecord: (newDetailersRecord: T[]) => void;
+  // coreProductVal: ProductRecord | null | undefined;
+  // secProductVal: ProductRecord | null | undefined;
+  // remindProductVal: ProductRecord | null | undefined;
+  // setCoreProductVal: (newCoreProductVal: ProductRecord | undefined) => void;
+  // setSecProductVal: (newSecProductVal: ProductRecord | undefined) => void;
+  // setRemindProductVal: (newRemindProductVal: ProductRecord | undefined) => void;
 }
 interface DataProviderProps {
   children: ReactNode;
@@ -102,9 +108,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const { getCurrentDate } = useRefreshFetchDataContext();
   const { refreshSchedData } = useRefreshFetchDataContext();
   const fetchDashboardData = async () => {
-    console.log(
-      "getDatesAndTypeForCalendarView getDatesAndTypeForCalendarView getDatesAndTypeForCalendarView"
-    );
     try {
       setIsDashboardLoading(true);
 
@@ -390,13 +393,10 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   useEffect(() => {
     fetchProducts();
   }, []);
-  // const fetchDetailers = async () => {
-  //   const detailersData = await fetchDetailersDataLocalDb();
-  //   setDetailersRecord(detailersData);
-  // };
-  // useEffect(() => {
-  //   fetchDetailers();
-  // }, []);
+  const [coreProductVal, setCoreProductVal] = useState<ProductRecord>();
+  const [secProductVal, setSecProductVal] = useState<ProductRecord>();
+  const [remindProductVal, setRemindProductVal] = useState<ProductRecord>();
+
   // ADD SCHEDULE DATA HERE
   // ***************************************************************************
   // ***************************************************************************
@@ -491,6 +491,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         detailersRecord,
         productRecord,
         setDetailersRecord,
+        // coreProductVal,
+        // secProductVal,
+        // remindProductVal,
+        // setCoreProductVal,
+        // setSecProductVal,
+        // setRemindProductVal,
         // ***************************************************************************
         // SCHEDULE DATA END
         // ***************************************************************************

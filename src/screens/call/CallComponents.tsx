@@ -10,6 +10,7 @@ import {
   Alert,
   GestureResponderEvent,
 } from "react-native";
+import { Picker } from "@react-native-picker/picker";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { RootStackParamList } from "../../type/navigation";
 import { RouteProp } from "@react-navigation/native";
@@ -19,6 +20,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import DetailerModal from "../modals/DetailerModal";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
+import { useDataContext } from "../../context/DataContext";
 import {
   formatTimeHoursMinutes,
   getCurrentDatePH,
@@ -43,6 +45,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({
   docName,
   canStartCall,
 }) => {
+  const { productRecord } = useDataContext();
   const navigation = useNavigation<OnCallScreenNavigationProp>();
   const navigation1 = useNavigation<SharedCallScreenNavigationProp>();
   const [note, setNote] = useState<string>("");
@@ -56,6 +59,23 @@ const CallComponents: React.FC<CallComponentsProps> = ({
   const [base64Image, setBase64Image] = useState<string[]>([]);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [currentDate, setCurrentDate] = useState<string>();
+
+  const [coreProductVal, setCoreProductVal] = useState<
+    ProductRecord | undefined[]
+  >([]);
+  const [secProductVal, setSecProductVal] = useState<
+    ProductRecord | undefined[]
+  >([]);
+  const [remindProductVal, setRemindProductVal] = useState<
+    ProductRecord | undefined[]
+  >([]);
+
+  const [selectedProduct1, setSelectedProduct1] =
+    useState<ProductRecord | null>(null);
+  const [selectedProduct2, setSelectedProduct2] =
+    useState<ProductRecord | null>(null);
+  const [selectedProduct3, setSelectedProduct3] =
+    useState<ProductRecord | null>(null);
 
   useEffect(() => {
     const fetchPreCallNotes = async () => {
@@ -312,24 +332,97 @@ const CallComponents: React.FC<CallComponentsProps> = ({
 
       <View style={styles.cardContainer}>
         <View style={styles.headerContainer}>
-          <Text style={styles.sectionTitle}>View Detailers</Text>
+          <Text style={styles.sectionTitle}>Set Detailers</Text>
         </View>
         <View style={styles.detailerButtonsContainer}>
-          <TouchableOpacity
-            style={styles.detailerButton}
-            onPress={() => openModal(1)}>
-            <Text style={styles.detailerButtonText}>Detailer 1</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.detailerButton}
-            onPress={() => openModal(2)}>
-            <Text style={styles.detailerButtonText}>Detailer 2</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.detailerButton}
-            onPress={() => openModal(3)}>
-            <Text style={styles.detailerButtonText}>Detailer 3</Text>
-          </TouchableOpacity>
+          <View>
+            <Text style={dynamicStyles.mainText}>Core Product</Text>
+            <Picker
+              style={dynamicStyles.pickerProd}
+              selectedValue={selectedProduct1}
+              onValueChange={async (
+                itemValue: ProductRecord | null | undefined
+              ) => {
+                if (
+                  itemValue &&
+                  itemValue.item_code !== selectedProduct1?.item_code
+                ) {
+                  setCoreProductVal(itemValue);
+                  setSelectedProduct1(itemValue);
+                }
+              }}>
+              <Picker.Item label="Select product" value="selectproduct1" />
+              {productRecord
+                .filter((prod) => prod.item_code !== null)
+                .map((prod) => (
+                  <Picker.Item
+                    key={prod.id}
+                    label={`${prod.item_code} - ${prod.item_description}`}
+                    value={prod}
+                  />
+                ))}
+            </Picker>
+          </View>
+          <View>
+            <Text style={[dynamicStyles.mainText, { marginTop: 30 }]}>
+              Secondary Product
+            </Text>
+            <Picker
+              style={dynamicStyles.pickerProd}
+              selectedValue={selectedProduct2}
+              onValueChange={async (
+                itemValue: ProductRecord | null | undefined
+              ) => {
+                if (
+                  itemValue &&
+                  itemValue.item_code !== selectedProduct2?.item_code
+                ) {
+                  setSecProductVal(itemValue);
+                  setSelectedProduct2(itemValue);
+                }
+              }}>
+              <Picker.Item label="Select product" value="selectproduct1" />
+              {productRecord
+                .filter((prod) => prod.item_code !== null)
+                .map((prod) => (
+                  <Picker.Item
+                    key={prod.id}
+                    label={`${prod.item_code} - ${prod.item_description}`}
+                    value={prod}
+                  />
+                ))}
+            </Picker>
+          </View>
+          <View>
+            <Text style={[dynamicStyles.mainText, { marginTop: 30 }]}>
+              Reminder
+            </Text>
+            <Picker
+              style={dynamicStyles.pickerProd}
+              selectedValue={selectedProduct3}
+              onValueChange={async (
+                itemValue: ProductRecord | null | undefined
+              ) => {
+                if (
+                  itemValue &&
+                  itemValue.item_code !== selectedProduct3?.item_code
+                ) {
+                  setRemindProductVal(itemValue);
+                  setSelectedProduct3(itemValue);
+                }
+              }}>
+              <Picker.Item label="Select product" value="selectproduct1" />
+              {productRecord
+                .filter((prod) => prod.item_code !== null)
+                .map((prod) => (
+                  <Picker.Item
+                    key={prod.id}
+                    label={`${prod.item_code} - ${prod.item_description}`}
+                    value={prod}
+                  />
+                ))}
+            </Picker>
+          </View>
         </View>
 
         {modalVisible && selectedDetailer !== null && (
@@ -513,7 +606,8 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   detailerButtonsContainer: {
-    flexDirection: "row",
+    padding: 20,
+    flexDirection: "column",
     justifyContent: "space-between",
   },
   detailerButton: {
@@ -537,6 +631,9 @@ const styles = StyleSheet.create({
   timerText: {
     fontSize: 18,
     color: "#333",
+  },
+  marginBottom: {
+    marginBottom: 10,
   },
 });
 

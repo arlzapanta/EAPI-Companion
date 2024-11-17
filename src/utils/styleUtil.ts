@@ -418,6 +418,14 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       borderColor: "#ddd",
       borderWidth: 1,
     },
+    pickerProd: {
+      width: Dimensions.get("window").width * 0.44,
+      height: 40,
+      backgroundColor: "#f9f9f9",
+      borderRadius: 4,
+      borderColor: "#ddd",
+      borderWidth: 1,
+    },
     picker1col: {
       // width: Dimensions.get("window").width * 0.16,
       marginBottom: 15,
