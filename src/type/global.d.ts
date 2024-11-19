@@ -32,6 +32,12 @@ declare global {
     item_description: string;
     detailer: string;
   }
+  export interface ProductWoDetailsRecord {
+    id: string;
+    product_id: string;
+    item_code: string;
+    item_description: string;
+  }
   interface DetailCardProps {
     details: {
       label: string;
@@ -359,6 +365,10 @@ declare global {
 
   export interface PreCallNotesParams {
     notesArray: string[];
+    scheduleId: string;
+  }
+  export interface PreCallProdIdsParams {
+    prodIds: string[];
     scheduleId: string;
   }
 

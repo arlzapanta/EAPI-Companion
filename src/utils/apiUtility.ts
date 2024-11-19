@@ -302,20 +302,46 @@ export const doctorRecordsSync = async (user: User): Promise<any> => {
   }
 };
 
+// export const syncProducts = async (offsetVal: number): Promise<string> => {
 export const syncProducts = async () => {
   try {
-    const responseDoc = await axios.post(
-      `${API_URL_ENV}/getAllProductDetailers`,
-      {
-        headers: {
-          "Content-Type": "application/json",
+    // TODO: this is static for now but need to make it dynamically depends on the # of products from API config table
+    await dropLocalTable("products_tbl");
+    const totalProd = 110;
+    for (let index = 0; index < totalProd; index += 2) {
+      console.log(index, "index asdasd");
+      const responseDoc = await axios.post(
+        `${API_URL_ENV}/getAllProductDetailers`,
+        {
+          offset: index,
         },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log(responseDoc.data.isProceed, "asdqweqeqwe");
+      if (responseDoc.data.isProceed) {
+        await saveProductsLocalDb(responseDoc.data.data);
       }
-    );
-
-    if (responseDoc.data.isProceed) {
-      await saveProductsLocalDb(responseDoc.data.data);
     }
+
+    // const responseDoc = await axios.post(
+    //   `${API_URL_ENV}/getAllProductDetailers`,
+    //   {
+    //     offset: offsetVal,
+    //   },
+    //   {
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //   }
+    // );
+    // if (responseDoc.data.isProceed) {
+    //   await saveProductsLocalDb(responseDoc.data.data);
+    // }
+    // return offsetVal.toString();
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const { response, request, message } = error;

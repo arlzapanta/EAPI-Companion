@@ -103,7 +103,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
       }));
 
       setDoctorList(mappedDoctors);
-      const updatedDoctors = await getUpdatedDoctorRecordsLocalDb();
+      // const updatedDoctors = await getUpdatedDoctorRecordsLocalDb();
     } catch (error) {
       console.log("fetchDoctorData error", error);
     }

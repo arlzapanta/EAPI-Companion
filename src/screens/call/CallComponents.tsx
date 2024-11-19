@@ -30,6 +30,8 @@ import {
   savePostCallNotesLocalDb,
   getPreCallNotesLocalDb,
   getPostCallNotesLocalDb,
+  getPreCallProdIdsLocalDb,
+  savePreCallProdIdsLocalDb,
 } from "../../utils/callComponentsUtil";
 import { customToast } from "../../utils/customToast";
 import { getActualCallsCount, uploadImage } from "../../utils/localDbUtils";
@@ -50,6 +52,8 @@ const CallComponents: React.FC<CallComponentsProps> = ({
   const navigation1 = useNavigation<SharedCallScreenNavigationProp>();
   const [note, setNote] = useState<string>("");
   const [notes, setNotes] = useState<string[]>([]);
+  const [prodIds, setProdIds] = useState<string[]>([]);
+
   const [selectedMood, setSelectedMood] = useState<string>("cold");
   const [feedback, setFeedback] = useState<string>("");
   const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -61,21 +65,21 @@ const CallComponents: React.FC<CallComponentsProps> = ({
   const [currentDate, setCurrentDate] = useState<string>();
 
   const [coreProductVal, setCoreProductVal] = useState<
-    ProductRecord | undefined[]
+    ProductWoDetailsRecord | undefined[]
   >([]);
   const [secProductVal, setSecProductVal] = useState<
-    ProductRecord | undefined[]
+    ProductWoDetailsRecord | undefined[]
   >([]);
   const [remindProductVal, setRemindProductVal] = useState<
-    ProductRecord | undefined[]
+    ProductWoDetailsRecord | undefined[]
   >([]);
 
   const [selectedProduct1, setSelectedProduct1] =
-    useState<ProductRecord | null>(null);
+    useState<ProductWoDetailsRecord | null>(null);
   const [selectedProduct2, setSelectedProduct2] =
-    useState<ProductRecord | null>(null);
+    useState<ProductWoDetailsRecord | null>(null);
   const [selectedProduct3, setSelectedProduct3] =
-    useState<ProductRecord | null>(null);
+    useState<ProductWoDetailsRecord | null>(null);
 
   useEffect(() => {
     const fetchPreCallNotes = async () => {
@@ -84,8 +88,32 @@ const CallComponents: React.FC<CallComponentsProps> = ({
       setCurrentDate(await getCurrentDatePH());
     };
 
+    const fetchPreCallProdIds = async () => {
+      const fetchedProdIds = await getPreCallProdIdsLocalDb(scheduleId);
+      setProdIds(fetchedProdIds.map((prodId) => prodId.prodIds).flat());
+    };
+
     fetchPreCallNotes();
+    fetchPreCallProdIds();
   }, [scheduleId]);
+
+  useEffect(() => {
+    if (prodIds.length > 0 && productRecord) {
+      const selectedProducts = prodIds.slice(0, 3).map((prodId) => {
+        const foundProduct = productRecord.find(
+          (product) => product.id === prodId
+        );
+        return foundProduct || null;
+      });
+      setSelectedProduct1(selectedProducts[0]);
+      setSelectedProduct2(selectedProducts[1]);
+      setSelectedProduct3(selectedProducts[2]);
+    } else {
+      setSelectedProduct1(null);
+      setSelectedProduct2(null);
+      setSelectedProduct3(null);
+    }
+  }, [prodIds, productRecord]);
 
   const addNote = async () => {
     if (note.trim()) {
@@ -125,6 +153,29 @@ const CallComponents: React.FC<CallComponentsProps> = ({
     await savePreCallNotesLocalDb({ notesArray: notes, scheduleId });
   };
 
+  const savePreCallProdIds = async () => {
+    const prodIds: string[] = [];
+
+    if (selectedProduct1) {
+      prodIds.push(selectedProduct1.id);
+    } else {
+      prodIds.push("0");
+    }
+    if (selectedProduct2) {
+      prodIds.push(selectedProduct2.id);
+    } else {
+      prodIds.push("0");
+    }
+    if (selectedProduct3) {
+      prodIds.push(selectedProduct3.id);
+    } else {
+      prodIds.push("0");
+    }
+
+    setProdIds(prodIds);
+    await savePreCallProdIdsLocalDb({ prodIds: prodIds, scheduleId });
+  };
+
   const startTimer = () => {
     if (intervalRef.current) return;
     intervalRef.current = setInterval(() => {
@@ -137,6 +188,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({
     navigation.navigate("OnCall", {
       scheduleIdValue: scheduleId,
       notesArray: notes,
+      prodIds: prodIds,
       docName,
     });
     startTimer();
@@ -331,8 +383,19 @@ const CallComponents: React.FC<CallComponentsProps> = ({
       </View>
 
       <View style={styles.cardContainer}>
-        <View style={styles.headerContainer}>
+        <View
+          style={[
+            dynamicStyles.row,
+            styles.headerContainer,
+            { justifyContent: "space-between" },
+          ]}>
           <Text style={styles.sectionTitle}>Set Detailers</Text>
+          <TouchableOpacity onPress={savePreCallProdIds}>
+            <Icon
+              style={[styles.addNotesBtn, dynamicStyles.subBgColor]}
+              name="save"
+            />
+          </TouchableOpacity>
         </View>
         <View style={styles.detailerButtonsContainer}>
           <View>
@@ -341,7 +404,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({
               style={dynamicStyles.pickerProd}
               selectedValue={selectedProduct1}
               onValueChange={async (
-                itemValue: ProductRecord | null | undefined
+                itemValue: ProductWoDetailsRecord | null | undefined
               ) => {
                 if (
                   itemValue &&
@@ -371,7 +434,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({
               style={dynamicStyles.pickerProd}
               selectedValue={selectedProduct2}
               onValueChange={async (
-                itemValue: ProductRecord | null | undefined
+                itemValue: ProductWoDetailsRecord | null | undefined
               ) => {
                 if (
                   itemValue &&
@@ -401,7 +464,7 @@ const CallComponents: React.FC<CallComponentsProps> = ({
               style={dynamicStyles.pickerProd}
               selectedValue={selectedProduct3}
               onValueChange={async (
-                itemValue: ProductRecord | null | undefined
+                itemValue: ProductWoDetailsRecord | null | undefined
               ) => {
                 if (
                   itemValue &&

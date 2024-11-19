@@ -33,6 +33,7 @@ import {
 import DetailersOnCallModal from "../modals/DetailersOnCallModal";
 import Entypo from "@expo/vector-icons/Entypo";
 import { getStyleUtil } from "../../utils/styleUtil";
+import ProductMultiViewModal from "../modals/ProductMultiViewModal";
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
 type OnCallScreenRouteProp = RouteProp<RootStackParamList, "OnCall">;
@@ -47,7 +48,7 @@ interface Props {
 
 const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
   const { refreshSchedData } = useRefreshFetchDataContext();
-  const { scheduleIdValue, notesArray, docName } = route.params;
+  const { scheduleIdValue, notesArray, docName, prodIds } = route.params;
   const [timer, setTimer] = useState<number>(0);
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
   const [selectedMood, setSelectedMood] = useState<string>("");
@@ -210,7 +211,12 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
         </TouchableOpacity>
 
         {/* Render DetailerModal and pass isVisible and onClose */}
-        <DetailersOnCallModal isVisible={isModalVisible} onClose={closeModal} />
+        {/* <DetailersOnCallModal isVisible={isModalVisible} onClose={closeModal} /> */}
+        <ProductMultiViewModal
+          isVisible={isModalVisible}
+          onClose={closeModal}
+          prodIds={prodIds}
+        />
       </View>
 
       <View style={styles.cardContainer}>

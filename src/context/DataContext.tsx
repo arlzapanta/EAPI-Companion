@@ -15,6 +15,7 @@ import {
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import { getQuickCalls } from "../utils/quickCallUtil";
+import { customToast } from "../utils/customToast";
 
 // todo : add necessary states from components
 interface DataContextProps<T> {
@@ -38,7 +39,7 @@ interface DataContextProps<T> {
   isDoctorLoading: boolean;
   isQuickLoading: boolean;
   detailersRecord: T[];
-  productRecord: ProductRecord[];
+  productRecord: ProductWoDetailsRecord[];
   quickCallData: Call[];
   ytdDataMonthValues: Array<{
     value: number;
@@ -385,10 +386,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // ***************************************************************************
   const [isScheduleLoading, setIsScheduleLoading] = useState<boolean>(false);
   const [detailersRecord, setDetailersRecord] = useState<DetailersRecord[]>([]);
-  const [productRecord, setProductRecord] = useState<ProductRecord[]>([]);
+  const [productRecord, setProductRecord] = useState<ProductWoDetailsRecord[]>(
+    []
+  );
   const fetchProducts = async () => {
-    const productData = (await getProductRecordsLocalDb()) as ProductRecord[];
+    const productData =
+      (await getProductRecordsLocalDb()) as ProductWoDetailsRecord[];
     setProductRecord(productData);
+
+    // remove after testing
+    customToast(`${productData}, 'productDataproductDataproductData`);
   };
   useEffect(() => {
     fetchProducts();

@@ -217,8 +217,8 @@ const Attendance: React.FC = () => {
             progress: 0.4,
             text: "Fetching data : detailers",
           });
-          const getDetailersRes = await getDetailersData();
-          handleUpdateDetailers(getDetailersRes);
+          // const getDetailersRes = await getDetailersData();
+          // handleUpdateDetailers(getDetailersRes);
           await getCallsAPI(userInfo);
           setLoadingProgressData({
             progress: 0.5,

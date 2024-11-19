@@ -48,13 +48,12 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const dynamicStyles = getStyleUtil({});
   const [currentDate, setCurrentDate] = useState("");
   const [doctorList, setDoctorList] = useState<DoctorRecord[]>([]);
-  const [productList, setProductList] = useState<ProductRecord[]>([]);
+  const [productList, setProductList] = useState<ProductWoDetailsRecord[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorRecord | null>(
     null
   );
-  const [selectedProduct, setSelectedProduct] = useState<ProductRecord | null>(
-    null
-  );
+  const [selectedProduct, setSelectedProduct] =
+    useState<ProductWoDetailsRecord | null>(null);
   const [accordionExpandedDoctors, setAccordionExpandedDoctors] =
     useState(false);
   const [accordionExpandedProducts, setAccordionExpandedProducts] =
@@ -142,10 +141,12 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
         return;
       }
 
-      const mappedProducts: ProductRecord[] = productRecord.map((prod) => ({
-        ...prod,
-        full_name: `${prod.item_code} ${prod.item_description}`,
-      }));
+      const mappedProducts: ProductWoDetailsRecord[] = productRecord.map(
+        (prod) => ({
+          ...prod,
+          full_name: `${prod.item_code} ${prod.item_description}`,
+        })
+      );
 
       setProductList(mappedProducts);
     } catch (error) {
@@ -182,7 +183,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
     setTimeout(() => setIsInternalDoctorLoading(false), 500);
   };
 
-  const handleProductClick = (prod: ProductRecord) => {
+  const handleProductClick = (prod: ProductWoDetailsRecord) => {
     setSelectedProduct(prod);
     setIsInternalDoctorLoading(true);
     setTimeout(() => setIsInternalDoctorLoading(false), 500);
@@ -416,9 +417,9 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
     );
   };
 
-  const ProductDetails = ({ prod }: { prod: ProductRecord }) => {
-    const imageCount = prod.detailer.split(",").length;
-    let checkImgCount = imageCount <= 4 ? 0.15 : 0.1;
+  const ProductDetails = ({ prod }: { prod: ProductWoDetailsRecord }) => {
+    // const imageCount = prod.detailer.split(",").length;
+    // let checkImgCount = imageCount <= 4 ? 0.15 : 0.1;
 
     interface ImageProps {
       src: string;
@@ -427,15 +428,15 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
     }
     const [imageWidth, setImageWidth] = useState(0);
 
-    const handleResize = () => {
-      const availableWidth = window.innerWidth;
-      const imageCount = prod.detailer.split(",").length;
-      const marginPerImage = 10;
-      const idealImageWidth = Math.floor(
-        (availableWidth - marginPerImage * (imageCount - 1)) / imageCount
-      );
-      setImageWidth(idealImageWidth);
-    };
+    // const handleResize = () => {
+    //   const availableWidth = window.innerWidth;
+    //   const imageCount = prod.detailer.split(",").length;
+    //   const marginPerImage = 10;
+    //   const idealImageWidth = Math.floor(
+    //     (availableWidth - marginPerImage * (imageCount - 1)) / imageCount
+    //   );
+    //   setImageWidth(idealImageWidth);
+    // };
 
     return (
       <ScrollView>
@@ -479,7 +480,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
               { margin: 10, justifyContent: "space-around" },
               dynamicStyles.centerItems,
             ]}>
-            {prod.detailer.split(",").map((base64String, index) => (
+            {/* {prod.detailer.split(",").map((base64String, index) => (
               <Image
                 key={index}
                 source={{ uri: `data:image/jpeg;base64,${base64String}` }}
@@ -490,7 +491,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                   resizeMode: "cover",
                 }}
               />
-            ))}
+            ))} */}
           </View>
         </View>
       </ScrollView>

@@ -6,7 +6,12 @@ export type RootStackParamList = {
   Sync: undefined;
   Reschedule: undefined;
   Attendance: undefined;
-  OnCall: { scheduleIdValue: string; notesArray: string[]; docName: string };
+  OnCall: {
+    scheduleIdValue: string;
+    notesArray: string[];
+    docName: string;
+    prodIds: string[];
+  };
   QuickCall: undefined;
   SpecialistTool: undefined;
   SharedCall: { scheduleIdValue: string; doctorsName: string };

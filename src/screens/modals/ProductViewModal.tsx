@@ -15,6 +15,7 @@ import {
 import { useDataContext } from "../../context/DataContext";
 import { getStyleUtil } from "../../utils/styleUtil";
 import { getBase64StringFormat } from "../../utils/commonUtil";
+import { getProdDetailersById } from "../../utils/localDbUtils";
 const { width, height } = Dimensions.get("window");
 
 const dynamicStyles = getStyleUtil({});
@@ -58,12 +59,9 @@ const ProductViewModal: React.FC<ProductModalProps> = ({
       }).start();
 
       const fetchDetailers = async () => {
-        const matchingDetailer = productRecord.find(
-          (test) => test.product_id === prodId.toString()
-        );
-
-        if (matchingDetailer) {
-          const detailersArray = matchingDetailer.detailer.split(",");
+        const prodIdData = await getProdDetailersById(prodId.toString());
+        if (prodIdData) {
+          const detailersArray = prodIdData.detailer.split(",");
           if (detailersArray.length === 0 || detailersArray[0] === "") {
             setImageUrls([]);
           } else {

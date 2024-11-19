@@ -59,25 +59,14 @@ const ProductMultiViewModal: React.FC<ProductMultiModalProps> = ({
       }).start();
 
       const fetchDetailers = async () => {
-        const prodIdsArray = prodIds[0].split(",");
-
-        // const fetchProds = await getMultiProductsRecordsLocalDb(prodIds);
-        // preparation if need
-        // this is an array of objects - products
-
-        const matchingDetailers = productRecord.filter((test) =>
-          prodIdsArray.includes(test.product_id.toString())
-        );
-
-        if (matchingDetailers.length > 0) {
-          const detailerStrings = matchingDetailers.flatMap((detailer) =>
+        const prodsData = await getMultiProductsRecordsLocalDb(prodIds);
+        if (prodsData.length > 0) {
+          const detailerStrings = prodsData.flatMap((detailer) =>
             detailer.detailer.split(",")
           );
-
           const filteredDetailerStrings = detailerStrings.filter(
             (base64string) => base64string && base64string.trim() !== ""
           );
-
           setImageUrls(filteredDetailerStrings);
         } else {
           setImageUrls([]);

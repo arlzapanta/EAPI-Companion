@@ -10,6 +10,7 @@ import {
   getMonthRangeExGTToday,
 } from "./dateUtils";
 import moment from "moment";
+import { customToast } from "./customToast";
 
 // ************************************************************
 // ************************************************************
@@ -1054,7 +1055,7 @@ export const saveProductsLocalDb = async (
     useNewConnection: true,
   });
 
-  await db.execAsync(dropCreate_productsData);
+  await db.execAsync(createIfNE_products);
   const insertPromises = Array.isArray(productsData)
     ? productsData
     : [productsData];
@@ -1069,9 +1070,9 @@ export const saveProductsLocalDb = async (
       })
     );
 
-    const query = `SELECT product_id FROM products_tbl`;
-    const existingRows = await db.getAllAsync(query);
-    console.log("GUMANA productsproductsproducts:", existingRows);
+    // const query = `SELECT product_id FROM products_tbl`;
+    // const existingRows = await db.getAllAsync(query);
+    // console.log("GUMANA productsproductsproducts:", existingRows);
 
     return "Success";
   } catch (error) {
@@ -1176,15 +1177,45 @@ export const getProductRecordsLocalDb = async () => {
 
   await db.execAsync(createIfNE_products);
 
-  const query = `SELECT * FROM products_tbl`;
+  const query = `SELECT id, product_id, item_code, item_description FROM products_tbl`;
 
   try {
     const existingRows = await db.getAllAsync(query);
-    // console.log('existingRows getDoctorRecordsLocalDb', existingRows);
+    // console.log("existingRows getDoctorRecordsLocalDb", existingRows);
     return existingRows;
   } catch (error) {
     console.error("Error fetching attendance data:", error);
     return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getProdDetailersById = async (
+  prodId: string
+): Promise<ProductRecord> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNE_products);
+
+  const query = `SELECT * FROM products_tbl WHERE product_id = ?`;
+
+  try {
+    const existingRows = await db.getFirstAsync(query, [prodId]);
+    const result = existingRows as ProductRecord;
+    // console.log("existingRows getDoctorRecordsLocalDb", existingRows);
+    return result;
+  } catch (error) {
+    console.error("Error fetching attendance data:", error);
+    return {
+      id: "",
+      product_id: "",
+      item_code: "",
+      item_description: "",
+      detailer: "",
+    };
   } finally {
     await db.closeAsync();
   }

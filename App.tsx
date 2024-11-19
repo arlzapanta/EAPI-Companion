@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  LayoutAnimation,
   Platform,
   SafeAreaView,
   StyleSheet,
@@ -60,7 +59,6 @@ const Layout = () => {
   React.useEffect(() => {
     console.log("Layout initialized");
     NavigationBar.setBackgroundColorAsync("black");
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     requestPermissions();
   }, []);
   return (
@@ -77,7 +75,6 @@ const Layout = () => {
               name="Home"
               component={Home}
               options={{
-                // Hide the header for this route
                 headerShown: false,
               }}
             />
@@ -85,7 +82,6 @@ const Layout = () => {
               name="Sync"
               component={SyncSettingsScreen}
               options={{
-                // Hide the header for this route
                 headerShown: false,
               }}
             />
@@ -93,7 +89,6 @@ const Layout = () => {
               name="Reschedule"
               component={RescheduleScreen}
               options={{
-                // Hide the header for this route
                 headerShown: false,
               }}
             />
@@ -101,7 +96,6 @@ const Layout = () => {
               name="Attendance"
               component={AttendanceScreen}
               options={{
-                // Hide the header for this route
                 headerShown: false,
               }}
             />

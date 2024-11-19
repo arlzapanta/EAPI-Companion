@@ -148,6 +148,46 @@ export const savePreCallNotesLocalDb = async ({
   }
 };
 
+export const savePreCallProdIdsLocalDb = async ({
+  prodIds,
+  scheduleId,
+}: PreCallProdIdsParams): Promise<void> => {
+  try {
+    const db = await SQLite.openDatabaseAsync("cmms", {
+      useNewConnection: true,
+    });
+
+    await db.execAsync(`
+      PRAGMA journal_mode = WAL;
+      CREATE TABLE IF NOT EXISTS pre_call_prodIds_tbl (
+        id INTEGER PRIMARY KEY NOT NULL, 
+        prodIds TEXT NOT NULL, 
+        schedule_id TEXT NOT NULL, 
+        date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await deleteAllPreCallProdIds({ scheduleId });
+
+    const prodIdsJson = JSON.stringify(prodIds);
+
+    await db.runAsync(
+      `INSERT INTO pre_call_prodIds_tbl (prodIds, schedule_id) VALUES (?,?)`,
+      prodIdsJson,
+      scheduleId
+    );
+
+    // const testRecords = await db.getAllAsync(
+    //   "SELECT * FROM pre_call_prodIds_tbl "
+    // );
+    // console.log("All pre_call_prodIds_tbl: prodIdsprodIds", testRecords);
+
+    db.closeSync();
+  } catch (error) {
+    console.error("Error saving pre-call prodIds:", error);
+  }
+};
+
 export const getPreCallNotesLocalDb = async (
   scheduleId: string
 ): Promise<PreCallNotesParams[]> => {
@@ -182,6 +222,40 @@ export const getPreCallNotesLocalDb = async (
   }
 };
 
+export const getPreCallProdIdsLocalDb = async (
+  scheduleId: string
+): Promise<PreCallProdIdsParams[]> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(`
+    PRAGMA journal_mode = WAL;
+    CREATE TABLE IF NOT EXISTS pre_call_prodIds_tbl (
+      id INTEGER PRIMARY KEY NOT NULL, 
+      prodIds TEXT NOT NULL, 
+      schedule_id TEXT NOT NULL, 
+      date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const query = `SELECT prodIds, schedule_id FROM pre_call_prodIds_tbl WHERE schedule_id = ?`;
+
+  try {
+    const result = await db.getAllAsync(query, [scheduleId]);
+    const existingRows = result as { prodIds: string; schedule_id: string }[];
+    return existingRows.map((row) => ({
+      prodIds: JSON.parse(row.prodIds),
+      scheduleId: row.schedule_id,
+    }));
+  } catch (error) {
+    console.error("Error fetching pre-call prodIds:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
 export const deleteAllPreCallNotes = async ({
   scheduleId,
 }: {
@@ -200,6 +274,29 @@ export const deleteAllPreCallNotes = async ({
     // console.log(`Successfully deleted all pre-call notes for scheduleId: ${scheduleId}`);
   } catch (error) {
     console.error("Error deleting pre-call notes:", error);
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const deleteAllPreCallProdIds = async ({
+  scheduleId,
+}: {
+  scheduleId: string;
+}) => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  try {
+    await db.runAsync(
+      `DELETE FROM pre_call_prodIds_tbl WHERE schedule_id = ?`,
+      scheduleId
+    );
+
+    // console.log(`Successfully deleted all pre-call notes for scheduleId: ${scheduleId}`);
+  } catch (error) {
+    console.error("Error deleting pre-call prodIds:", error);
   } finally {
     await db.closeAsync();
   }

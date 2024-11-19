@@ -20,6 +20,7 @@ import {
   getDailyChartsData,
   getDatesAndTypeForCalendarView,
   getDoctorsSchedLocalDb,
+  getProductRecordsLocalDb,
   insertDummyRecords,
   saveUserSyncHistoryLocalDb,
 } from "../utils/localDbUtils";
@@ -120,95 +121,100 @@ const Settings = () => {
     text: "Fetching products ... Please wait",
   });
 
-  // const MidSync = async () => {
-  //   // this is for testing
-  //   const getDetailersRes = await getDetailersData();
-  //   console.log(getDetailersRes, "askdja");
-  // };
-
   const MidSync = async () => {
-    let msg = "";
-    // if (isTimeBetween12and1PM()) {
-    // const check = await getDatesAndTypeForCalendarView();
-    // console.log(check);
-    try {
-      setLoading(true);
-      const checkQC = await getQuickCalls();
-      const checkPost = await checkPostCallUnsetExist();
-      if (checkQC.length > 0) {
-        msg = "Existing quick calls, kindly complete or remove any data";
-        Alert.alert(msg);
-        return;
-      }
-      if (checkPost) {
-        msg = "Existing empty post calls, kindly complete all post calls";
-        Alert.alert(msg);
-        return;
-      }
-      if (!userInfo) {
-        msg = "Server Error : User information is missing.";
-        Alert.alert(msg);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        setLoadingProgressData({
-          progress: 0.2,
-          text: "Syncing data : preparing ...",
-        });
-        let hasError = false;
-        try {
-          setLoading(true);
-          setLoadingProgressData({
-            progress: 0.5,
-            text: "Syncing data : checking actual calls ...",
-          });
-          await syncUserMid(userInfo);
-        } catch (error) {
-          hasError = true;
-          msg = "Server Error : Failed to mid sync please contact admin.";
-          Alert.alert(msg);
-          throw error;
-        } finally {
-          setLoading(false);
-        }
-
-        if (!hasError) {
-          setLoading(true);
-          setLoadingProgressData({
-            progress: 0.7,
-            text: "Syncing data : saving sync logs ...",
-          });
-          await saveUserSyncHistoryLocalDb(userInfo, 3, {
-            Date: await getCurrentDatePH(),
-            Time: await getCurrentTimePH(),
-          });
-          setLoadingProgressData({
-            progress: 0.9,
-            text: "Almost there ...",
-          });
-        }
-      } catch (error) {
-        msg = "Server Error : Failed to mid sync please contact admin.";
-        Alert.alert(msg);
-      } finally {
-        setLoading(false);
-      }
-    } catch (error) {
-      Alert.alert("Server Error", " Failed to mid sync please contact admin.");
-    } finally {
-      setLoadingProgressData({
-        progress: 1,
-        text: "DONE!",
-      });
-      setLoading(false);
-    }
-
-    // } else {
-    //   customToast("Mid sync is available between 12pm and 1pm");
-    // }
+    // this is for testing
+    const getDetailersRes = await getProductRecordsLocalDb();
+    const detailersString = JSON.stringify(getDetailersRes);
+    console.log(
+      detailersString,
+      "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+    );
+    customToast(`${getDetailersRes}, asdsadsad`);
   };
+
+  // const MidSync = async () => {
+  //   let msg = "";
+  //   // if (isTimeBetween12and1PM()) {
+  //   // const check = await getDatesAndTypeForCalendarView();
+  //   // console.log(check);
+  //   try {
+  //     setLoading(true);
+  //     const checkQC = await getQuickCalls();
+  //     const checkPost = await checkPostCallUnsetExist();
+  //     if (checkQC.length > 0) {
+  //       msg = "Existing quick calls, kindly complete or remove any data";
+  //       Alert.alert(msg);
+  //       return;
+  //     }
+  //     if (checkPost) {
+  //       msg = "Existing empty post calls, kindly complete all post calls";
+  //       Alert.alert(msg);
+  //       return;
+  //     }
+  //     if (!userInfo) {
+  //       msg = "Server Error : User information is missing.";
+  //       Alert.alert(msg);
+  //       return;
+  //     }
+
+  //     try {
+  //       setLoading(true);
+  //       setLoadingProgressData({
+  //         progress: 0.2,
+  //         text: "Syncing data : preparing ...",
+  //       });
+  //       let hasError = false;
+  //       try {
+  //         setLoading(true);
+  //         setLoadingProgressData({
+  //           progress: 0.5,
+  //           text: "Syncing data : checking actual calls ...",
+  //         });
+  //         await syncUserMid(userInfo);
+  //       } catch (error) {
+  //         hasError = true;
+  //         msg = "Server Error : Failed to mid sync please contact admin.";
+  //         Alert.alert(msg);
+  //         throw error;
+  //       } finally {
+  //         setLoading(false);
+  //       }
+
+  //       if (!hasError) {
+  //         setLoading(true);
+  //         setLoadingProgressData({
+  //           progress: 0.7,
+  //           text: "Syncing data : saving sync logs ...",
+  //         });
+  //         await saveUserSyncHistoryLocalDb(userInfo, 3, {
+  //           Date: await getCurrentDatePH(),
+  //           Time: await getCurrentTimePH(),
+  //         });
+  //         setLoadingProgressData({
+  //           progress: 0.9,
+  //           text: "Almost there ...",
+  //         });
+  //       }
+  //     } catch (error) {
+  //       msg = "Server Error : Failed to mid sync please contact admin.";
+  //       Alert.alert(msg);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   } catch (error) {
+  //     Alert.alert("Server Error", " Failed to mid sync please contact admin.");
+  //   } finally {
+  //     setLoadingProgressData({
+  //       progress: 1,
+  //       text: "DONE!",
+  //     });
+  //     setLoading(false);
+  //   }
+
+  //   // } else {
+  //   //   customToast("Mid sync is available between 12pm and 1pm");
+  //   // }
+  // };
 
   const handleSyncProducts = async () => {
     setSyncProdLoading(true);
@@ -221,6 +227,12 @@ const Settings = () => {
           text: "fetching products: please wait...",
         });
         await syncProducts();
+
+        // await dropLocalTable("products_tbl");
+        // const totalProd = 110;
+        // for (let index = 0; index < totalProd; index += 2) {
+        //   await syncProducts(index);
+        // }
       } catch (error) {
         msg = "Server Error : Failed to sync products please contact admin.";
         Alert.alert(msg);
@@ -348,14 +360,6 @@ const Settings = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={dynamicStyle.buttonContainer}
-                  onPress={handleRequestreschedOnPress}>
-                  <Text style={styles.buttonTextLogout}>
-                    Reschedule Request
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
                   style={[styles.buttonLogout, dynamicStyle.buttonLogout]}
                   onPress={handleLogout}>
                   <Text style={styles.buttonTextLogout}>Logout</Text>
@@ -363,7 +367,12 @@ const Settings = () => {
 
                 <TouchableOpacity
                   style={styles.buttonTest}
-                  onPress={dropLocalTables}>
+                  onPress={() =>
+                    showConfirmAlert(
+                      dropLocalTables,
+                      "DROP ALL TABLES (THIS IS FOR DEV ONLY PLEASE DONT CONFIRM)"
+                    )
+                  }>
                   <Text style={styles.buttonTextTest}>
                     DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
                   </Text>
