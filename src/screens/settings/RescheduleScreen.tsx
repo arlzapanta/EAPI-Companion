@@ -119,7 +119,7 @@ const RescheduleScreen: React.FC = () => {
     try {
       setIsReschedLoading(true);
       if (selectedDoctor) {
-        const type = isWithinWeekOrAdvance(selectedDateTo);
+        const type = isWithinWeekOrAdvance(selectedDateTo, selectedDoctor.date);
         const reschedDetails = {
           id: "",
           request_id: "",
@@ -280,11 +280,10 @@ const RescheduleScreen: React.FC = () => {
                 onValueChange={async (itemValue: ScheduleAPIRecord | null) => {
                   setSelectedDateTo("selectedate");
                   if (itemValue !== selectedDoctor) {
-                    let doctors_id = selectedDoctor?.doctors_id
-                      ? selectedDoctor.doctors_id
-                      : "0";
                     setSelectedDoctor(itemValue);
+
                     if (itemValue && itemValue.date) {
+                      let doctors_id = itemValue.doctors_id;
                       setSelectedDateTo(itemValue.date);
                       const dateToAvail = getDateRangeGTToday(itemValue.date);
                       const similarDocSchedDates = await getSchedDatesByDocId({
@@ -302,6 +301,11 @@ const RescheduleScreen: React.FC = () => {
                               )
                               .map((item) => item.date)
                           : [];
+
+                      console.log(
+                        similarDocSchedDatesStrings,
+                        "asdlkjaskjdsimilarDocSchedDatesStrings"
+                      );
 
                       // console.log(similarDocSchedDatesStrings, "asdasd");
                       // console.log(dateToAvail, "dateToAvail");

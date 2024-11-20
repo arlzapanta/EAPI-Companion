@@ -121,8 +121,8 @@ const ProductViewModal: React.FC<ProductModalProps> = ({
           ) : (
             <View style={styles.noImagesContainer}>
               <Text style={styles.noImagesText}>
-                No images available. Please contact your DSM or admin for
-                assistance.
+                No products were set for this schedule. To add product
+                detailers, please edit the pre-call schedule.
               </Text>
             </View>
           )}

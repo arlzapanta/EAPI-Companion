@@ -457,7 +457,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
               ]}
               onPress={() => openModal(prod.product_id)}>
               <Text style={dynamicStyles.textWhite}>
-                View Product Images Fullscreen
+                View Product Detailer/s
               </Text>
             </TouchableOpacity>
           </View>
@@ -533,8 +533,8 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                 style={dynamicStyles.accordionButton}>
                 <Text style={dynamicStyles.accordionTitle}>
                   {accordionExpandedDoctors
-                    ? "Hide Doctor List"
-                    : "View Doctor List"}
+                    ? `View Doctor List [${doctorList.length}]`
+                    : `Hide Doctor List [${doctorList.length}]`}
                 </Text>
                 <Ionicons
                   name={
@@ -573,8 +573,8 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                 style={dynamicStyles.accordionButton}>
                 <Text style={dynamicStyles.accordionTitle}>
                   {accordionExpandedProducts
-                    ? "Hide Products"
-                    : "View Products"}
+                    ? `Hide Products [${productList.length}]`
+                    : `View Products [${productList.length}]`}
                 </Text>
                 <Ionicons
                   name={

@@ -6,6 +6,7 @@ import {
   dropLocalTable,
   dropLocalTables,
   getCallsTodayLocalDb,
+  getProductRecordsLocalDb,
   getRescheduleRequestRecordsLocalDb,
   getUpdatedDoctorRecordsLocalDb,
   saveCallsAPILocalDb,
@@ -25,6 +26,8 @@ import {
   getPostCallNotesLocalDb,
   getPreCallNotesLocalDb,
 } from "./callComponentsUtil";
+import { customToast } from "./customToast";
+import { useDataContext } from "../context/DataContext";
 
 export const apiTimeIn = async (user: User) => {
   try {
@@ -308,8 +311,7 @@ export const syncProducts = async () => {
     // TODO: this is static for now but need to make it dynamically depends on the # of products from API config table
     await dropLocalTable("products_tbl");
     const totalProd = 110;
-    for (let index = 0; index < totalProd; index += 2) {
-      console.log(index, "index asdasd");
+    for (let index = 0; index < totalProd; index += 5) {
       const responseDoc = await axios.post(
         `${API_URL_ENV}/getAllProductDetailers`,
         {
@@ -321,27 +323,10 @@ export const syncProducts = async () => {
           },
         }
       );
-      console.log(responseDoc.data.isProceed, "asdqweqeqwe");
       if (responseDoc.data.isProceed) {
         await saveProductsLocalDb(responseDoc.data.data);
       }
     }
-
-    // const responseDoc = await axios.post(
-    //   `${API_URL_ENV}/getAllProductDetailers`,
-    //   {
-    //     offset: offsetVal,
-    //   },
-    //   {
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //   }
-    // );
-    // if (responseDoc.data.isProceed) {
-    //   await saveProductsLocalDb(responseDoc.data.data);
-    // }
-    // return offsetVal.toString();
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const { response, request, message } = error;

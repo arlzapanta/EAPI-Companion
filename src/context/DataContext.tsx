@@ -48,7 +48,8 @@ interface DataContextProps<T> {
     label?: string;
   }>;
   setDetailersRecord: (newDetailersRecord: T[]) => void;
-  // coreProductVal: ProductRecord | null | undefined;
+  setProductRecord: (newProductRecords: ProductWoDetailsRecord[]) => void;
+  setCalendarData: (newCalendarRecord: CalendarProps) => void;
   // secProductVal: ProductRecord | null | undefined;
   // remindProductVal: ProductRecord | null | undefined;
   // setCoreProductVal: (newCoreProductVal: ProductRecord | undefined) => void;
@@ -393,16 +394,10 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     const productData =
       (await getProductRecordsLocalDb()) as ProductWoDetailsRecord[];
     setProductRecord(productData);
-
-    // remove after testing
-    customToast(`${productData}, 'productDataproductDataproductData`);
   };
   useEffect(() => {
     fetchProducts();
   }, []);
-  const [coreProductVal, setCoreProductVal] = useState<ProductRecord>();
-  const [secProductVal, setSecProductVal] = useState<ProductRecord>();
-  const [remindProductVal, setRemindProductVal] = useState<ProductRecord>();
 
   // ADD SCHEDULE DATA HERE
   // ***************************************************************************
@@ -498,6 +493,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         detailersRecord,
         productRecord,
         setDetailersRecord,
+        setProductRecord,
+        setCalendarData,
         // coreProductVal,
         // secProductVal,
         // remindProductVal,

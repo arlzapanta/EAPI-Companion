@@ -529,11 +529,23 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       marginTop: 20,
       alignItems: "center",
     } as ViewStyle,
+    // image: {
+    //   width: 400,
+    //   height: 260,
+    //   marginTop: 10,
+    //   resizeMode: "contain",
+    // } as ImageStyle,
+
     image: {
-      width: 400,
-      height: 260,
-      marginTop: 10,
-      resizeMode: "contain",
+      width: "100%",
+      height: "auto",
+      aspectRatio: 10 / 6,
+    } as ImageStyle,
+    signImage: {
+      marginVertical: 15,
+      width: "100%",
+      height: "auto",
+      aspectRatio: 15 / 5,
     } as ImageStyle,
     thumbnailImage: {
       width: 400,

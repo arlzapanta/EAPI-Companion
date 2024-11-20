@@ -225,7 +225,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
           {signatureValue ? (
             <Image
               source={{ uri: `${getBase64StringFormat()}${signatureValue}` }}
-              style={styles.signImage}
+              style={dynamicStyles.signImage}
             />
           ) : (
             <SignatureCapture
@@ -244,7 +244,7 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
               <Text style={dynamicStyles.mainText}>Photo Capture</Text>
               <Image
                 source={{ uri: `${getBase64StringFormat()}${imageBase64}` }}
-                style={styles.image}
+                style={dynamicStyles.image}
               />
             </View>
           )}
@@ -457,16 +457,15 @@ const styles = StyleSheet.create({
     color: "#007bff",
   },
   image: {
-    width: 830,
-    height: 260,
-    marginTop: 10,
-    resizeMode: "stretch",
+    width: "100%",
+    height: "auto",
+    aspectRatio: 10 / 6,
   },
   signImage: {
     marginVertical: 15,
     width: "100%",
-    height: 200,
-    resizeMode: "contain",
+    height: "auto",
+    aspectRatio: 15 / 5,
   },
 });
 
