@@ -22,7 +22,6 @@ import SharedCallScreen from "./src/screens/call/SharedCallScreen";
 import { DataProvider } from "./src/context/DataContext";
 import * as Location from "expo-location";
 import { Camera } from "expo-camera";
-import ExpoStatusBar from "expo-status-bar/build/ExpoStatusBar";
 import * as NavigationBar from "expo-navigation-bar";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -63,8 +62,6 @@ const Layout = () => {
   }, []);
   return (
     <SafeAreaView style={styles.container}>
-      <ExpoStatusBar style="light" backgroundColor="black" animated />
-
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

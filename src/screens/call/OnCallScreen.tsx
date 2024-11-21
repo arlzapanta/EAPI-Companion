@@ -171,6 +171,10 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
     location: string,
     attempts: string | number
   ): Promise<void> => {
+    console.log(
+      imageBase64,
+      "aslkdaslkjdaskljdimageBase64imageBase64imageBase64imageBase64"
+    );
     const attemptCount =
       typeof attempts === "string" ? parseInt(attempts, 10) : attempts;
 

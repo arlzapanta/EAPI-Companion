@@ -1814,19 +1814,14 @@ export const getDailyChartsData = async (): Promise<DailyChartData[]> => {
 
   const currentDate = await getCurrentDatePH();
   const query = `
-  SELECT 
-    COUNT(*) AS calls_count,
-    (SELECT COUNT(*) FROM schedule_API_tbl WHERE DATE(date) = ?) AS schedule_api_count
-  FROM calls_tbl
-  WHERE DATE(created_at) = ?
-`;
+    SELECT
+      COUNT(*) AS calls_count,
+      (SELECT COUNT(*) FROM schedule_API_tbl WHERE DATE(date) = ?) AS schedule_api_count
+    FROM calls_tbl
+  `;
 
   try {
-    const result = await db.getAllAsync(query, [currentDate, currentDate]);
-    console.log(
-      result,
-      "resultresultresultresultresultresultresultresultresultresult"
-    );
+    const result = await db.getAllAsync(query, [currentDate]);
     return result as DailyChartData[];
   } catch (error) {
     console.error("Error fetching data for getCallsLocalDb:", error);

@@ -150,41 +150,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           },
         }));
 
-        // const dailyPlottingCount = parseInt(
-        //   transformedData[0].daily.plottingCount.toString(),
-        //   10
-        // );
-        // const dailyCallsCount = parseInt(
-        //   transformedData[0].daily.callsCount.toString(),
-        //   10
-        // );
-
-        const monthlyPlottingCount = parseInt(
-          transformedData[0].monthly.plottingCount.toString(),
-          10
-        );
-        const monthlyCallsCount = parseInt(
-          transformedData[0].monthly.callsCount.toString(),
-          10
-        );
-        const monthlyTargetCount = transformedData[0].monthly.targetCount;
-
-        const yearlyPlottingCount = parseInt(
-          transformedData[0].yearly.plottingCount.toString(),
-          10
-        );
-        const yearlyCallsCount = parseInt(
-          transformedData[0].yearly.callsCount.toString(),
-          10
-        );
-        const yearlyTargetCount = transformedData[0].yearly.targetCount;
-
-        const ytdPlottingCount = transformedData[0].ytd.plottingCount;
-        const ytdCallsCount = transformedData[0].ytd.callsCount;
-        const ytdTargetCount = transformedData[0].ytd.targetCount;
-
         const dailyCompData: DailyChartData[] = await getDailyChartsData();
-
         let dailyPlottingCount = parseInt(
           dailyCompData[0].schedule_api_count.toString(),
           10
@@ -199,8 +165,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         //   100;
         // const remainingPercentage = 100 - completedPercentage;
 
-        dailyPlottingCount = 20;
-        dailyCallsCount = 10;
+        // dailyPlottingCount = 20;
+        // dailyCallsCount = 10;
 
         dailyCallsCount = dailyCallsCount < 15 ? dailyCallsCount : 15;
 
@@ -211,6 +177,28 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
           { value: completedPercentage, color: "#046E37" },
           { value: remainingPercentage, color: "lightgray" },
         ];
+
+        const monthlyPlottingCount = parseInt(
+          transformedData[0].monthly.plottingCount.toString(),
+          10
+        );
+        const monthlyCallsCount =
+          parseInt(transformedData[0].monthly.callsCount.toString(), 10) +
+          dailyCallsCount;
+        const monthlyTargetCount = transformedData[0].monthly.targetCount;
+
+        const yearlyPlottingCount = parseInt(
+          transformedData[0].yearly.plottingCount.toString(),
+          10
+        );
+        const yearlyCallsCount =
+          parseInt(transformedData[0].yearly.callsCount.toString(), 10) +
+          dailyCallsCount;
+        const yearlyTargetCount = transformedData[0].yearly.targetCount;
+
+        const ytdPlottingCount = transformedData[0].ytd.plottingCount;
+        const ytdCallsCount = transformedData[0].ytd.callsCount;
+        const ytdTargetCount = transformedData[0].ytd.targetCount;
 
         setDailyTargetVal(15);
         setDailyCallsVal(dailyCallsCount);

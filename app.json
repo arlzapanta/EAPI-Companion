@@ -2,13 +2,14 @@
   "expo": {
     "name": "EAPI-Companion",
     "slug": "EAPI-Companion",
-    "version": "1.0.0",
+    "version": "1.3.0",
     "orientation": "landscape",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/test-logo.png",
-      "resizeMode": "contain",
+      "resizeMode": "cover",
       "backgroundColor": "#ffffff"
     },
     "ios": {
@@ -34,7 +35,15 @@
           "initialOrientation": "landscape"
         }
       ],
-      ["expo-build-properties", { "android": { "usesCleartextTraffic": true } }]
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      "expo-sqlite"
     ],
     "extra": {
       "eas": {

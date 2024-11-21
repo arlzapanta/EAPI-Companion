@@ -542,10 +542,10 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       aspectRatio: 10 / 6,
     } as ImageStyle,
     signImage: {
-      marginVertical: 15,
+      left: -100,
       width: "100%",
       height: "auto",
-      aspectRatio: 15 / 5,
+      aspectRatio: 16 / 9,
     } as ImageStyle,
     thumbnailImage: {
       width: 400,

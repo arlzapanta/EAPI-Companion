@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   View,
   PanResponder,
@@ -9,7 +9,7 @@ import {
   Modal,
   Text,
 } from "react-native";
-import ViewShot, { captureRef } from "react-native-view-shot";
+import { captureRef } from "react-native-view-shot";
 import Svg, { Path } from "react-native-svg";
 import { getLocation } from "../utils/currentLocation";
 import { updateCallSignature } from "../utils/quickCallUtil";
@@ -18,8 +18,6 @@ import Loading from "./Loading";
 import { getBase64StringFormat } from "../utils/commonUtil";
 import { formatTimeHoursMinutes } from "../utils/dateUtils";
 import { customToast } from "../utils/customToast";
-import Canvas, { CanvasRenderingContext2D } from "react-native-canvas";
-
 const dynamicStyle = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
@@ -34,64 +32,8 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   );
   const [isModalVisible, setIsModalVisible] = useState(false);
   const viewRef = useRef<View>(null);
-  const canvasRef = useRef<Canvas>(null);
-
-  const drawShape = async () => {
-    if (canvasRef.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-
-      // Set the canvas size
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-
-      // Clear the canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Set styles
-      ctx.strokeStyle = "black"; // Line color
-      ctx.lineWidth = 2; // Line width
-
-      // Draw the paths
-      ctx.beginPath();
-      paths.forEach((path) => {
-        path.forEach((point, index) => {
-          if (index === 0) {
-            ctx.moveTo(point.x, point.y); // Move to the start of the path
-          } else {
-            ctx.lineTo(point.x, point.y); // Draw a line to the next point
-          }
-        });
-      });
-      ctx.stroke();
-
-      // Generate Base64 string
-      const base64 = await canvas.toDataURL("image/png");
-      const base64WithoutPrefix = base64.split(",")[1];
-
-      const loc = await getLocation();
-      try {
-        if (callId !== 12340000) {
-          await updateCallSignature(
-            callId,
-            base64WithoutPrefix,
-            loc,
-            attemptCount,
-            callStartTime,
-            callEndTime ? callEndTime : formatTimeHoursMinutes(new Date())
-          );
-        }
-        onSignatureUpdate(base64WithoutPrefix, loc, attemptCount);
-        setSignature(base64WithoutPrefix);
-        console.log(signature, "signature daw");
-      } catch (error) {
-        console.error("Error updating signature:", error);
-      }
-    }
-  };
-
   const canvasWidth = width - 40;
-  const canvasHeight = 600;
+  const canvasHeight = 300;
   const [attemptCount, setAttemptCount] = useState<number>(0);
 
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
@@ -170,57 +112,37 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
       .join(" ");
   };
 
-  // const captureSignature = async () => {
-  //   console.log(paths, "panResponderpanResponder");
-  //   if (viewRef.current && paths.length > 0) {
-  //     stopTimer();
-  //     setIsSignatureLoading(true);
-  //     try {
-
-  //       // const uri = await captureRef(viewRef.current, {
-  //       //   format: "png",
-  //       //   quality: 1.0,
-  //       //   result: "base64",
-  //       // });
-
-  //       // const base64Signature = `${uri}`;
-  //       // setSignature(base64Signature);
-
-  //       const loc = await getLocation();
-  //       try {
-  //         if (callId !== 12340000) {
-  //           // await updateCallSignature(
-  //           //   callId,
-  //           //   uri,
-  //           //   loc,
-  //           //   attemptCount,
-  //           //   callStartTime,
-  //           //   callEndTime ? callEndTime : formatTimeHoursMinutes(new Date())
-  //           // );
-  //         }
-  //         // onSignatureUpdate(base64Signature, loc, attemptCount);
-  //       } catch (error) {
-  //         console.error("Error updating signature:", error);
-  //       }
-  //     } catch (error) {
-  //       console.error("Error capturing the view:", error);
-  //     }
-  //   } else {
-  //     customToast("Please sign first");
-  //   }
-  // };
-
   const captureSignature = async () => {
-    if (paths.length > 0) {
+    if (viewRef.current && paths.length > 0) {
       stopTimer();
       setIsSignatureLoading(true);
       try {
-        await drawShape();
-        customToast("Signature captured successfully");
+        const uri = await captureRef(viewRef.current, {
+          format: "png",
+          quality: 1.0,
+          result: "base64",
+        });
+        const base64Signature = `${uri}`;
+        setSignature(base64Signature);
+
+        const loc = await getLocation();
+        try {
+          if (callId !== 12340000) {
+            await updateCallSignature(
+              callId,
+              uri,
+              loc,
+              attemptCount,
+              callStartTime,
+              callEndTime ? callEndTime : formatTimeHoursMinutes(new Date())
+            );
+          }
+          onSignatureUpdate(base64Signature, loc, attemptCount);
+        } catch (error) {
+          console.error("Error updating signature:", error);
+        }
       } catch (error) {
-        console.error("Error capturing the signature:", error);
-      } finally {
-        setIsSignatureLoading(false);
+        console.error("Error capturing the view:", error);
       }
     } else {
       customToast("Please sign first");
@@ -243,7 +165,6 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
         <View style={styles.modalContainer}>
           <View
             ref={viewRef}
-            collapsable={false}
             style={[
               styles.canvas,
               { width: canvasWidth, height: canvasHeight },
@@ -264,17 +185,6 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
               ))}
             </Svg>
           </View>
-
-          <Canvas
-            ref={canvasRef}
-            style={{
-              display: "none",
-              width: canvasWidth,
-              height: canvasHeight,
-              backgroundColor: "#FFF",
-              borderWidth: 1,
-            }}
-          />
           <View style={dynamicStyle.centerItems}>
             <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
             <SpacerH size={30} />
@@ -303,7 +213,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
         </View>
       </Modal>
 
-      {/* <Modal
+      <Modal
         visible={signature !== null}
         animationType="slide"
         transparent={true}
@@ -315,7 +225,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
           <SpacerH size={30} />
           {isSignatureLoading ? <Loading /> : null}
         </View>
-      </Modal> */}
+      </Modal>
     </View>
   );
 };
