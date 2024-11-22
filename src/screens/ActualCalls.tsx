@@ -338,7 +338,7 @@ const ActualCalls = () => {
                                   selectedCall.photo
                                 }`,
                               }}
-                              style={styles1.photo}
+                              style={[dynamicStyles.image, { margin: 20 }]}
                             />
                           )}
                         </View>
@@ -352,7 +352,10 @@ const ActualCalls = () => {
                                     selectedCall.signature
                                   }`,
                                 }}
-                                style={styles1.signature}
+                                style={[
+                                  dynamicStyles.signImage,
+                                  { margin: 20 },
+                                ]}
                               />
                             </>
                           )}

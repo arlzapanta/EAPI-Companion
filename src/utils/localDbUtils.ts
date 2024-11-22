@@ -1815,15 +1815,14 @@ export const getDailyChartsData = async (): Promise<DailyChartData[]> => {
 
   const currentDate = await getCurrentDatePH();
   const query = `
-  SELECT 
-    COUNT(*) AS calls_count,
-    (SELECT COUNT(*) FROM schedule_API_tbl WHERE DATE(date) = ?) AS schedule_api_count
-  FROM calls_tbl
-  WHERE DATE(created_at) = ?
-`;
+  SELECT
+      COUNT(*) AS calls_count,
+      (SELECT COUNT(*) FROM schedule_API_tbl WHERE DATE(date) = ?) AS schedule_api_count
+    FROM calls_tbl
+  `;
 
   try {
-    const result = await db.getAllAsync(query, [currentDate, currentDate]);
+    const result = await db.getAllAsync(query, [currentDate]);
     return result as DailyChartData[];
   } catch (error) {
     console.error("Error fetching data for getCallsLocalDb:", error);
@@ -1980,8 +1979,10 @@ export const getSchedDatesByDocId = async ({
 
   try {
     const checkDocData = `SELECT date FROM schedule_API_tbl WHERE doctors_id = ?`;
+    const checkDocReqData = `SELECT date_to as date FROM reschedule_req_tbl WHERE doctors_id = ?`;
     const result = await db.getAllAsync(checkDocData, [doctors_id]);
-    return result;
+    const result1 = await db.getAllAsync(checkDocReqData, [doctors_id]);
+    return [...result, ...result1];
   } catch (error) {
     console.error("Error getSchedDatesByDocId records :", error);
   } finally {

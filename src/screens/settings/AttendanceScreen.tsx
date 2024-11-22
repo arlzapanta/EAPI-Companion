@@ -19,6 +19,7 @@ import {
   saveCallsAPILocalDb,
   dropLocalTable,
   dropLocalTables,
+  getDatesAndTypeForCalendarView,
 } from "../../utils/localDbUtils";
 import {
   apiTimeIn,
@@ -84,7 +85,8 @@ const Attendance: React.FC = () => {
   const [selfieVal, setSelfieVal] = useState<string>("");
   const [selfieLoc, setSelfieLoc] = useState<string>("");
 
-  const { detailersRecord, setDetailersRecord } = useDataContext();
+  const { detailersRecord, setDetailersRecord, setCalendarData } =
+    useDataContext();
   const { refreshSchedData } = useRefreshFetchDataContext();
 
   const handleUpdateDetailers = (newDetailersData: DetailersRecord[]) => {
@@ -360,6 +362,10 @@ const Attendance: React.FC = () => {
             text: "Saving : Attendance logs",
           });
           await fetchAttendanceData();
+          const getDates = await getDatesAndTypeForCalendarView();
+          if (getDates && Array.isArray(getDates)) {
+            setCalendarData({ data: getDates });
+          }
         }
       } else {
         customToast("Already timed out, please contact admin [time out api]");

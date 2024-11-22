@@ -1,11 +1,11 @@
 import axios from "axios";
 import { API_URL_ENV } from "@env";
 import {
-  deleteCallsTodayLocalDb,
   deleteDoctorsTodayLocalDb,
   dropLocalTable,
   dropLocalTables,
   getCallsTodayLocalDb,
+  getProductRecordsLocalDb,
   getRescheduleRequestRecordsLocalDb,
   getUpdatedDoctorRecordsLocalDb,
   saveCallsAPILocalDb,
@@ -19,7 +19,7 @@ import {
   updateActualCallsToDone,
 } from "../utils/localDbUtils";
 import { formatDateYMD, getCurrentDatePH } from "./dateUtils";
-import { getLocation, getLocationAttendance } from "../utils/currentLocation";
+import { getLocationAttendance } from "../utils/currentLocation";
 import * as SQLite from "expo-sqlite";
 import {
   getPostCallNotesLocalDb,
@@ -106,7 +106,6 @@ export const apiTimeOut = async (user: User) => {
   }
 };
 
-// sync calls from local to api
 export const syncUser = async (user: User): Promise<any> => {
   try {
     let recordsToSync: ApiPayload[] = [];
@@ -163,10 +162,6 @@ export const syncUser = async (user: User): Promise<any> => {
         "pre_call_notes_tbl",
         "post_call_notes_tbl",
         "chart_data_tbl",
-        // "calls_tbl",
-        // "reschedule_history_tbl",
-        // "user_sync_history_tbl",
-        // "user_attendance_tbl",
       ]);
     }
 
@@ -232,9 +227,6 @@ export const syncUserMid = async (user: User): Promise<any> => {
     });
 
     if (response.data.isProceed) {
-      // await deleteCallsTodayLocalDb();
-      // await dropLocalTable("calls_tbl");`
-      // CONVERT ALL ACTUAL CALLS TO DONE == 1
       await updateActualCallsToDone();
     }
 
@@ -302,13 +294,12 @@ export const doctorRecordsSync = async (user: User): Promise<any> => {
   }
 };
 
-// export const syncProducts = async (offsetVal: number): Promise<string> => {
 export const syncProducts = async () => {
   try {
     // TODO: this is static for now but need to make it dynamically depends on the # of products from API config table
     await dropLocalTable("products_tbl");
     const totalProd = 110;
-    for (let index = 0; index < totalProd; index += 2) {
+    for (let index = 0; index < totalProd; index += 5) {
       console.log(index, "index asdasd");
       const responseDoc = await axios.post(
         `${API_URL_ENV}/getAllProductDetailers`,
@@ -326,22 +317,6 @@ export const syncProducts = async () => {
         await saveProductsLocalDb(responseDoc.data.data);
       }
     }
-
-    // const responseDoc = await axios.post(
-    //   `${API_URL_ENV}/getAllProductDetailers`,
-    //   {
-    //     offset: offsetVal,
-    //   },
-    //   {
-    //     headers: {
-    //       "Content-Type": "application/json",
-    //     },
-    //   }
-    // );
-    // if (responseDoc.data.isProceed) {
-    //   await saveProductsLocalDb(responseDoc.data.data);
-    // }
-    // return offsetVal.toString();
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const { response, request, message } = error;
@@ -413,7 +388,6 @@ export const requestRecordSync = async (user: User): Promise<any> => {
   }
 };
 
-// get schedules
 export const getSChedulesAPI = async (user: User): Promise<any> => {
   try {
     const { sales_portal_id } = user;
@@ -457,7 +431,6 @@ export const getSChedulesAPI = async (user: User): Promise<any> => {
   }
 };
 
-// get calls from server
 export const getCallsAPI = async (user: User): Promise<any> => {
   const now = await getCurrentDatePH();
   try {
@@ -489,7 +462,6 @@ export const getCallsAPI = async (user: User): Promise<any> => {
   }
 };
 
-// get calls from server (weekly)
 export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
   const now = await getCurrentDatePH();
   try {

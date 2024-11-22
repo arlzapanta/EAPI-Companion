@@ -342,11 +342,15 @@ export const getDateRangeGTToday = (selectedDate: string) => {
   return monthDays;
 };
 
-export const isWithinWeekOrAdvance = (dateStr: string): string | null => {
+export const isWithinWeekOrAdvance = (
+  dateTo: string,
+  dateFrom: string
+): string | null => {
   const today = new Date();
-  const date = new Date(dateStr);
+  const dateToVal = new Date(dateTo);
+  const dateFromVal = new Date(dateFrom);
 
-  if (date <= today) {
+  if (dateToVal <= today) {
     return null;
   }
 
@@ -356,10 +360,14 @@ export const isWithinWeekOrAdvance = (dateStr: string): string | null => {
   const endOfWeek = new Date(today);
   endOfWeek.setDate(today.getDate() + (6 - today.getDay()));
 
-  if (date >= startOfWeek && date <= endOfWeek) {
-    return "Makeup";
-  } else {
+  if (
+    dateToVal >= startOfWeek &&
+    dateToVal <= endOfWeek &&
+    dateFromVal > today
+  ) {
     return "Advance";
+  } else {
+    return "Makeup";
   }
 };
 
