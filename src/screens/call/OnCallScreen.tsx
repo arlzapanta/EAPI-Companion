@@ -5,22 +5,19 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Button,
   ScrollView,
   Image,
 } from "react-native";
-import { RouteProp, useNavigation } from "@react-navigation/native";
+import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Icon from "react-native-vector-icons/Ionicons";
 import { RootStackParamList } from "../../type/navigation";
 import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
 import { saveCallsDoneFromSchedules } from "../../utils/localDbUtils";
-import Detailers from "../modals/DetailersOnCallModal";
+import Octicons from "@expo/vector-icons/Octicons";
 import {
-  formatDate,
   formatTimeHoursMinutes,
   getCurrentDatePH,
-  getFormattedDateToday,
 } from "../../utils/dateUtils";
 import SignatureCapture from "../../components/SignatureCapture";
 import { useImagePicker } from "../../hook/useImagePicker";
@@ -30,7 +27,6 @@ import {
   getBase64StringFormat,
   showConfirmAlert,
 } from "../../utils/commonUtil";
-import DetailersOnCallModal from "../modals/DetailersOnCallModal";
 import Entypo from "@expo/vector-icons/Entypo";
 import { getStyleUtil } from "../../utils/styleUtil";
 import ProductMultiViewModal from "../modals/ProductMultiViewModal";
@@ -235,9 +231,17 @@ const OnCallScreen: React.FC<Props> = ({ route, navigation }) => {
           )}
           {!imageBase64 ? (
             <TouchableOpacity
-              style={dynamicStyles.buttonContainer1}
+              style={[
+                dynamicStyles.takePhotoButton,
+                dynamicStyles.mainBgColor,
+                dynamicStyles.rowItem,
+                { justifyContent: "center" },
+              ]}
               onPress={handleImagePicker}>
-              <Text style={dynamicStyles.buttonText}>Take a photo</Text>
+              <Octicons name="device-camera" size={30} color="white" />
+              <Text style={[dynamicStyles.buttonText, { marginLeft: 10 }]}>
+                Take a photo
+              </Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.imageContainer}>

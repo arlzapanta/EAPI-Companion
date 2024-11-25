@@ -45,6 +45,7 @@ import {
   showConfirmAlert,
 } from "../../utils/commonUtil";
 import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
+import LoadingSub from "../../components/LoadingSub";
 const dynamicStyles = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
@@ -60,11 +61,23 @@ const QuickCall = () => {
   const [callData, setCallData] = useState<Call[]>([]);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [selectedCallIdValue, setSelectedCallIdValue] = useState<number>(0);
+  const [isInternalQuickLoading, setIsInternalQuickLoading] =
+    useState<boolean>(false);
+  const [cardActiveId, setSelectedCardId] = useState<string>("");
   const [doctorScheduleList, setDoctorScheduleList] = useState<
     ScheduleAPIRecord[]
   >([]);
   const [selectedDoctor, setSelectedDoctor] =
-    useState<ScheduleAPIRecord | null>(null);
+    useState<ScheduleAPIRecord | null>({
+      id: "",
+      address: "",
+      date: "",
+      doctors_id: "",
+      full_name: "",
+      municipality_city: "",
+      province: "",
+      schedule_id: "",
+    });
 
   const fetchCallsData = async () => {
     try {
@@ -119,8 +132,11 @@ const QuickCall = () => {
   });
 
   const handleCallClick = (call: Call) => {
+    setIsInternalQuickLoading(true);
+    setSelectedCardId(call.id.toString());
     setSelectedCall(call);
     setSelectedCallIdValue(call.id);
+    setTimeout(() => setIsInternalQuickLoading(false), 200);
   };
 
   const handleAddCall = async () => {
@@ -149,6 +165,7 @@ const QuickCall = () => {
   };
 
   const handleRemoveCall = async (callId: number) => {
+    setSelectedCardId("");
     Alert.alert(
       "Confirm Removal",
       "Are you sure you want to remove this call?",
@@ -187,9 +204,19 @@ const QuickCall = () => {
   const CallItem = ({ call }: { call: Call }) => (
     <View style={styles.callItemContainer}>
       <TouchableOpacity
-        onPress={() => handleCallClick(call)}
-        style={styles.callItem}>
-        <Text style={styles.callText}>
+        onPress={() => {
+          handleCallClick(call);
+          setIsInternalQuickLoading(true);
+        }}
+        style={[
+          styles.callItem,
+          cardActiveId === call.id.toString() && styles.callItemActive,
+        ]}>
+        <Text
+          style={[
+            styles.callText,
+            cardActiveId === call.id.toString() && styles.callTextActive,
+          ]}>
           {!call.notes ? `QuickID ${call.id}` : call.notes}
         </Text>
       </TouchableOpacity>
@@ -274,6 +301,7 @@ const QuickCall = () => {
         );
         if (result == "Success") {
           await removeCallFromLocalDb(call.id);
+          await fetchDoctorSchedules();
           await fetchCallsData();
         }
       } else {
@@ -300,21 +328,21 @@ const QuickCall = () => {
               <Text style={styles.updateButtonText}>Save Note</Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.dropdownContainer}>
+          <View style={[styles.dropdownContainer]}>
             <Text style={styles.signatureLabel}>Select doctor</Text>
             <View style={styles.pickerContainer}>
               <Picker
-                style={styles.picker}
+                style={[dynamicStyles.picker]}
                 selectedValue={selectedDoctor}
                 onValueChange={(itemValue: ScheduleAPIRecord | null) => {
-                  setSelectedDoctor(null);
+                  setSelectedDoctor(itemValue);
                   if (itemValue !== selectedDoctor) {
                     setSelectedDoctor(itemValue);
                     if (itemValue && itemValue.date) {
-                      console.log(selectedDoctor);
                     }
                   } else {
                     if (itemValue && itemValue.date) {
+                      setSelectedDoctor(itemValue);
                     }
                   }
                 }}>
@@ -338,12 +366,8 @@ const QuickCall = () => {
                   ))}
               </Picker>
             </View>
-            {/* <TouchableOpacity
-              style={styles.saveButton}
-              onLongPress={handleSaveQuickCall}>
-              <Text style={styles.buttonText}>Save (hold)</Text>
-            </TouchableOpacity> */}
-
+          </View>
+          <View style={dynamicStyles.centerItems}>
             <TouchableOpacity
               onPress={
                 call.signature || call.photo
@@ -352,11 +376,11 @@ const QuickCall = () => {
               }
               disabled={!(call.signature || call.photo)}
               style={[
-                styles.saveButton,
+                dynamicStyles.buttonContainer,
                 !(call.signature || call.photo) &&
                   dynamicStyles.buttonContainerDisabled,
               ]}>
-              <View style={dynamicStyles.floatingButton}>
+              <View style={dynamicStyles.row}>
                 <Icon name="exit" size={24} color="#fff" />
                 <Text style={dynamicStyles.buttonText}>Save</Text>
               </View>
@@ -365,10 +389,17 @@ const QuickCall = () => {
           {!call.photo ? (
             <>
               <TouchableOpacity
-                style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
+                style={[
+                  dynamicStyles.buttonContainer,
+                  dynamicStyles.mainBgColor,
+                  dynamicStyles.rowItem,
+                  { justifyContent: "center" },
+                ]}
                 onPress={handleImagePicker}>
-                <Octicons name="device-camera" size={20} color="white" />
-                <Text style={styles.buttonText}>Take a photo</Text>
+                <Octicons name="device-camera" size={30} color="white" />
+                <Text style={[dynamicStyles.buttonText, { marginLeft: 10 }]}>
+                  Take a photo
+                </Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -376,15 +407,18 @@ const QuickCall = () => {
               <Text style={styles.signatureLabel}>Photo Capture</Text>
               <Image
                 source={{ uri: `${getBase64StringFormat()}${call.photo}` }}
-                style={styles.image}
+                style={dynamicStyles.image}
               />
             </View>
           )}
           {call.signature ? (
-            <Image
-              source={{ uri: `${getBase64StringFormat()}${call.signature}` }}
-              style={styles.signImage}
-            />
+            <View style={[styles.imageContainer, { marginTop: 20 }]}>
+              <Text style={styles.signatureLabel}>Signature</Text>
+              <Image
+                source={{ uri: `${getBase64StringFormat()}${call.signature}` }}
+                style={[dynamicStyles.signImage]}
+              />
+            </View>
           ) : (
             <SignatureCapture
               callId={call.id}
@@ -425,11 +459,13 @@ const QuickCall = () => {
           </View>
           <View style={dynamicStyles.column2}>
             <View style={dynamicStyles.card2Col}>
-              {selectedCall ? (
+              {selectedCall && !isInternalQuickLoading ? (
                 <CallDetails
                   call={selectedCall}
                   onSignatureUpdate={handleSignatureUpdate}
                 />
+              ) : isInternalQuickLoading ? (
+                <LoadingSub />
               ) : (
                 <NoCallSelected />
               )}
@@ -468,16 +504,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 5,
   },
-  callItem: {
-    padding: 12,
-    borderWidth: 1,
-    borderColor: "#e9ecef",
-    backgroundColor: "#ffffff",
-    borderRadius: 8,
-    elevation: 1,
-    marginVertical: 5,
-    width: "80%",
-  },
   signImage: {
     width: "100%",
     height: 200,
@@ -507,9 +533,34 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 5,
   },
+  callItem: {
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    elevation: 1,
+    marginVertical: 5,
+    width: "80%",
+  },
   callText: {
     fontSize: 14,
     color: "black",
+  },
+  callItemActive: {
+    padding: 12,
+    borderWidth: 3,
+    borderColor: "green",
+    backgroundColor: "#ffffff",
+    borderRadius: 8,
+    elevation: 1,
+    marginVertical: 5,
+    width: "80%",
+  },
+  callTextActive: {
+    fontSize: 14,
+    fontWeight: 700,
+    color: "green",
   },
   containerNoCallData: {
     flex: 1,
@@ -625,7 +676,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   dropdownContainer: {
-    width: 400,
     padding: 10,
   },
   saveButton: {
@@ -635,6 +685,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginTop: 10,
+  },
+  saveButtonQuickCall: {
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#046E37",
+    borderRadius: 5,
   },
   pickerContainer: {
     marginVertical: 10,

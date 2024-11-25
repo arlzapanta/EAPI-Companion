@@ -44,11 +44,39 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  const [selectedDocId, setSelectedDocId] = useState<string>("");
+  const [selectedProdIdVal, setSelectedProdIdVal] = useState<string>("");
+
   const { authState } = useAuth();
   const dynamicStyles = getStyleUtil({});
   const [currentDate, setCurrentDate] = useState("");
   const [doctorList, setDoctorList] = useState<DoctorRecord[]>([]);
   const [productList, setProductList] = useState<ProductWoDetailsRecord[]>([]);
+
+  const [searchTextDoc, setSearchTextDoc] = useState("");
+  const [filteredDoctors, setFilteredDoctors] = useState(doctorList);
+  const handleSearchChangeDoc = (text: string) => {
+    setSearchTextDoc(text.toLowerCase());
+    const filtered = doctorList.filter((doc) => {
+      const searchString =
+        `${doc.first_name} ${doc.last_name} ${doc.specialization}`.toLowerCase();
+      return searchString.includes(text.toLowerCase());
+    });
+    setFilteredDoctors(filtered);
+  };
+
+  const [searchTextProd, setSearchTextProd] = useState("");
+  const [filteredProd, setFilteredProd] = useState(productList);
+  const handleSearchChangeProd = (text: string) => {
+    setSearchTextProd(text.toLowerCase());
+    const filteredProd = productList.filter((prod) => {
+      const searchString =
+        `${prod.item_code} ${prod.item_description}`.toLowerCase();
+      return searchString.includes(text.toLowerCase());
+    });
+    setFilteredProd(filteredProd);
+  };
+
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorRecord | null>(
     null
   );
@@ -178,12 +206,18 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   };
 
   const handleDocClick = (doc: DoctorRecord) => {
+    setSelectedProduct(null);
+    setSelectedDocId(doc.doctors_id);
+    setSelectedProdIdVal("");
     setSelectedDoctor(doc);
     setIsInternalDoctorLoading(true);
     setTimeout(() => setIsInternalDoctorLoading(false), 500);
   };
 
   const handleProductClick = (prod: ProductWoDetailsRecord) => {
+    setSelectedDoctor(null);
+    setSelectedProdIdVal(prod.product_id);
+    setSelectedDocId("");
     setSelectedProduct(prod);
     setIsInternalDoctorLoading(true);
     setTimeout(() => setIsInternalDoctorLoading(false), 500);
@@ -418,26 +452,6 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   };
 
   const ProductDetails = ({ prod }: { prod: ProductWoDetailsRecord }) => {
-    // const imageCount = prod.detailer.split(",").length;
-    // let checkImgCount = imageCount <= 4 ? 0.15 : 0.1;
-
-    interface ImageProps {
-      src: string;
-      width: number;
-      height: number;
-    }
-    const [imageWidth, setImageWidth] = useState(0);
-
-    // const handleResize = () => {
-    //   const availableWidth = window.innerWidth;
-    //   const imageCount = prod.detailer.split(",").length;
-    //   const marginPerImage = 10;
-    //   const idealImageWidth = Math.floor(
-    //     (availableWidth - marginPerImage * (imageCount - 1)) / imageCount
-    //   );
-    //   setImageWidth(idealImageWidth);
-    // };
-
     return (
       <ScrollView>
         <View key={prod.id} style={styles.callDetailsContainer}>
@@ -479,20 +493,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
               dynamicStyles.row,
               { margin: 10, justifyContent: "space-around" },
               dynamicStyles.centerItems,
-            ]}>
-            {/* {prod.detailer.split(",").map((base64String, index) => (
-              <Image
-                key={index}
-                source={{ uri: `data:image/jpeg;base64,${base64String}` }}
-                alt={`Image ${index + 1}`}
-                style={{
-                  width: width * checkImgCount,
-                  height: height * checkImgCount,
-                  resizeMode: "cover",
-                }}
-              />
-            ))} */}
-          </View>
+            ]}></View>
         </View>
       </ScrollView>
     );
@@ -532,7 +533,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                 onPress={toggleAccordionDoctors}
                 style={dynamicStyles.accordionButton}>
                 <Text style={dynamicStyles.accordionTitle}>
-                  {accordionExpandedDoctors
+                  {!accordionExpandedDoctors
                     ? `View Doctor List [${doctorList.length}]`
                     : `Hide Doctor List [${doctorList.length}]`}
                 </Text>
@@ -549,21 +550,64 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                 <View style={{ maxHeight: 300 }}>
                   <ScrollView
                     contentContainerStyle={styles.scrollViewContainer}>
-                    {doctorList.length > 0 ? (
-                      doctorList.map((doc) => (
-                        <TouchableOpacity
-                          key={`${doc.doctors_id}`}
-                          onPress={() => handleDocClick(doc)}
-                          style={dynamicStyles.cardItems}>
-                          <Text
-                            style={
-                              styles.callText
-                            }>{`${doc.first_name} ${doc.last_name} - ${doc.specialization}`}</Text>
-                        </TouchableOpacity>
-                      ))
-                    ) : (
-                      <Text>No doctors available</Text>
-                    )}
+                    <View style={dynamicStyles.textInputWithIconContainer}>
+                      <TextInput
+                        placeholder="Search Doctors..."
+                        value={searchTextDoc}
+                        onChangeText={handleSearchChangeDoc}
+                        style={dynamicStyles.searchInput}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setSearchTextDoc("")}
+                        style={dynamicStyles.iconInputContainer}>
+                        <Ionicons
+                          name={"remove-circle"}
+                          size={24}
+                          color="red"
+                        />
+                      </TouchableOpacity>
+                    </View>
+
+                    {filteredDoctors.length > 0
+                      ? filteredDoctors.map((doc) => (
+                          <TouchableOpacity
+                            key={`${doc.doctors_id}`}
+                            onPress={() => handleDocClick(doc)}
+                            style={[
+                              dynamicStyles.cardItems,
+                              selectedDocId === doc.doctors_id &&
+                                dynamicStyles.activeCardItems,
+                            ]}>
+                            <Text
+                              style={[
+                                styles.callText,
+                                selectedDocId === doc.doctors_id &&
+                                  dynamicStyles.activeCardItemsText,
+                              ]}>
+                              {`${doc.first_name} ${doc.last_name} - ${doc.specialization}`}
+                            </Text>
+                          </TouchableOpacity>
+                        ))
+                      : searchTextDoc && <Text>None match your search..</Text>}
+                    {doctorList.length > 0 && !searchTextDoc
+                      ? doctorList.map((doc) => (
+                          <TouchableOpacity
+                            key={`${doc.doctors_id}`}
+                            onPress={() => handleDocClick(doc)}
+                            style={[
+                              dynamicStyles.cardItems,
+                              selectedDocId === doc.doctors_id &&
+                                dynamicStyles.activeCardItems,
+                            ]}>
+                            <Text
+                              style={[
+                                styles.callText,
+                                selectedDocId === doc.doctors_id &&
+                                  dynamicStyles.activeCardItemsText,
+                              ]}>{`${doc.first_name} ${doc.last_name} - ${doc.specialization}`}</Text>
+                          </TouchableOpacity>
+                        ))
+                      : !searchTextDoc && <Text>No doctors available</Text>}
                   </ScrollView>
                 </View>
               )}
@@ -589,24 +633,65 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                 <>
                   <ScrollView
                     contentContainerStyle={styles.scrollViewContainer}>
-                    {productList.length > 0 ? (
-                      productList.map((prod) => (
-                        <TouchableOpacity
-                          key={`${prod.id}${prod.product_id}`}
-                          onPress={() => handleProductClick(prod)}
-                          style={dynamicStyles.cardItems}>
-                          <Text style={styles.callText}>
-                            {prod.item_description}
+                    <View style={dynamicStyles.textInputWithIconContainer}>
+                      <TextInput
+                        placeholder="Search Products..."
+                        value={searchTextProd}
+                        onChangeText={handleSearchChangeProd}
+                        style={dynamicStyles.searchInput}
+                      />
+                      <TouchableOpacity
+                        onPress={() => setSearchTextProd("")}
+                        style={dynamicStyles.iconInputContainer}>
+                        <Ionicons
+                          name={"remove-circle"}
+                          size={24}
+                          color="red"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    {filteredProd.length > 0
+                      ? filteredProd.map((prod) => (
+                          <TouchableOpacity
+                            key={`${prod.id}${prod.product_id}`}
+                            onPress={() => handleProductClick(prod)}
+                            style={[
+                              dynamicStyles.cardItems,
+                              selectedProdIdVal === prod.product_id &&
+                                dynamicStyles.activeCardItems,
+                            ]}>
                             <Text
-                              style={{
-                                color: "#ccc",
-                              }}>{`[${prod.item_code}]`}</Text>
-                          </Text>
-                        </TouchableOpacity>
-                      ))
-                    ) : (
-                      <Text>No Products available</Text>
-                    )}
+                              style={[
+                                styles.callText,
+                                selectedProdIdVal === prod.product_id &&
+                                  dynamicStyles.activeCardItemsText,
+                              ]}>
+                              {`${prod.item_code} ${prod.item_description}`}
+                            </Text>
+                          </TouchableOpacity>
+                        ))
+                      : searchTextProd && <Text>None match your search..</Text>}
+                    {productList.length > 0 && !searchTextProd
+                      ? productList.map((prod) => (
+                          <TouchableOpacity
+                            key={`${prod.id}${prod.product_id}`}
+                            onPress={() => handleProductClick(prod)}
+                            style={[
+                              dynamicStyles.cardItems,
+                              selectedProdIdVal === prod.product_id &&
+                                dynamicStyles.activeCardItems,
+                            ]}>
+                            <Text
+                              style={[
+                                styles.callText,
+                                selectedProdIdVal === prod.product_id &&
+                                  dynamicStyles.activeCardItemsText,
+                              ]}>
+                              {`${prod.item_code} ${prod.item_description}`}
+                            </Text>
+                          </TouchableOpacity>
+                        ))
+                      : !searchTextProd && <Text>No Products available</Text>}
                   </ScrollView>
                 </>
               )}
@@ -622,7 +707,9 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                     <DoctorDetails doc={selectedDoctor} />
                   )}
                   {selectedProduct && !selectedDoctor && (
-                    <ProductDetails prod={selectedProduct} />
+                    <>
+                      <ProductDetails prod={selectedProduct} />
+                    </>
                   )}
                   {!(selectedDoctor || selectedProduct) && <NoDoctorSelected />}
                 </>

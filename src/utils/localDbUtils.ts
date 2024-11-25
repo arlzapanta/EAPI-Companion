@@ -1899,11 +1899,11 @@ export const getAllActualDatesFilter = async (): Promise<ScheduleRecord[]> => {
   });
 
   await db.execAsync(createIfNECalls);
-
-  const query = `SELECT * FROM calls_tbl`;
+  const currentDate = await getCurrentDatePH();
+  const query = `SELECT * FROM calls_tbl WHERE DATE(created_at) != ?`;
 
   try {
-    const result = await db.getAllAsync(query);
+    const result = await db.getAllAsync(query, [currentDate]);
     const existingRows = result as ScheduleRecord[];
     return existingRows;
   } catch (error) {

@@ -19,6 +19,7 @@ import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import { getStyleUtil } from "../utils/styleUtil";
 import QuickCallBottomSheet from "./call/QuickCallBottomSheet";
+import QuickCallLightning from "./call/LightningQuickCall";
 
 const defaultDoctor: DoctorRecord = {
   doctors_id: "",
@@ -144,21 +145,21 @@ const Home = () => {
         ref={refRBSheet}
         height={900}
         closeOnPressBack={true}
-        draggable={true}
+        // draggable={true}
         closeOnPressMask={true}
         customStyles={{
           wrapper: {
             backgroundColor: "rgba(0, 0, 0, .5)",
           },
-          draggableIcon: {
-            backgroundColor: "#046E37",
-          },
+          // draggableIcon: {
+          //   backgroundColor: "#046E37",
+          // },
         }}
         customModalProps={{
           animationType: "slide",
           statusBarTranslucent: true,
         }}>
-        <QuickCallBottomSheet closeSheet={closeSheet} />
+        <QuickCallLightning closeSheet={closeSheet} />
       </RBSheet>
     </View>
   );

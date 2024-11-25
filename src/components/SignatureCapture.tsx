@@ -15,9 +15,11 @@ import { getLocation } from "../utils/currentLocation";
 import { updateCallSignature } from "../utils/quickCallUtil";
 import { getStyleUtil } from "../utils/styleUtil";
 import Loading from "./Loading";
-import { getBase64StringFormat } from "../utils/commonUtil";
+import { getBase64StringFormat, showConfirmAlert } from "../utils/commonUtil";
 import { formatTimeHoursMinutes } from "../utils/dateUtils";
 import { customToast } from "../utils/customToast";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import Ionicons from "@expo/vector-icons/Ionicons";
 const dynamicStyle = getStyleUtil({});
 
 const { width, height } = Dimensions.get("window");
@@ -25,6 +27,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   callId,
   onSignatureUpdate,
 }) => {
+  const [duringScreenshot, setDuringScreenshot] = useState<boolean>(false);
   const [isSignatureLoading, setIsSignatureLoading] = useState<boolean>(false);
   const [signature, setSignature] = useState<string | null>(null);
   const [paths, setPaths] = useState<Array<Array<{ x: number; y: number }>>>(
@@ -33,7 +36,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const viewRef = useRef<View>(null);
   const canvasWidth = width - 40;
-  const canvasHeight = 300;
+  const canvasHeight = 600;
   const [attemptCount, setAttemptCount] = useState<number>(0);
 
   const [intervalId, setIntervalId] = useState<NodeJS.Timeout | null>(null);
@@ -113,6 +116,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   };
 
   const captureSignature = async () => {
+    setDuringScreenshot(true);
     if (viewRef.current && paths.length > 0) {
       stopTimer();
       setIsSignatureLoading(true);
@@ -138,6 +142,7 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
             );
           }
           onSignatureUpdate(base64Signature, loc, attemptCount);
+          setDuringScreenshot(false);
         } catch (error) {
           console.error("Error updating signature:", error);
         }
@@ -152,9 +157,17 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity
-        style={dynamicStyle.buttonContainer1}
+        style={[
+          dynamicStyle.buttonContainer,
+          dynamicStyle.mainBgColor,
+          dynamicStyle.rowItem,
+          { justifyContent: "center" },
+        ]}
         onPress={() => setIsModalVisible(true)}>
-        <Text style={styles.buttonText}>Open Signature Pad</Text>
+        <FontAwesome5 name="signature" size={30} color="white" />
+        <Text style={[dynamicStyle.buttonText, { marginLeft: 10 }]}>
+          Open Signature Pad
+        </Text>
       </TouchableOpacity>
 
       <Modal
@@ -170,6 +183,26 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
               { width: canvasWidth, height: canvasHeight },
             ]}
             {...panResponder.panHandlers}>
+            {!duringScreenshot && (
+              <View style={dynamicStyle.centerItems}>
+                <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
+                <TouchableOpacity
+                  style={[
+                    dynamicStyle.subBgColor,
+                    {
+                      justifyContent: "center",
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      zIndex: 999,
+                      borderRadius: 8,
+                    },
+                  ]}
+                  onPress={clearSignature}>
+                  <Ionicons name="refresh" size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+            )}
+
             <Svg
               width={canvasWidth}
               height={canvasHeight}
@@ -185,30 +218,34 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
               ))}
             </Svg>
           </View>
-          <View style={dynamicStyle.centerItems}>
-            <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
-            <SpacerH size={30} />
-          </View>
-          <View style={[dynamicStyle.trioBtnRow]}>
-            <TouchableOpacity
-              style={[dynamicStyle.buttonContainer1, dynamicStyle.subBgColor]}
-              onPress={clearSignature}>
-              <Text style={dynamicStyle.buttonText}>Clear Signature</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={dynamicStyle.buttonContainer1}
-              onPress={captureSignature}>
-              <Text style={dynamicStyle.buttonText}>Capture Signature</Text>
-            </TouchableOpacity>
-
+          <View style={[dynamicStyle.trioRow]}>
             <TouchableOpacity
               style={[
                 dynamicStyle.buttonContainer1,
-                { backgroundColor: "red" },
+                dynamicStyle.mainBgColor,
+                dynamicStyle.rowItem,
+                { justifyContent: "center" },
               ]}
-              onPress={() => setIsModalVisible(false)}>
-              <Text style={dynamicStyle.buttonText}>Close</Text>
+              onPress={() =>
+                showConfirmAlert(captureSignature, "Signature save")
+              }>
+              <FontAwesome5 name="signature" size={30} color="white" />
+              <Text style={[dynamicStyle.buttonText, { marginLeft: 10 }]}>
+                Save Signature
+              </Text>
             </TouchableOpacity>
+
+            <View
+              style={[
+                dynamicStyle.rowItem,
+                { position: "absolute", bottom: -70, left: -20 },
+              ]}>
+              <TouchableOpacity
+                style={dynamicStyle.buttonCancelContainer}
+                onPress={() => setIsModalVisible(false)}>
+                <Text style={dynamicStyle.buttonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

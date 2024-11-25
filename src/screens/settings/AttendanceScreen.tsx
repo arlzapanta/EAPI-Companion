@@ -21,6 +21,7 @@ import {
   dropLocalTables,
   getDatesAndTypeForCalendarView,
 } from "../../utils/localDbUtils";
+import Octicons from "@expo/vector-icons/Octicons";
 import {
   apiTimeIn,
   apiTimeOut,
@@ -216,19 +217,19 @@ const Attendance: React.FC = () => {
           await getChartData(userInfo);
 
           setLoadingProgressData({
-            progress: 0.4,
-            text: "Fetching data : detailers",
+            progress: 0.5,
+            text: "Checking data : actual calls",
           });
           // const getDetailersRes = await getDetailersData();
           // handleUpdateDetailers(getDetailersRes);
           await getCallsAPI(userInfo);
           setLoadingProgressData({
-            progress: 0.5,
+            progress: 0.7,
             text: "Fetching data : actual calls",
           });
           await getSChedulesAPI(userInfo);
           setLoadingProgressData({
-            progress: 0.7,
+            progress: 0.9,
             text: "Fetching data : schedules",
           });
         } catch (error) {
@@ -482,9 +483,25 @@ const Attendance: React.FC = () => {
 
                     {!selfieVal ? (
                       <TouchableOpacity
-                        style={dynamicStyles.buttonContainer1}
+                        style={[
+                          dynamicStyles.takePhotoButton,
+                          dynamicStyles.mainBgColor,
+                          dynamicStyles.rowItem,
+                          { justifyContent: "center" },
+                        ]}
                         onPress={handleImagePicker}>
-                        <Text style={styles.buttonText1}>Take a photo</Text>
+                        <Octicons
+                          name="device-camera"
+                          size={30}
+                          color="white"
+                        />
+                        <Text
+                          style={[
+                            dynamicStyles.buttonText,
+                            { marginLeft: 10 },
+                          ]}>
+                          Take a photo
+                        </Text>
                       </TouchableOpacity>
                     ) : (
                       <></>

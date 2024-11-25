@@ -57,7 +57,7 @@ export const getCurrentDateTimePH = async (): Promise<string> => {
 };
 
 export const getWeekdaysRange = async () => {
-  const currentMoment = moment(await getCurrentDatePH()).tz("Asia/Manila");
+  const currentMoment = moment(await getCurrentDatePH());
   const monday = currentMoment.clone().startOf("week").add(1, "days");
   const today = currentMoment.format("YYYY-MM-DD");
   const weekdays: string[] = [];
@@ -71,7 +71,7 @@ export const getWeekdaysRange = async () => {
 };
 
 export const getWeekdaysRangeExToday = async () => {
-  const currentMoment = moment(await getCurrentDatePH()).tz("Asia/Manila");
+  const currentMoment = moment(await getCurrentDatePH());
   const monday = currentMoment.clone().startOf("week").add(1, "days");
   const today = currentMoment.format("YYYY-MM-DD");
   const weekdays: string[] = [];
@@ -86,7 +86,7 @@ export const getWeekdaysRangeExToday = async () => {
 };
 
 export const getMonthRangeExToday = async () => {
-  const currentMoment = moment(await getCurrentDatePH()).tz("Asia/Manila");
+  const currentMoment = moment(await getCurrentDatePH());
   const startOfMonth = currentMoment.clone().startOf("month");
   const endToday = currentMoment.clone();
   const monthDays: string[] = [];
@@ -106,9 +106,6 @@ export const isTimeBetween12and1PM = (): boolean => {
   const endTime = moment().hour(13).minute(0).second(0);
 
   const isBetween = currentTime.isBetween(startTime, endTime);
-
-  console.log(isBetween ? "true" : "false");
-
   return isBetween;
 };
 
@@ -202,9 +199,7 @@ export const formatDateYMD = (dateString: string) => {
 };
 
 export const getFormattedDateToday = async () => {
-  console.log(await getCurrentDatePH());
   const currentMoment = moment(await getCurrentDatePH());
-  console.log(currentMoment, "currentMoment getFormattedDateToday");
   const today = currentMoment.format("YYYY-MM-DD");
   return today;
 };

@@ -18,8 +18,12 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     // ***************************************************************************************
     container: {
       flex: 1,
-      paddingTop: width >= 1280 ? width * 0.02 : width * 0.002,
       backgroundColor: currentTheme.containerSubBackgroundColor,
+      paddingTop: width >= 1280 ? width * 0.02 : width * 0.002,
+    } as ViewStyle,
+    containerQuickCall: {
+      flex: 1,
+      paddingTop: width >= 1280 ? width * 0.02 : width * 0.002,
     } as ViewStyle,
     subContainer: {
       flex: 1,
@@ -35,6 +39,13 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     subBgColor: {
       backgroundColor: currentTheme.containerSecondaryBackgroundColor,
     },
+    searchInput: {
+      width: "100%",
+      borderWidth: 1,
+      borderColor: "#ccc",
+      borderRadius: 5,
+      padding: 10,
+    } as TextStyle,
     accordionButton: {
       flexDirection: "row",
       justifyContent: "space-between",
@@ -55,6 +66,15 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       paddingVertical: 10,
       paddingHorizontal: 8,
     } as ViewStyle,
+    textInputWithIconContainer: {
+      flexDirection: "row",
+    } as ViewStyle,
+    iconInputContainer: {
+      position: "absolute",
+      right: 15,
+      top: 12,
+      zIndex: 100,
+    } as ViewStyle,
     columnTitle: {
       fontSize: 24,
       fontWeight: "bold",
@@ -66,12 +86,26 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       color: "#6c757d",
     } as TextStyle,
     buttonContainerDisabled: {
+      alignItems: "center",
+      justifyContent: "center",
       backgroundColor: "lightgray",
       paddingVertical: 10,
       paddingHorizontal: 20,
       borderRadius: 5,
       marginBottom: 10,
       elevation: 5,
+    } as ViewStyle,
+    buttonContainerSave: {
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: currentTheme.containerBackgroundColor,
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 5,
+      marginBottom: 10,
+      elevation: 5,
+      minWidth: 200,
+      maxWidth: 200,
     } as ViewStyle,
     scrollViewContainer: {
       alignItems: "center",
@@ -135,8 +169,12 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     } as ViewStyle,
     trioBtnRow: {
       flexDirection: "row",
-      // justifyContent: "center",
-      justifyContent: "space-around",
+      justifyContent: "center",
+      minWidth: 60,
+    } as ViewStyle,
+    trioRow: {
+      flexDirection: "row",
+      justifyContent: "center",
       minWidth: 60,
     } as ViewStyle,
     buttonContainer1: {
@@ -156,14 +194,23 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       paddingHorizontal: 20,
       borderRadius: 5,
       elevation: 5,
-      maxWidth: 200,
-      minWidth: 200,
+      maxWidth: 100,
+      minWidth: 100,
       marginBottom: 2,
       marginTop: 20,
       alignItems: "center",
     } as ViewStyle,
     buttonSubContainer1: {
       backgroundColor: "#046E37",
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 5,
+      elevation: 5,
+      marginBottom: 2,
+      alignItems: "center",
+    } as ViewStyle,
+    saveNoteButton: {
+      backgroundColor: "black",
       paddingVertical: 10,
       paddingHorizontal: 20,
       borderRadius: 5,
@@ -340,8 +387,17 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       backgroundColor: currentTheme.buttonColor,
       borderRadius: 4,
       alignItems: "center",
-      maxWidth: 450,
       marginTop: 10,
+      minWidth: 300,
+      maxWidth: 300,
+    } as ViewStyle,
+    takePhotoButton: {
+      backgroundColor: "#007BFF",
+      borderRadius: 5,
+      width: 300,
+      alignItems: "center",
+      justifyContent: "center",
+      height: 60,
     } as ViewStyle,
     buttonLogout: {
       width: "100%",
@@ -349,7 +405,7 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       backgroundColor: "#d9534f",
       borderRadius: 4,
       alignItems: "center",
-      maxWidth: 450,
+      maxWidth: 300,
       marginTop: 10,
     } as ViewStyle,
     isLoadingButtonContainer: {
@@ -446,6 +502,16 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       width: "100%",
       padding: 15,
       borderWidth: 1.5,
+      // borderColor: currentTheme.containerBackgroundColor,
+      borderColor: "black",
+      backgroundColor: "#ffffff",
+      borderRadius: 8,
+      marginVertical: 4,
+    } as ViewStyle,
+    activeCardItems: {
+      width: "100%",
+      padding: 15,
+      borderWidth: 6,
       borderColor: currentTheme.containerBackgroundColor,
       backgroundColor: "#ffffff",
       borderRadius: 8,
@@ -463,6 +529,11 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
     cardItemText: {
       fontSize: 16,
       color: "#343a40",
+    } as TextStyle,
+    activeCardItemsText: {
+      fontSize: 16,
+      color: currentTheme.containerBackgroundColor,
+      fontWeight: 900,
     } as TextStyle,
     cardDoneItemText: {
       fontSize: 16,
@@ -535,10 +606,15 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       aspectRatio: 10 / 6,
     } as ImageStyle,
     signImage: {
-      left: -100,
       width: "100%",
       height: "auto",
-      aspectRatio: 16 / 9,
+      aspectRatio: 11 / 5.5,
+    } as ImageStyle,
+    signImageActual: {
+      left: -50,
+      width: "100%",
+      height: "auto",
+      aspectRatio: 11 / 4,
     } as ImageStyle,
     thumbnailImage: {
       width: 400,

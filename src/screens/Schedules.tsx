@@ -73,6 +73,9 @@ const Schedules = () => {
     new Set(scheduleFilterData.map((item) => formatDate(item.date)))
   );
 
+  const [cardActiveId, setCardActiveId] = useState<string>("");
+  const [cardActiveDate, setCardActiveDate] = useState<string>("");
+
   const [selectedDate, setSelectedDate] = useState<string>("");
   const fetchScheduleData = async () => {
     if (authState.user) {
@@ -144,6 +147,8 @@ const Schedules = () => {
   };
 
   const handleScheduleClickToday = (schedule: any) => {
+    setCardActiveId(schedule.id);
+    setCardActiveDate(schedule.date);
     setIsInternalSchedLoading(true);
     try {
       setSelectedScheduleToday(schedule);
@@ -158,6 +163,8 @@ const Schedules = () => {
   };
 
   const handleScheduleClickWeek = (schedule: any) => {
+    setCardActiveId(schedule.id);
+    setCardActiveDate(schedule.date);
     setIsInternalSchedLoading(true);
     try {
       setSelectedScheduleToday(null);
@@ -172,6 +179,8 @@ const Schedules = () => {
   };
 
   const handleScheduleClickFilter = (schedule: any) => {
+    setCardActiveId(schedule.id);
+    setCardActiveDate(schedule.date);
     setIsInternalSchedLoading(true);
     try {
       setSelectedScheduleFilter(schedule);
@@ -185,6 +194,8 @@ const Schedules = () => {
     }
   };
   const handleScheduleClickMakeup = (schedule: any) => {
+    setCardActiveId(schedule.id);
+    setCardActiveDate(schedule.date);
     setIsInternalSchedLoading(true);
     try {
       setSelectedScheduleMakeup(schedule);
@@ -304,8 +315,19 @@ const Schedules = () => {
                               onPress={() =>
                                 handleScheduleClickFilter(scheduleFilter)
                               }
-                              style={dynamicStyles.cardItems}>
-                              <Text style={dynamicStyles.cardItemText}>
+                              style={{
+                                ...(scheduleFilter.done !== "1" &&
+                                  dynamicStyles.cardItems),
+                                ...(cardActiveId === scheduleFilter.id &&
+                                  cardActiveDate === scheduleFilter.date &&
+                                  dynamicStyles.activeCardItems),
+                              }}>
+                              <Text
+                                style={{
+                                  ...(cardActiveId === scheduleFilter.id &&
+                                    cardActiveDate === scheduleFilter.date &&
+                                    dynamicStyles.activeCardItemsText),
+                                }}>
                                 {`${moment(scheduleFilter.date).format(
                                   "MMMM DD, dddd"
                                 )}, `}
@@ -344,8 +366,18 @@ const Schedules = () => {
                       <TouchableOpacity
                         key={schedule.schedule_id}
                         onPress={() => handleScheduleClickToday(schedule)}
-                        style={dynamicStyles.cardItems}>
-                        <Text style={dynamicStyles.cardItemText}>
+                        style={{
+                          ...(schedule.done !== "1" && dynamicStyles.cardItems),
+                          ...(cardActiveId === schedule.id &&
+                            cardActiveDate === schedule.date &&
+                            dynamicStyles.activeCardItems),
+                        }}>
+                        <Text
+                          style={{
+                            ...(cardActiveId === schedule.id &&
+                              cardActiveDate === schedule.date &&
+                              dynamicStyles.activeCardItemsText),
+                          }}>
                           {schedule.full_name}
                           {`${
                             schedule.municipality_city
@@ -376,28 +408,31 @@ const Schedules = () => {
 
                 {accordionWeekExpanded && (
                   <View style={dynamicStyles.accordionContent}>
-                    {scheduleWeekData
-                      .filter(
-                        (record) =>
-                          new Date(record.date) != new Date(currentDate)
-                      )
-                      .map((schedule) => (
-                        <TouchableOpacity
-                          key={schedule.schedule_id}
-                          onPress={() => handleScheduleClickWeek(schedule)}
-                          style={dynamicStyles.cardItems}>
-                          <Text style={dynamicStyles.cardItemText}>
-                            {`${moment(schedule.date).format(
-                              "MMMM DD, dddd"
-                            )}, `}
-                            {`\n${schedule.full_name}, ${
-                              schedule.municipality_city
-                                ? `${schedule.municipality_city}`
-                                : ""
-                            }`}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
+                    {scheduleWeekData.map((schedule) => (
+                      <TouchableOpacity
+                        key={schedule.schedule_id}
+                        onPress={() => handleScheduleClickWeek(schedule)}
+                        style={{
+                          ...(schedule.done !== "1" && dynamicStyles.cardItems),
+                          ...(cardActiveId === schedule.id &&
+                            cardActiveDate === schedule.date &&
+                            dynamicStyles.activeCardItems),
+                        }}>
+                        <Text
+                          style={{
+                            ...(cardActiveId === schedule.id &&
+                              cardActiveDate === schedule.date &&
+                              dynamicStyles.activeCardItemsText),
+                          }}>
+                          {`${moment(schedule.date).format("MMMM DD, dddd")}, `}
+                          {`\n${schedule.full_name}, ${
+                            schedule.municipality_city
+                              ? `${schedule.municipality_city}`
+                              : ""
+                          }`}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                   </View>
                 )}
                 {/* make up data */}
@@ -425,8 +460,18 @@ const Schedules = () => {
                       <TouchableOpacity
                         key={schedule.schedule_id}
                         onPress={() => handleScheduleClickMakeup(schedule)}
-                        style={dynamicStyles.cardItems}>
-                        <Text style={dynamicStyles.cardItemText}>
+                        style={{
+                          ...(schedule.done !== "1" && dynamicStyles.cardItems),
+                          ...(cardActiveId === schedule.id &&
+                            cardActiveDate === schedule.date &&
+                            dynamicStyles.activeCardItems),
+                        }}>
+                        <Text
+                          style={{
+                            ...(cardActiveId === schedule.id &&
+                              cardActiveDate === schedule.date &&
+                              dynamicStyles.activeCardItemsText),
+                          }}>
                           {`${moment(schedule.date).format("MMMM DD, dddd")}, `}
                           {`\n${schedule.full_name}, ${
                             schedule.municipality_city

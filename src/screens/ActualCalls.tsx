@@ -47,6 +47,8 @@ const ActualCalls = () => {
   const [feedback, setFeedback] = useState<string>("");
   const [selectedMood, setSelectedMood] = useState<string>("");
   const [scheduleIdValue, setScheduleIdValue] = useState<string>("");
+  const [cardActiveId, setCardActiveId] = useState<string>("");
+  const [cardActiveDate, setCardActiveDate] = useState<string>("");
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
   const { isActualLoading } = useDataContext();
   const [isInternalActualLoading, setIsInternalActualLoading] =
@@ -65,6 +67,7 @@ const ActualCalls = () => {
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [actualFilterData, setActualFilterData] = useState<any[]>([]);
   const [actualDatesFilterData, setActualDatesFilterData] = useState<any[]>([]);
+  const getDate = getCurrentDatePH();
 
   const fetchFilterSchedule = async (itemValue: string) => {
     try {
@@ -80,9 +83,8 @@ const ActualCalls = () => {
   const fetchActualCallsData = async () => {
     if (authState.user) {
       try {
-        const getDate = await getCurrentDatePH();
-        getCurrentDate(moment(getDate).format("MMMM DD, dddd"));
-        const actualData = await getCallsLocalDb();
+        getCurrentDate(moment(await getDate).format("MMMM DD, dddd"));
+        const actualData = await getCallsTodayLocalDb();
         setCallsDate(actualData);
         // filter
         const filterData = await getAllActualDatesFilter();
@@ -114,6 +116,8 @@ const ActualCalls = () => {
   };
 
   const handleCallClick = async (call: any) => {
+    setCardActiveId(call.id);
+    setCardActiveDate(call.date);
     setIsInternalActualLoading(true);
     try {
       const postCallData = await getPostCallNotesLocalDb(call.schedule_id);
@@ -236,12 +240,27 @@ const ActualCalls = () => {
                               onPress={() => {
                                 handleCallClick(actual);
                               }}
-                              style={dynamicStyles.cardItems}>
-                              <Text style={dynamicStyles.cardItemText}>{`${
-                                actual.doctors_name
-                              } \n${moment(actual.created_at).format(
-                                "MMMM DD YYYY"
-                              )}`}</Text>
+                              style={{
+                                ...(actual.done === "1" &&
+                                  dynamicStyles.cardDoneItems),
+                                ...(actual.done !== "1" &&
+                                  dynamicStyles.cardItems),
+                                ...(cardActiveId === actual.id &&
+                                  cardActiveDate === actual.date &&
+                                  dynamicStyles.activeCardItems),
+                              }}>
+                              <Text
+                                style={{
+                                  ...(actual.done === "1" &&
+                                    dynamicStyles.cardDoneItemText),
+                                  ...(actual.done !== "1" &&
+                                    dynamicStyles.cardItemText),
+                                  ...(cardActiveId === actual.id &&
+                                    cardActiveDate === actual.date &&
+                                    dynamicStyles.activeCardItemsText),
+                                }}>{`${actual.doctors_name} \n${moment(
+                                actual.created_at
+                              ).format("MMMM DD YYYY")}`}</Text>
                             </TouchableOpacity>
                           ))
                         )}
@@ -272,17 +291,22 @@ const ActualCalls = () => {
                       <TouchableOpacity
                         key={call.id}
                         onPress={() => handleCallClick(call)}
-                        style={
-                          call.done != "1"
-                            ? dynamicStyles.cardItems
-                            : dynamicStyles.cardDoneItems
-                        }>
+                        style={{
+                          ...(call.done === "1" && dynamicStyles.cardDoneItems),
+                          ...(call.done !== "1" && dynamicStyles.cardItems),
+                          ...(cardActiveId === call.id &&
+                            dynamicStyles.activeCardItems),
+                        }}>
                         <Text
-                          style={
-                            call.done != "1"
-                              ? dynamicStyles.cardItemText
-                              : dynamicStyles.cardDoneItemText
-                          }>{`${call.doctors_name} \n${moment(
+                          style={{
+                            ...(call.done === "1" &&
+                              dynamicStyles.cardDoneItemText),
+                            ...(call.done !== "1" &&
+                              dynamicStyles.cardItemText),
+                            ...(cardActiveId === call.id &&
+                              cardActiveDate === call.date &&
+                              dynamicStyles.activeCardItemsText),
+                          }}>{`${call.doctors_name} \n${moment(
                           call.created_date
                         ).format("MMMM DD YYYY")}`}</Text>
                       </TouchableOpacity>
@@ -353,8 +377,8 @@ const ActualCalls = () => {
                                   }`,
                                 }}
                                 style={[
-                                  dynamicStyles.signImage,
-                                  { margin: 20 },
+                                  dynamicStyles.signImageActual,
+                                  { marginTop: 25 },
                                 ]}
                               />
                             </>

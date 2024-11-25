@@ -125,7 +125,9 @@ const SharedCallScreen: React.FC<Props> = ({ route, navigation }) => {
           <>
             {call.photo && (
               <TouchableOpacity
-                key={call.id + call.doctors_name + call.schedule_id}
+                key={
+                  call.id + call.doctors_name + call.schedule_id + new Date()
+                }
                 onPress={() =>
                   showConfirmAlert(
                     () => handleSelectCall(call),
