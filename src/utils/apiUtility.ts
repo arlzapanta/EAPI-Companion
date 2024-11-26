@@ -300,7 +300,6 @@ export const syncProducts = async () => {
     await dropLocalTable("products_tbl");
     const totalProd = 110;
     for (let index = 0; index < totalProd; index += 5) {
-      console.log(index, "index asdasd");
       const responseDoc = await axios.post(
         `${API_URL_ENV}/getAllProductDetailers`,
         {
@@ -312,7 +311,6 @@ export const syncProducts = async () => {
           },
         }
       );
-      console.log(responseDoc.data.isProceed, "asdqweqeqwe");
       if (responseDoc.data.isProceed) {
         await saveProductsLocalDb(responseDoc.data.data);
       }

@@ -1,7 +1,6 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
-  Image,
   Text,
   TouchableOpacity,
   Alert,
@@ -15,9 +14,6 @@ import {
   saveUserAttendanceLocalDb,
   getUserAttendanceRecordsLocalDb,
   saveUserSyncHistoryLocalDb,
-  saveSchedulesAPILocalDb,
-  saveCallsAPILocalDb,
-  dropLocalTable,
   dropLocalTables,
   getDatesAndTypeForCalendarView,
 } from "../../utils/localDbUtils";
@@ -28,7 +24,6 @@ import {
   doctorRecordsSync,
   getCallsAPI,
   getChartData,
-  getDetailersData,
   getDoctors,
   getReschedulesData,
   getSChedulesAPI,
@@ -43,7 +38,6 @@ import { getLocation } from "../../utils/currentLocation";
 import { showConfirmAlert } from "../../utils/commonUtil";
 import { AntDesign } from "@expo/vector-icons";
 import { getStyleUtil } from "../../utils/styleUtil";
-import Loading from "../../components/Loading";
 import { customToast } from "../../utils/customToast";
 import { checkPostCallUnsetExist } from "../../utils/callComponentsUtil";
 import { useDataContext } from "../../context/DataContext";
@@ -80,7 +74,6 @@ const Attendance: React.FC = () => {
   const [hasTimedOut, setHasTimedOut] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [statusColor, setStatusColor] = useState<string>("");
-  // added 10-5-24
   const [signatureVal, setSignatureVal] = useState<string>("");
   const [signatureLoc, setSignatureLoc] = useState<string>("");
   const [selfieVal, setSelfieVal] = useState<string>("");
@@ -198,9 +191,6 @@ const Attendance: React.FC = () => {
             "post_call_notes_tbl",
             "chart_data_tbl",
             "calls_tbl",
-            // "reschedule_history_tbl",
-            // "user_sync_history_tbl",
-            // "user_attendance_tbl",
           ]);
 
           setLoading(true);
@@ -220,8 +210,6 @@ const Attendance: React.FC = () => {
             progress: 0.5,
             text: "Checking data : actual calls",
           });
-          // const getDetailersRes = await getDetailersData();
-          // handleUpdateDetailers(getDetailersRes);
           await getCallsAPI(userInfo);
           setLoadingProgressData({
             progress: 0.7,
@@ -243,9 +231,6 @@ const Attendance: React.FC = () => {
             "pre_call_notes_tbl",
             "post_call_notes_tbl",
             "chart_data_tbl",
-            // "reschedule_history_tbl",
-            // "user_sync_history_tbl",
-            // "user_attendance_tbl",
           ]);
           hasError = true;
         }
@@ -439,16 +424,6 @@ const Attendance: React.FC = () => {
                 </Text>
               )}
               <View style={styles.centerItems}>
-                {/* <TouchableOpacity
-                  onPress={() => showConfirmAlert(timeIn, "Time In")}
-                  style={styles.buttonContainer}>
-                  <Text style={styles.buttonText}>Time In</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => showConfirmAlert(timeOut, "Time Out")}
-                  style={styles.buttonContainer}>
-                  <Text style={styles.buttonText}>Time Out</Text>
-                </TouchableOpacity> */}
                 {!hasTimedIn && !loading && (
                   <>
                     <TouchableOpacity
@@ -525,13 +500,6 @@ const Attendance: React.FC = () => {
               <AttendanceTable data={attendanceData} />
             </View>
           </ScrollView>
-          {/* <TouchableOpacity
-            onPress={handleBack}
-            style={dynamicStyles.floatingButtonContainer}>
-            <View style={dynamicStyles.floatingButton}>
-              <AntDesign name="back" size={24} color="white" />
-            </View>
-          </TouchableOpacity> */}
         </>
       )}
     </View>

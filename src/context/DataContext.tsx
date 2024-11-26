@@ -33,6 +33,7 @@ interface DataContextProps<T> {
   yearlyData: chartData[];
   ytdData: chartYtdData[];
   isLoading: boolean;
+  loadingGlobal: LoadingSubRecords;
   isDashboardLoading: boolean;
   isScheduleLoading: boolean;
   isActualLoading: boolean;
@@ -50,6 +51,8 @@ interface DataContextProps<T> {
   setDetailersRecord: (newDetailersRecord: T[]) => void;
   setProductRecord: (newProductRecords: ProductWoDetailsRecord[]) => void;
   setCalendarData: (newCalendarRecord: CalendarProps) => void;
+  setLoadingGlobal: (newLoadingGlobalData: LoadingSubRecords) => void;
+  setIsLoading: (newIsLoadingValue: boolean) => void;
   // coreProductVal: ProductRecord | null | undefined;
   // secProductVal: ProductRecord | null | undefined;
   // remindProductVal: ProductRecord | null | undefined;
@@ -106,7 +109,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [ytdData, setYtdData] = useState<chartYtdData[]>([
     { value: [0, 0, 0] },
   ]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [loadingGlobal, setLoadingGlobal] = useState<LoadingSubRecords>({
+    progress: 0,
+    text: "",
+  });
   const [isDashboardLoading, setIsDashboardLoading] = useState<boolean>(false);
   const { getCurrentDate } = useRefreshFetchDataContext();
   const { refreshSchedData } = useRefreshFetchDataContext();
@@ -388,9 +395,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   useEffect(() => {
     fetchProducts();
   }, []);
-  const [coreProductVal, setCoreProductVal] = useState<ProductRecord>();
-  const [secProductVal, setSecProductVal] = useState<ProductRecord>();
-  const [remindProductVal, setRemindProductVal] = useState<ProductRecord>();
 
   // ADD SCHEDULE DATA HERE
   // ***************************************************************************
@@ -475,6 +479,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         isLoading,
         isDashboardLoading,
         ytdDataMonthValues,
+        loadingGlobal,
+        setIsLoading,
+        setLoadingGlobal,
         // ***************************************************************************
         // DASHBOARD DATA END
         // ***************************************************************************

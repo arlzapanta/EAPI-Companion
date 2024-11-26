@@ -4,15 +4,12 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Animated,
   ScrollView,
-  Button,
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { getStyleUtil } from "../utils/styleUtil";
 import {
   getSchedulesTodayLocalDb,
-  getSchedulesLocalDb,
   getSchedulesWeekLocalDb,
   getSchedulesFilterLocalDb,
   getAllSchedulesFilterLocalDb,
@@ -29,8 +26,8 @@ import { Picker } from "@react-native-picker/picker";
 import LoadingSub from "../components/LoadingSub";
 
 const Schedules = () => {
-  const { isScheduleLoading, detailersRecord } = useDataContext();
-  // todo : detailersRecord
+  const { isScheduleLoading, setLoadingGlobal, setIsLoading } =
+    useDataContext();
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
   useEffect(() => {
     const timer = setTimeout(() => {

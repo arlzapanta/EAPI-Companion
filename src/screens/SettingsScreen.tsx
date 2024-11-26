@@ -22,6 +22,7 @@ import {
   getDoctorsSchedLocalDb,
   getProductRecordsLocalDb,
   insertDummyRecords,
+  saveProductsLocalDb,
   saveUserSyncHistoryLocalDb,
 } from "../utils/localDbUtils";
 import {
@@ -47,6 +48,9 @@ import {
 } from "../utils/callComponentsUtil";
 import LoadingProgressBar from "../components/LoadingProgressbar";
 import { useDataContext } from "../context/DataContext";
+import axios from "axios";
+import { API_URL_ENV } from "@env";
+import * as SQLite from "expo-sqlite";
 
 type SettingsScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -71,7 +75,7 @@ const Settings = () => {
   } | null>(null);
   const dynamicStyle = getStyleUtil({});
   const navigation = useNavigation<SettingsScreenNavigationProp>();
-  const { setProductRecord } = useDataContext();
+  const { setProductRecord, setIsLoading, setLoadingGlobal } = useDataContext();
 
   const handleLogout = () => {
     Alert.alert(
@@ -229,12 +233,6 @@ const Settings = () => {
           text: "fetching products: please wait...",
         });
         await syncProducts();
-
-        // await dropLocalTable("products_tbl");
-        // const totalProd = 110;
-        // for (let index = 0; index < totalProd; index += 2) {
-        //   await syncProducts(index);
-        // }
       } catch (error) {
         msg = "Server Error : Failed to sync products please contact admin.";
         Alert.alert(msg);
@@ -251,6 +249,63 @@ const Settings = () => {
         (await getProductRecordsLocalDb()) as ProductWoDetailsRecord[];
       setProductRecord(productData);
       setSyncProdLoading(false);
+    }
+  };
+
+  const syncProducts = async () => {
+    try {
+      // TODO: this is static for now but need to make it dynamically depends on the # of products from API config table
+      setIsLoading(true);
+      setLoadingGlobal({
+        progress: 0.01,
+        text: `Preparing products... Please dont close the app`,
+      });
+      await dropLocalTable("products_tbl");
+      const totalProd = 110;
+      for (let index = 0; index < totalProd; index += 5) {
+        setLoadingGlobal({
+          progress: index / totalProd,
+          text: `Fetching ${index} out of ${totalProd} products`,
+        });
+        const responseDoc = await axios.post(
+          `${API_URL_ENV}/getAllProductDetailers`,
+          {
+            offset: index,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (responseDoc.data.isProceed) {
+          await saveProductsLocalDb(responseDoc.data.data);
+        } else {
+          setIsLoading(false);
+          setLoadingGlobal({
+            progress: 0,
+            text: "",
+          });
+        }
+      }
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        const { response, request, message } = error;
+        console.error("API syncProducts Error message:", message);
+        console.error("API syncProducts Error response data:", response?.data);
+        console.error(
+          "API syncProducts Error response status:",
+          response?.status
+        );
+        console.error(
+          "API syncProducts Error response headers:",
+          response?.headers
+        );
+        console.error("API syncProducts Error request:", request);
+      } else {
+        console.error("An unexpected error occurred:", error);
+      }
+      throw error;
     }
   };
 

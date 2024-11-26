@@ -66,9 +66,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         throw new Error("Failed to refresh token");
       }
-    } catch (error) {
-      console.log("Token refresh error:", error);
-      await logout();
+    } catch (error: any) {
+      if (axios.isAxiosError(error)) {
+        const { response, request, message } = error;
+        console.error("API refreshToken Error message:", message);
+        console.error("API refreshToken Error response data:", response?.data);
+        console.error(
+          "API refreshToken Error response status:",
+          response?.status
+        );
+        console.error(
+          "API refreshToken Error response headers:",
+          response?.headers
+        );
+        console.error("API refreshToken Error request:", request);
+      } else {
+        console.error("An unexpected error occurred: refreshToken", error);
+      }
+      throw error;
     }
   };
 
@@ -150,11 +165,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return { error: true, msg: "Invalid credentials" };
       }
     } catch (error: any) {
-      console.log("Error during login:", error.message);
-      return {
-        error: true,
-        msg: "No or Intermittent Internet Connection, Please try again",
-      };
+      if (axios.isAxiosError(error)) {
+        const { response, request, message } = error;
+        console.error("API login Error message:", message);
+        console.error("API login Error response data:", response?.data);
+        console.error("API login Error response status:", response?.status);
+        console.error("API login Error response headers:", response?.headers);
+        console.error("API login Error request:", request);
+      } else {
+        console.error("An unexpected error occurred: login", error);
+      }
+      throw error;
     }
   };
 

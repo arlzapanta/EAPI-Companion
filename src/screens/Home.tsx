@@ -1,11 +1,5 @@
 import React, { useState, useRef } from "react";
-import {
-  View,
-  Text,
-  Animated,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { View, Text, Animated, TouchableOpacity } from "react-native";
 import Dashboard from "./Dashboard";
 import SettingsScreen from "./SettingsScreen";
 import Schedules from "./Schedules";
@@ -14,13 +8,12 @@ import QuickCall from "./call/QuickCall";
 import SpecialistTool from "./SpecialistTool";
 import NavLinkComponent from "../components/NavLink";
 import RBSheet from "react-native-raw-bottom-sheet";
-import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 
 import { getStyleUtil } from "../utils/styleUtil";
-import QuickCallBottomSheet from "./call/QuickCallBottomSheet";
+import LoadingProgressBarGlobal from "../components/LoadingProgressbarGlobal";
 import QuickCallLightning from "./call/LightningQuickCall";
-
+import { useDataContext } from "../context/DataContext";
 const defaultDoctor: DoctorRecord = {
   doctors_id: "",
   first_name: "",
@@ -45,6 +38,7 @@ const defaultDoctor: DoctorRecord = {
 };
 
 const Home = () => {
+  const { loadingGlobal, isLoading } = useDataContext();
   const refRBSheet = useRef<RBSheet>(null);
   const [selectedScreen, setSelectedScreen] = useState<
     | "dashboard"
@@ -81,87 +75,92 @@ const Home = () => {
   const closeSheet = () => refRBSheet.current?.close();
 
   return (
-    <View style={dynamicStyles.homeContainer_home}>
-      <View style={dynamicStyles.navContainer_home}>
-        <NavLinkComponent
-          iconName="house-circle-exclamation"
-          onPress={() => setSelectedScreen("dashboard")}
-          active={selectedScreen === "dashboard"}
-          text={"Home"}
-        />
-        <NavLinkComponent
-          iconName="user-gear"
-          onPress={() => setSelectedScreen("settings")}
-          active={selectedScreen === "settings"}
-          text={"Account & Settings"}
-        />
-        <NavLinkComponent
-          iconName="calendar-alt"
-          onPress={() => setSelectedScreen("schedules")}
-          active={selectedScreen === "schedules"}
-          text={"Schedules"}
-        />
-
-        <NavLinkComponent
-          iconName="calendar-check"
-          onPress={() => setSelectedScreen("actualcalls")}
-          active={selectedScreen === "actualcalls"}
-          text={"Actual Calls"}
-        />
-
-        <NavLinkComponent
-          iconName="hospital-user"
-          onPress={() => setSelectedScreen("specialisttool")}
-          active={selectedScreen === "specialisttool"}
-          text={"Specialist Toolkit"}
-        />
-
-        <NavLinkComponent
-          iconName="bolt-lightning"
-          onPress={() => setSelectedScreen("quickcall")}
-          active={selectedScreen === "quickcall"}
-          text={"Quick Call"}
-        />
-      </View>
-      <View style={dynamicStyles.components_container}>{renderContent()}</View>
-      <TouchableOpacity
-        onLongPress={() => {
-          setSelectedScreen("dashboard");
-          openSheet();
-        }}
-        style={dynamicStyles.floatingButtonContainer}>
-        <View style={dynamicStyles.floatingButton}>
-          {/* <MaterialIcons name="add-call" size={24} color="white" /> */}
-          <MaterialCommunityIcons
-            name="lightning-bolt-circle"
-            size={24}
-            color="white"
+    <>
+      {isLoading && <LoadingProgressBarGlobal data={loadingGlobal} />}
+      <View style={dynamicStyles.homeContainer_home}>
+        <View style={dynamicStyles.navContainer_home}>
+          <NavLinkComponent
+            iconName="house-circle-exclamation"
+            onPress={() => setSelectedScreen("dashboard")}
+            active={selectedScreen === "dashboard"}
+            text={"Home"}
           />
-          <Text style={dynamicStyles.textWhite}>QUICK CALL</Text>
-          <Text style={dynamicStyles.textWhite}>[hold]</Text>
+          <NavLinkComponent
+            iconName="user-gear"
+            onPress={() => setSelectedScreen("settings")}
+            active={selectedScreen === "settings"}
+            text={"Account & Settings"}
+          />
+          <NavLinkComponent
+            iconName="calendar-alt"
+            onPress={() => setSelectedScreen("schedules")}
+            active={selectedScreen === "schedules"}
+            text={"Schedules"}
+          />
+
+          <NavLinkComponent
+            iconName="calendar-check"
+            onPress={() => setSelectedScreen("actualcalls")}
+            active={selectedScreen === "actualcalls"}
+            text={"Actual Calls"}
+          />
+
+          <NavLinkComponent
+            iconName="hospital-user"
+            onPress={() => setSelectedScreen("specialisttool")}
+            active={selectedScreen === "specialisttool"}
+            text={"Specialist Toolkit"}
+          />
+
+          <NavLinkComponent
+            iconName="bolt-lightning"
+            onPress={() => setSelectedScreen("quickcall")}
+            active={selectedScreen === "quickcall"}
+            text={"Quick Call"}
+          />
         </View>
-      </TouchableOpacity>
-      <RBSheet
-        ref={refRBSheet}
-        height={900}
-        closeOnPressBack={true}
-        // draggable={true}
-        closeOnPressMask={true}
-        customStyles={{
-          wrapper: {
-            backgroundColor: "rgba(0, 0, 0, .5)",
-          },
-          // draggableIcon: {
-          //   backgroundColor: "#046E37",
-          // },
-        }}
-        customModalProps={{
-          animationType: "slide",
-          statusBarTranslucent: true,
-        }}>
-        <QuickCallLightning closeSheet={closeSheet} />
-      </RBSheet>
-    </View>
+        <View style={dynamicStyles.components_container}>
+          {renderContent()}
+        </View>
+        <TouchableOpacity
+          onLongPress={() => {
+            setSelectedScreen("dashboard");
+            openSheet();
+          }}
+          style={dynamicStyles.floatingButtonContainer}>
+          <View style={dynamicStyles.floatingButton}>
+            {/* <MaterialIcons name="add-call" size={24} color="white" /> */}
+            <MaterialCommunityIcons
+              name="lightning-bolt-circle"
+              size={24}
+              color="white"
+            />
+            <Text style={dynamicStyles.textWhite}>QUICK CALL</Text>
+            <Text style={dynamicStyles.textWhite}>[hold]</Text>
+          </View>
+        </TouchableOpacity>
+        <RBSheet
+          ref={refRBSheet}
+          height={900}
+          closeOnPressBack={true}
+          // draggable={true}
+          closeOnPressMask={true}
+          customStyles={{
+            wrapper: {
+              backgroundColor: "rgba(0, 0, 0, .5)",
+            },
+            // draggableIcon: {
+            //   backgroundColor: "#046E37",
+            // },
+          }}
+          customModalProps={{
+            animationType: "slide",
+            statusBarTranslucent: true,
+          }}>
+          <QuickCallLightning closeSheet={closeSheet} />
+        </RBSheet>
+      </View>
+    </>
   );
 };
 export default Home;

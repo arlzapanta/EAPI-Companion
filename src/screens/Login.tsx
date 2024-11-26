@@ -109,7 +109,7 @@ const Login = () => {
           <TouchableOpacity
             disabled={isLoginLoading}
             style={[
-              dynamicStyles.buttonContainer,
+              dynamicStyles.buttonLoginContainer,
               isLoginLoading && dynamicStyles.isLoadingButtonContainer,
             ]}
             onPress={handleLogin}>

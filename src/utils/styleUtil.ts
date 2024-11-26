@@ -293,6 +293,16 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       alignItems: "center",
       backgroundColor: currentTheme.mainContainerBG,
     } as ViewStyle,
+    containerLoadingGlobal: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      backgroundColor: currentTheme.mainContainerBG,
+      zIndex: 999999999,
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+    } as ViewStyle,
     scrollViewContent: {
       flexGrow: 1,
       paddingBottom: 60,
@@ -390,6 +400,16 @@ export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
       marginTop: 10,
       minWidth: 300,
       maxWidth: 300,
+    } as ViewStyle,
+    buttonLoginContainer: {
+      width: "100%",
+      padding: 15,
+      backgroundColor: currentTheme.buttonColor,
+      borderRadius: 4,
+      alignItems: "center",
+      marginTop: 10,
+      minWidth: 450,
+      maxWidth: 450,
     } as ViewStyle,
     takePhotoButton: {
       backgroundColor: "#007BFF",
