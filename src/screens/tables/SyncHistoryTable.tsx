@@ -6,7 +6,7 @@ import { format, parseISO } from "date-fns";
 import { AntDesign } from "@expo/vector-icons";
 import Icon from "react-native-vector-icons/Ionicons";
 import { getStyleUtil } from "../../utils/styleUtil";
-import { formatDate, formatDateTime } from "../../utils/dateUtils";
+import { formatDatev1, formatDateTime } from "../../utils/dateUtils";
 const dynamicStyles = getStyleUtil({ theme: "light" });
 
 const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
@@ -25,11 +25,11 @@ const SyncHistoryTable: React.FC<SyncHistoryTableProps> = ({ data }) => {
   }, []);
 
   const uniqueDates = Array.from(
-    new Set(data.map((item) => formatDate(item.date)))
+    new Set(data.map((item) => formatDatev1(item.date)))
   );
 
   const filteredData = data.filter(
-    (user) => !selectedDate || formatDate(user.date) === selectedDate
+    (user) => !selectedDate || formatDatev1(user.date) === selectedDate
   );
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);

@@ -1789,13 +1789,17 @@ export const getDoctorsWeekSchedLocalDb = async (): Promise<
   await db.execAsync(createIfNEscheduleAPI);
 
   const weekDates = await getWeekdaysRange();
+  console.log(
+    weekDates,
+    "getDoctorsWeekSchedLocalDbgetDoctorsWeekSchedLocalDb week dates"
+  );
   const placeholders = weekDates.map(() => "?").join(", ");
   const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) IN (${placeholders})`;
 
   try {
     const result = await db.getAllAsync(query, weekDates);
     const existingRows = result as ScheduleAPIRecord[];
-
+    console.log(existingRows, "exustak dlkasjd");
     return existingRows;
   } catch (error) {
     console.error("Error fetching schedule records data6:", error);
@@ -1818,11 +1822,11 @@ export const getDailyChartsData = async (): Promise<DailyChartData[]> => {
   SELECT
       COUNT(*) AS calls_count,
       (SELECT COUNT(*) FROM schedule_API_tbl WHERE DATE(date) = ?) AS schedule_api_count
-    FROM calls_tbl
+    FROM calls_tbl WHERE DATE(created_at) = ?
   `;
 
   try {
-    const result = await db.getAllAsync(query, [currentDate]);
+    const result = await db.getAllAsync(query, [currentDate, currentDate]);
     return result as DailyChartData[];
   } catch (error) {
     console.error("Error fetching data for getCallsLocalDb:", error);
@@ -1922,15 +1926,36 @@ export const getCallsTodayLocalDb = async (): Promise<ScheduleRecord[]> => {
   await db.execAsync(createIfNECalls);
 
   const currentDate = await getCurrentDatePH();
-  const query = `SELECT * FROM calls_tbl WHERE DATE(created_at) = ? AND done != ?`;
+  const query = `SELECT * FROM calls_tbl WHERE DATE(created_at) = ?`;
 
   try {
-    const result = await db.getAllAsync(query, [currentDate, 1]);
+    const result = await db.getAllAsync(query, [currentDate]);
     const existingRows = result as ScheduleRecord[];
 
-    // const testRecords = await db.getAllAsync(
-    //   "SELECT schedule_id, created_date, created_at FROM calls_tbl"
-    // );
+    return existingRows;
+  } catch (error) {
+    console.error("Error fetching data for today: getCallsTodayLocalDb", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getCallsTodayNotSyncedLocalDb = async (): Promise<
+  ScheduleRecord[]
+> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNECalls);
+
+  const currentDate = await getCurrentDatePH();
+  const query = `SELECT * FROM calls_tbl WHERE DATE(created_at) = ? AND done = ?`;
+
+  try {
+    const result = await db.getAllAsync(query, [currentDate, "0"]);
+    const existingRows = result as ScheduleRecord[];
 
     return existingRows;
   } catch (error) {
@@ -1961,6 +1986,34 @@ export const deleteCallByScheduleIdLocalDb = async ({
     );
   } catch (error) {
     console.error("Error deleting records for today:", error);
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const deleteRescheduleReqByScheduleIdLocalDb = async ({
+  scheduleId,
+}: {
+  scheduleId: string;
+}) => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  try {
+    await db.runAsync(
+      `DELETE FROM reschedule_req_tbl WHERE schedule_id = ? and status = 0`,
+      scheduleId
+    );
+
+    console.log(
+      `Successfully deleted pending reschedule req for scheduleId: ${scheduleId}`
+    );
+  } catch (error) {
+    console.error(
+      "Error deleting records for delete pending reschedule:",
+      error
+    );
   } finally {
     await db.closeAsync();
   }
@@ -2127,6 +2180,7 @@ export const saveCallsDoneFromSchedules = async (
     );
 
     await deleteCallByScheduleIdLocalDb({ scheduleId });
+    await deleteRescheduleReqByScheduleIdLocalDb({ scheduleId });
 
     // const testRecords = await db.getAllAsync('SELECT * FROM calls_tbl WHERE schedule_id = ?', [scheduleId]);
     // console.log('CHECK NEW CALL IN CALLS_TBL', testRecords);

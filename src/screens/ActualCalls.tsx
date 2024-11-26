@@ -39,7 +39,7 @@ const dynamicStyles = getStyleUtil({});
 const ActualCalls = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [callData, setCallsDate] = useState<any[]>([]);
+  const [callData, setCallsData] = useState<any[]>([]);
   const [selectedCall, setSelectedCall] = useState<any | null>(null);
   const [accordionExpanded, setAccordionExpanded] = useState(false);
   const [accordionExpandedFilter, setAccordionExpandedFilter] = useState(false);
@@ -85,7 +85,7 @@ const ActualCalls = () => {
       try {
         getCurrentDate(moment(await getDate).format("MMMM DD, dddd"));
         const actualData = await getCallsTodayLocalDb();
-        setCallsDate(actualData);
+        setCallsData(actualData);
         // filter
         const filterData = await getAllActualDatesFilter();
         setActualDatesFilterData(filterData);
@@ -241,7 +241,7 @@ const ActualCalls = () => {
                                 handleCallClick(actual);
                               }}
                               style={{
-                                ...(actual.done === "1" &&
+                                ...(actual.done == "1" &&
                                   dynamicStyles.cardDoneItems),
                                 ...(actual.done !== "1" &&
                                   dynamicStyles.cardItems),
@@ -251,9 +251,9 @@ const ActualCalls = () => {
                               }}>
                               <Text
                                 style={{
-                                  ...(actual.done === "1" &&
+                                  ...(actual.done == "1" &&
                                     dynamicStyles.cardDoneItemText),
-                                  ...(actual.done !== "1" &&
+                                  ...(actual.done != "1" &&
                                     dynamicStyles.cardItemText),
                                   ...(cardActiveId === actual.id &&
                                     cardActiveDate === actual.date &&
@@ -292,17 +292,16 @@ const ActualCalls = () => {
                         key={call.id}
                         onPress={() => handleCallClick(call)}
                         style={{
-                          ...(call.done === "1" && dynamicStyles.cardDoneItems),
-                          ...(call.done !== "1" && dynamicStyles.cardItems),
+                          ...(call.done == "1" && dynamicStyles.cardDoneItems),
+                          ...(call.done != "1" && dynamicStyles.cardItems),
                           ...(cardActiveId === call.id &&
                             dynamicStyles.activeCardItems),
                         }}>
                         <Text
                           style={{
-                            ...(call.done === "1" &&
+                            ...(call.done == "1" &&
                               dynamicStyles.cardDoneItemText),
-                            ...(call.done !== "1" &&
-                              dynamicStyles.cardItemText),
+                            ...(call.done != "1" && dynamicStyles.cardItemText),
                             ...(cardActiveId === call.id &&
                               cardActiveDate === call.date &&
                               dynamicStyles.activeCardItemsText),

@@ -128,7 +128,9 @@ const ProductMultiViewModal: React.FC<ProductMultiModalProps> = ({
               </Text>
             </View>
           )}
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={[styles.closeButton, { zIndex: 9999999999 }]}>
             <Text style={styles.closeButtonText}>Close</Text>
           </TouchableOpacity>
         </Animated.View>

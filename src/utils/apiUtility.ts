@@ -5,6 +5,7 @@ import {
   dropLocalTable,
   dropLocalTables,
   getCallsTodayLocalDb,
+  getCallsTodayNotSyncedLocalDb,
   getProductRecordsLocalDb,
   getRescheduleRequestRecordsLocalDb,
   getUpdatedDoctorRecordsLocalDb,
@@ -109,7 +110,7 @@ export const apiTimeOut = async (user: User) => {
 export const syncUser = async (user: User): Promise<any> => {
   try {
     let recordsToSync: ApiPayload[] = [];
-    const localRecords = await getCallsTodayLocalDb();
+    const localRecords = await getCallsTodayNotSyncedLocalDb();
 
     for (const record of localRecords) {
       const scheduleId = record.schedule_id.toString();
@@ -184,7 +185,7 @@ export const syncUser = async (user: User): Promise<any> => {
 export const syncUserMid = async (user: User): Promise<any> => {
   try {
     let recordsToSync: ApiPayload[] = [];
-    const localRecords = await getCallsTodayLocalDb();
+    const localRecords = await getCallsTodayNotSyncedLocalDb();
 
     for (const record of localRecords) {
       const scheduleId = record.schedule_id.toString();

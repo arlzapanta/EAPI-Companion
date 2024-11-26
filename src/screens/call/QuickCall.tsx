@@ -13,6 +13,7 @@ import {
 import moment from "moment";
 import {
   formatDate,
+  formatDatev1,
   formatTimeHoursMinutes,
   getCurrentDatePH,
   getFormattedDateToday,
@@ -357,7 +358,7 @@ const QuickCall = () => {
                     <Picker.Item
                       key={schedule.id}
                       label={
-                        `${schedule.full_name} - ${formatDate(
+                        `${schedule.full_name} - ${formatDatev1(
                           schedule.date
                         )}` || "Unknown Name"
                       }
