@@ -135,7 +135,6 @@ const SignatureCaptureDisplay: React.FC<SignatureCaptureProps> = ({
 
   const captureSignature = async () => {
     const loc = await getLocation();
-    console.log(paths.length);
     if (viewRef.current) {
       stopTimer();
       setIsSignatureLoading(true);

@@ -556,7 +556,10 @@ export const saveSchedulesAPILocalDb = async (
     // console.log(testRecords,'asdasd saveSchedulesAPILocalDb');
     return "Success";
   } catch (error) {
-    console.error("Error saving data: asdasdasdasdasd", error);
+    console.error(
+      "Error saving data:       WHERE id NOT IN (SELECT schedule_id FROM calls_tbl)",
+      error
+    );
     return "Failed to save data";
   }
 };
@@ -583,6 +586,7 @@ export const saveCallsAPILocalDb = async (
                               signature_location,
                               photo,
                               photo_location,
+                              done,
                               created_at
                               )
       VALUES (
@@ -643,6 +647,7 @@ export const saveCallsAPILocalDb = async (
             ? `'${calls.photo_location}'`
             : "NULL"
         },
+        1,
         ${
           calls.created_at !== undefined && calls.created_at !== null
             ? `'${calls.created_at}'`
@@ -1449,7 +1454,13 @@ export const getSchedulesTodayLocalDb = async (): Promise<
   await db.execAsync(createIfNEscheduleAPI);
 
   const currentDate = await getCurrentDatePH();
-  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) = ?`;
+  const query = `
+  SELECT * 
+  FROM schedule_API_tbl 
+  WHERE DATE(date) = ? 
+    AND schedule_id NOT IN (SELECT schedule_id FROM reschedule_req_tbl WHERE status != 1)
+    AND schedule_id NOT IN (SELECT schedule_id FROM calls_tbl)
+  `;
 
   try {
     const result = await db.getAllAsync(query, [currentDate]);
@@ -1476,7 +1487,9 @@ export const getSchedulesWeekLocalDb = async (): Promise<
 
   const weekDates = await getWeekdaysRangeExToday();
   const placeholders = weekDates.map(() => "?").join(", ");
-  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) IN (${placeholders})`;
+  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) IN (${placeholders}) 
+  AND schedule_id NOT IN (SELECT schedule_id FROM reschedule_req_tbl WHERE status != 1) 
+  AND schedule_id NOT IN (SELECT schedule_id FROM calls_tbl)`;
 
   try {
     const result = await db.getAllAsync(query, weekDates);
@@ -1552,8 +1565,11 @@ export const getAllSchedulesFilterLocalDb = async (): Promise<
   });
 
   await db.execAsync(createIfNEscheduleAPI);
+  await db.execAsync(createIfNERescheduleReq);
   const currentDate = await getCurrentDatePH();
-  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) != ?`;
+  const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) != ? 
+  AND schedule_id NOT IN (SELECT schedule_id FROM reschedule_req_tbl WHERE status != 1)
+  AND schedule_id NOT IN (SELECT schedule_id FROM calls_tbl)`;
   try {
     const result = await db.getAllAsync(query, [currentDate]);
     const existingRows = result as ScheduleAPIRecord[];
@@ -1888,8 +1904,10 @@ export const updateActualCallsToDone = async () => {
 
   try {
     await db.execAsync(`UPDATE calls_tbl SET done = 1`);
-    // const test = await db.getAllAsync(`SELECT * FROM reschedule_req_tbl`);
-    // console.log(test);
+    const test = await db.getAllAsync(
+      `SELECT id,done,schedule_id FROM calls_tbl`
+    );
+    console.log(test);
   } catch (error) {
     console.error("Error updating calls_tblcalls_tbl status:", error);
   } finally {

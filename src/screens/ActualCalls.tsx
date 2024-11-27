@@ -243,7 +243,7 @@ const ActualCalls = () => {
                               style={{
                                 ...(actual.done == "1" &&
                                   dynamicStyles.cardDoneItems),
-                                ...(actual.done !== "1" &&
+                                ...(actual.done != "1" &&
                                   dynamicStyles.cardItems),
                                 ...(cardActiveId === actual.id &&
                                   cardActiveDate === actual.date &&
@@ -258,9 +258,30 @@ const ActualCalls = () => {
                                   ...(cardActiveId === actual.id &&
                                     cardActiveDate === actual.date &&
                                     dynamicStyles.activeCardItemsText),
-                                }}>{`${actual.doctors_name} \n${moment(
-                                actual.created_at
-                              ).format("MMMM DD YYYY")}`}</Text>
+                                }}>
+                                {`${actual.doctors_name} \n${moment(
+                                  actual.created_at
+                                ).format("MMMM DD YYYY")}`}{" "}
+                                {actual.done == "1" && (
+                                  <Entypo
+                                    name="arrow-with-circle-up"
+                                    size={24}
+                                    color="black"
+                                  />
+                                )}
+                                {cardActiveId === actual.id &&
+                                  cardActiveDate === actual.date &&
+                                  actual.done == "1" && (
+                                    <Ionicons
+                                      name="cloud-done"
+                                      style={{
+                                        alignSelf: "center",
+                                      }}
+                                      size={20}
+                                      color="green"
+                                    />
+                                  )}
+                              </Text>
                             </TouchableOpacity>
                           ))
                         )}
@@ -297,17 +318,46 @@ const ActualCalls = () => {
                           ...(cardActiveId === call.id &&
                             dynamicStyles.activeCardItems),
                         }}>
-                        <Text
-                          style={{
-                            ...(call.done == "1" &&
-                              dynamicStyles.cardDoneItemText),
-                            ...(call.done != "1" && dynamicStyles.cardItemText),
-                            ...(cardActiveId === call.id &&
-                              cardActiveDate === call.date &&
-                              dynamicStyles.activeCardItemsText),
-                          }}>{`${call.doctors_name} \n${moment(
-                          call.created_date
-                        ).format("MMMM DD YYYY")}`}</Text>
+                        <View style={dynamicStyles.row}>
+                          <Text
+                            style={{
+                              ...(call.done == "1" &&
+                                dynamicStyles.cardDoneItemText),
+                              ...(call.done != "1" &&
+                                dynamicStyles.cardItemText),
+                              ...(cardActiveId === call.id &&
+                                cardActiveDate === call.date &&
+                                dynamicStyles.activeCardItemsText),
+                            }}>
+                            {`${call.doctors_name} \n${moment(
+                              call.created_date
+                            ).format("MMMM DD YYYY")}`}{" "}
+                          </Text>
+                          {call.done == "1" && (
+                            <Ionicons
+                              name="cloud-done"
+                              style={{
+                                alignSelf: "center",
+                                marginLeft: 10,
+                              }}
+                              size={20}
+                              color="white"
+                            />
+                          )}
+
+                          {cardActiveId === call.id &&
+                            cardActiveDate === call.date &&
+                            call.done == "1" && (
+                              <Ionicons
+                                name="cloud-done"
+                                style={{
+                                  alignSelf: "center",
+                                }}
+                                size={20}
+                                color="green"
+                              />
+                            )}
+                        </View>
                       </TouchableOpacity>
                     ))}
                   </View>
