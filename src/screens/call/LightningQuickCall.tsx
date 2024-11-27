@@ -83,6 +83,7 @@ const QuickCallLightning: React.FC<QuickCallBottomSheetProps> = ({
       const loc = await getLocation();
       setPhotoVal(base64);
       await updateCallPhoto(selectedCallIdValue, base64, loc);
+      closeSheet();
     } catch (error) {
       console.log("handlePhotoCaptured error", error);
     }

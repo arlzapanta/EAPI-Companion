@@ -1603,7 +1603,8 @@ export const getSchedulesMakeupLocalDb = async (): Promise<
       INNER JOIN reschedule_req_tbl AS rr
       ON schedule_API_tbl.schedule_id = rr.schedule_id
       WHERE DATE(schedule_API_Tbl.date) IN (${placeholders})
-      AND rr.status = '1'`;
+      AND rr.status = '1' AND schedule_API_tbl.schedule_id NOT IN (SELECT schedule_id FROM calls_tbl)
+`;
 
   try {
     const result = await db.getAllAsync(query, weekDates);
