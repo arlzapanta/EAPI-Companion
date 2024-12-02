@@ -22,7 +22,12 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import { formatTimeHoursMinutes } from "../utils/dateUtils";
 import { customToast } from "../utils/customToast";
-const dynamicStyle = getStyleUtil({});
+import { useDataContext } from "../context/DataContext";
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const { width, height } = Dimensions.get("window");
 const SignatureCaptureLightning: React.FC<SignatureCaptureProps> = ({
@@ -152,11 +157,11 @@ const SignatureCaptureLightning: React.FC<SignatureCaptureProps> = ({
         style={[styles.canvas, { width: canvasWidth, height: canvasHeight }]}
         {...panResponder.panHandlers}>
         {!duringScreenshot && (
-          <View style={dynamicStyle.centerItems}>
-            <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
+          <View style={dynamicStyles.centerItems}>
+            <Text style={dynamicStyles.mainTextBig}>Signature pad</Text>
             <TouchableOpacity
               style={[
-                dynamicStyle.subBgColor,
+                dynamicStyles.subBgColor,
                 {
                   justifyContent: "center",
                   paddingHorizontal: 10,
@@ -186,29 +191,29 @@ const SignatureCaptureLightning: React.FC<SignatureCaptureProps> = ({
           ))}
         </Svg>
       </View>
-      <View style={[dynamicStyle.centerItems]}>
+      <View style={[dynamicStyles.centerItems]}>
         <TouchableOpacity
           style={[
             styles.takePhotoButton,
-            dynamicStyle.mainBgColor,
-            dynamicStyle.rowItem,
+            dynamicStyles.mainBgColor,
+            dynamicStyles.rowItem,
             { justifyContent: "center" },
           ]}
           onPress={() => showConfirmAlert(captureSignature, "save quick call")}>
           <FontAwesome5 name="signature" size={30} color="white" />
-          <Text style={[dynamicStyle.buttonText, { marginLeft: 10 }]}>
+          <Text style={[dynamicStyles.buttonText, { marginLeft: 10 }]}>
             Save Signature
           </Text>
         </TouchableOpacity>
         {/* <TouchableOpacitye
-          style={dynamicStyle.buttonContainer1}
+          style={dynamicStyles.buttonContainer1}
           onPress={() => showConfirmAlert(captureSignature, "save quick call")}>
-          <Text style={dynamicStyle.buttonText}>Save Signature</Text>
+          <Text style={dynamicStyles.buttonText}>Save Signature</Text>
         </TouchableOpacitye> */}
       </View>
 
-      <View style={dynamicStyle.centerItems}>
-        <Text style={dynamicStyle.textBlack}>OR</Text>
+      <View style={dynamicStyles.centerItems}>
+        <Text style={dynamicStyles.textBlack}>OR</Text>
       </View>
 
       <Modal

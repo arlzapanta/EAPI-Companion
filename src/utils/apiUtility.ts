@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_URL_ENV } from "@env";
+import { API_KEY } from "@env";
 import {
   deleteDoctorsTodayLocalDb,
   dropLocalTable,
@@ -42,7 +42,7 @@ export const apiTimeIn = async (user: User, req: any) => {
     };
 
     const response = await axios.post(
-      `${API_URL_ENV}/timeIn`,
+      `${API_KEY}/timeIn`,
       {
         sales_portal_id: userInfo.sales_portal_id,
         location: loc,
@@ -62,7 +62,9 @@ export const apiTimeIn = async (user: User, req: any) => {
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const { response, request, message } = error;
-      customToast(` Server is down,Please contact admin or DSM : ${message}`);
+      customToast(
+        ` Server is down,Please contact admin or DSM : ${message} api : ${API_KEY}`
+      );
       // console.error("API Time-In Error message:", message);
       // console.error("API Time-In Error response data:", response?.data);
       // console.error("API Time-In Error response status:", response?.status);
@@ -90,7 +92,7 @@ export const apiTimeOut = async (user: User) => {
     };
 
     const response = await axios.post(
-      `${API_URL_ENV}/timeOut`,
+      `${API_KEY}/timeOut`,
       {
         sales_portal_id: userInfo.sales_portal_id,
         location: loc,
@@ -158,7 +160,7 @@ export const syncUser = async (user: User): Promise<any> => {
 
     let allResponses = [];
     for (const record of recordsToSync) {
-      const response = await axios.post(`${API_URL_ENV}/sync`, [record], {
+      const response = await axios.post(`${API_KEY}/sync`, [record], {
         headers: {
           "Content-Type": "application/json",
         },
@@ -236,7 +238,7 @@ export const syncUserMid = async (user: User): Promise<any> => {
       return "No records to sync";
     }
 
-    const response = await axios.post(`${API_URL_ENV}/sync`, recordsToSync, {
+    const response = await axios.post(`${API_KEY}/sync`, recordsToSync, {
       headers: {
         "Content-Type": "application/json",
       },
@@ -276,7 +278,7 @@ export const doctorRecordsSync = async (user: User): Promise<any> => {
     );
 
     const responseDoc = await axios.post(
-      `${API_URL_ENV}/updateDoctorsNotes`,
+      `${API_KEY}/updateDoctorsNotes`,
       docRecordsToSync,
       {
         headers: {
@@ -317,7 +319,7 @@ export const syncProducts = async (totalProd: number) => {
     // const totalProd = 110;
     for (let index = 0; index < totalProd; index += 5) {
       const responseDoc = await axios.post(
-        `${API_URL_ENV}/getAllProductDetailers`,
+        `${API_KEY}/getAllProductDetailers`,
         {
           offset: index,
         },
@@ -368,7 +370,7 @@ export const requestRecordSync = async (user: User): Promise<any> => {
       }));
 
     const responseResreq = await axios.post(
-      `${API_URL_ENV}/rescheduleRequest`,
+      `${API_KEY}/rescheduleRequest`,
       rescheduleRecordsToSync,
       {
         headers: {
@@ -406,7 +408,7 @@ export const getSChedulesAPI = async (user: User): Promise<any> => {
   try {
     const { sales_portal_id } = user;
     const response = await axios.post(
-      `${API_URL_ENV}/getSchedules`,
+      `${API_KEY}/getSchedules`,
       {
         sales_portal_id,
       },
@@ -418,7 +420,7 @@ export const getSChedulesAPI = async (user: User): Promise<any> => {
     );
 
     const schedForMakeUp = await axios.post(
-      `${API_URL_ENV}/getSchedulesForMakeup`,
+      `${API_KEY}/getSchedulesForMakeup`,
       {
         sales_portal_id,
       },
@@ -450,7 +452,7 @@ export const getCallsAPI = async (user: User): Promise<any> => {
   try {
     const { sales_portal_id } = user;
     const response = await axios.post(
-      `${API_URL_ENV}/getCalls`,
+      `${API_KEY}/getCalls`,
       {
         sales_portal_id,
       },
@@ -481,7 +483,7 @@ export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
   try {
     const { sales_portal_id } = user;
     const response = await axios.post(
-      `${API_URL_ENV}/checkSchedules`,
+      `${API_KEY}/checkSchedules`,
       {
         sales_portal_id,
         date: formatDateYMD(now),
@@ -513,7 +515,7 @@ export const getDoctors = async (user: User): Promise<any> => {
   try {
     const { territory_id, division } = user;
     const response = await axios.post(
-      `${API_URL_ENV}/getDoctors`,
+      `${API_KEY}/getDoctors`,
       {
         territory_id,
         division,
@@ -545,7 +547,7 @@ export const getConfig = async (user: User): Promise<any> => {
   try {
     const { territory_id, division } = user;
     const response = await axios.post(
-      `${API_URL_ENV}/getAppConfig`,
+      `${API_KEY}/getAppConfig`,
       {
         territory_id,
         division,
@@ -583,7 +585,7 @@ export const getReschedulesData = async (user: User): Promise<any> => {
   try {
     const { sales_portal_id } = user;
     const response = await axios.post(
-      `${API_URL_ENV}/getRescheduleRequestsSPI`,
+      `${API_KEY}/getRescheduleRequestsSPI`,
       {
         sales_portal_id,
       },
@@ -616,7 +618,7 @@ export const getChartData = async (user: User): Promise<any[]> => {
   try {
     const { sales_portal_id } = user;
     const response = await axios.post(
-      `${API_URL_ENV}/getChartData`,
+      `${API_KEY}/getChartData`,
       {
         sales_portal_id,
         user_type: "medrep",
@@ -653,7 +655,7 @@ export const getChartData = async (user: User): Promise<any[]> => {
 
 export const getDetailersData = async (): Promise<any[]> => {
   try {
-    const response = await axios.post(`${API_URL_ENV}/getDetailers`, {
+    const response = await axios.post(`${API_KEY}/getDetailers`, {
       headers: {
         "Content-Type": "application/json",
       },

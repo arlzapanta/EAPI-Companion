@@ -1,5 +1,6 @@
-declare module '@env' {
+declare module "@env" {
   export const API_URL_ENV: string;
+  export const API_KEY: string;
   export const TOKEN_USERNAME_ENV: string;
   export const TOKEN_PASSWORD_ENV: string;
 }

@@ -11,8 +11,14 @@ import {
 } from "react-native";
 import { useAuth } from "../context/AuthContext";
 import { getStyleUtil } from "../utils/styleUtil";
-import { API_URL_ENV, TOKEN_PASSWORD_ENV, TOKEN_USERNAME_ENV } from "@env";
+import { API_KEY, TOKEN_PASSWORD_ENV, TOKEN_USERNAME_ENV } from "@env";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useDataContext } from "../context/DataContext";
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,8 +26,6 @@ const Login = () => {
   const { onLogin } = useAuth();
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [isLoginLoading, setIsLoginLoading] = useState<boolean>(false);
-
-  const dynamicStyles = getStyleUtil({});
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -35,21 +39,6 @@ const Login = () => {
       return;
     }
 
-    // try {
-    //   const result = await onLogin!(email, password);
-    //   if (result && result.error) {
-    //     Alert.alert("Login Error", result.msg);
-    //   }
-    // } catch (error: any) {
-    //   const result = await onLogin!(email, password);
-    //   Alert.alert(
-    //     "Login Error",
-    //     `${API_URL_ENV} ${result} An error occurred during login. Please try again.`
-    //     // `${TOKEN_USERNAME_ENV} ${TOKEN_PASSWORD_ENV} ${API_URL_ENV} ${result} An error occurred during login. Please try again.`
-    //   );
-    //   console.error(error);
-    // }
-
     try {
       setIsLoginLoading(true);
       const result = await onLogin!(email, password);
@@ -60,7 +49,7 @@ const Login = () => {
       const result = await onLogin!(email, password);
       Alert.alert(
         "Login Error",
-        `${API_URL_ENV} ${result} An error occurred during login. Please try again.`
+        `${API_KEY} ${result} An error occurred during login. Please try again.`
       );
       console.error(error);
     } finally {

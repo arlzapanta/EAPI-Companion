@@ -49,7 +49,7 @@ import {
 import LoadingProgressBar from "../components/LoadingProgressbar";
 import { useDataContext } from "../context/DataContext";
 import axios from "axios";
-import { API_URL_ENV } from "@env";
+import { API_KEY } from "@env";
 
 export const useStyles = (theme: string) => {
   const { configData } = useDataContext();
@@ -280,7 +280,7 @@ const Settings = () => {
           text: `Fetching ${index} out of ${totalProd} products`,
         });
         const responseDoc = await axios.post(
-          `${API_URL_ENV}/getAllProductDetailers`,
+          `${API_KEY}/getAllProductDetailers`,
           {
             offset: index,
           },

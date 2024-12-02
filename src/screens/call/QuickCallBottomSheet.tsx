@@ -41,7 +41,11 @@ import {
 } from "../../utils/commonUtil";
 import Octicons from "@expo/vector-icons/Octicons";
 import { getLocation } from "../../utils/currentLocation";
-const dynamicStyles = getStyleUtil({});
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const QuickCallBottomSheet: React.FC<QuickCallBottomSheetProps> = ({
   closeSheet,

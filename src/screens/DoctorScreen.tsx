@@ -25,6 +25,11 @@ import { getStyleUtil } from "../utils/styleUtil";
 import Loading from "../components/Loading";
 import { useDataContext } from "../context/DataContext";
 import LoadingSub from "../components/LoadingSub";
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const { isDoctorLoading } = useDataContext();
@@ -40,7 +45,6 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   }, []);
 
   const { authState } = useAuth();
-  const dynamicStyles = getStyleUtil({});
   const [currentDate, setCurrentDate] = useState("");
   const [doctorList, setDoctorList] = useState<DoctorRecord[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<DoctorRecord | null>(

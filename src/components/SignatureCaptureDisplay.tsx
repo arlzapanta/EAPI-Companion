@@ -20,7 +20,12 @@ import { getBase64StringFormat, showConfirmAlert } from "../utils/commonUtil";
 import { useImagePicker } from "../hook/useImagePicker";
 import Octicons from "@expo/vector-icons/Octicons";
 import { formatTimeHoursMinutes } from "../utils/dateUtils";
-const dynamicStyle = getStyleUtil({});
+import { useDataContext } from "../context/DataContext";
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const { width, height } = Dimensions.get("window");
 const SignatureCaptureDisplay: React.FC<SignatureCaptureProps> = ({
@@ -193,12 +198,12 @@ const SignatureCaptureDisplay: React.FC<SignatureCaptureProps> = ({
         </View>
       ) : null}
 
-      <View style={dynamicStyle.centerItems}>
+      <View style={dynamicStyles.centerItems}>
         {!photoVal ? (
           <>
-            <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
-            <View style={dynamicStyle.centerItems}>
-              <Text style={dynamicStyle.textBlack}>Or ..</Text>
+            <Text style={dynamicStyles.mainTextBig}>Signature pad</Text>
+            <View style={dynamicStyles.centerItems}>
+              <Text style={dynamicStyles.textBlack}>Or ..</Text>
             </View>
           </>
         ) : null}
@@ -206,49 +211,49 @@ const SignatureCaptureDisplay: React.FC<SignatureCaptureProps> = ({
         <View
           style={[
             styles.noteContainer,
-            dynamicStyle.centerItems,
+            dynamicStyles.centerItems,
             { marginBottom: 10 },
             { marginTop: 5 },
           ]}>
           {!photoVal ? (
             <TouchableOpacity
-              style={[styles.takePhotoButton, dynamicStyle.mainBgColor]}
+              style={[styles.takePhotoButton, dynamicStyles.mainBgColor]}
               onPress={handleImagePicker}>
               <Octicons name="device-camera" size={30} color="white" />
-              <Text style={dynamicStyle.buttonText}>Take a photo</Text>
+              <Text style={dynamicStyles.buttonText}>Take a photo</Text>
             </TouchableOpacity>
           ) : (
-            <View style={dynamicStyle.imageContainer}>
-              <Text style={dynamicStyle.mainText}>Photo Capture</Text>
+            <View style={dynamicStyles.imageContainer}>
+              <Text style={dynamicStyles.mainText}>Photo Capture</Text>
               <Image
                 source={{ uri: `${getBase64StringFormat()}${photoVal}` }}
-                style={dynamicStyle.image}
+                style={dynamicStyles.image}
               />
             </View>
           )}
         </View>
         <SpacerH size={5} />
       </View>
-      <View style={dynamicStyle.centerItems}>
-        <View style={[dynamicStyle.trioBtnRow]}>
+      <View style={dynamicStyles.centerItems}>
+        <View style={[dynamicStyles.trioBtnRow]}>
           {!photoVal ? (
             <TouchableOpacity
               style={[
-                dynamicStyle.buttonContainer1,
+                dynamicStyles.buttonContainer1,
                 { marginEnd: 5 },
-                dynamicStyle.subBgColor,
+                dynamicStyles.subBgColor,
               ]}
               onPress={clearSignature}>
-              <Text style={dynamicStyle.buttonText}>Clear Signature</Text>
+              <Text style={dynamicStyles.buttonText}>Clear Signature</Text>
             </TouchableOpacity>
           ) : null}
 
           <TouchableOpacity
-            style={dynamicStyle.buttonContainer1}
+            style={dynamicStyles.buttonContainer1}
             onPress={() =>
               showConfirmAlert(captureSignature, "save quick call")
             }>
-            <Text style={dynamicStyle.buttonText}>Save Quick Call</Text>
+            <Text style={dynamicStyles.buttonText}>Save Quick Call</Text>
           </TouchableOpacity>
         </View>
         <SpacerH size={20} />

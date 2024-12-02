@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
-import { API_URL_ENV, TOKEN_USERNAME_ENV, TOKEN_PASSWORD_ENV } from "@env";
+import { API_KEY, TOKEN_USERNAME_ENV, TOKEN_PASSWORD_ENV } from "@env";
 import axios from "axios";
 import { View, Text } from "react-native";
 import Loading from "../components/Loading";
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshToken = async () => {
     try {
-      const response = await axios.post(`${API_URL_ENV}/login`, {
+      const response = await axios.post(`${API_KEY}/login`, {
         username: TOKEN_USERNAME_ENV,
         password: TOKEN_PASSWORD_ENV,
       });
@@ -70,7 +70,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         const { response, request, message } = error;
-        customToast(` Server is down,Please contact admin or DSM : ${message}`);
+        customToast(
+          ` Server is down,Please contact admin or DSM : ${message} api : ${API_KEY}`
+        );
         // console.error("API refreshToken Error message:", message);
         // console.error("API refreshToken Error response data:", response?.data);
         // console.error(
@@ -115,7 +117,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       const getTokenResponse = await axios.post(
-        `${API_URL_ENV}/login`,
+        `${API_KEY}/login`,
         {
           username: TOKEN_USERNAME_ENV,
           password: TOKEN_PASSWORD_ENV,
@@ -139,7 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       const checkCredentialsResponse = await axios.post(
-        `${API_URL_ENV}/user/login`,
+        `${API_KEY}/user/login`,
         {
           email,
           password,
@@ -169,7 +171,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         const { response, request, message } = error;
-        customToast(` Server is down,Please contact admin or DSM : ${message}`);
+        customToast(
+          ` Server is down,Please contact admin or DSM : ${message} api : ${API_KEY}`
+        );
         // console.error("API Time-In Error message:", message);
         // console.error("API Time-In Error response data:", response?.data);
         // console.error("API Time-In Error response status:", response?.status);

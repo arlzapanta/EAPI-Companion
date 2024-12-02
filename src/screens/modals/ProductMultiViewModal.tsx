@@ -17,8 +17,11 @@ import { getStyleUtil } from "../../utils/styleUtil";
 import { getBase64StringFormat } from "../../utils/commonUtil";
 import { getMultiProductsRecordsLocalDb } from "../../utils/localDbUtils";
 const { width, height } = Dimensions.get("window");
-
-const dynamicStyles = getStyleUtil({});
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const CustomLoading = () => {
   return (

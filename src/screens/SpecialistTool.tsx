@@ -30,6 +30,11 @@ import { useDataContext } from "../context/DataContext";
 import LoadingSub from "../components/LoadingSub";
 import ProductViewModal from "./modals/ProductViewModal";
 const { width, height } = Dimensions.get("window");
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const { isDoctorLoading } = useDataContext();
@@ -48,7 +53,6 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const [selectedProdIdVal, setSelectedProdIdVal] = useState<string>("");
 
   const { authState } = useAuth();
-  const dynamicStyles = getStyleUtil({});
   const [currentDate, setCurrentDate] = useState("");
   const [doctorList, setDoctorList] = useState<DoctorRecord[]>([]);
   const [productList, setProductList] = useState<ProductWoDetailsRecord[]>([]);

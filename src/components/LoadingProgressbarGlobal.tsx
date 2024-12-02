@@ -3,7 +3,12 @@ import { ActivityIndicator, StyleSheet, View, Text } from "react-native";
 import LottieView from "lottie-react-native";
 import { getStyleUtil } from "../utils/styleUtil";
 import * as Progress from "react-native-progress";
-const dynamicStyles = getStyleUtil({});
+import { useDataContext } from "../context/DataContext";
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const LoadingProgressBarGlobal: React.FC<LoadingSubProps> = ({ data }) => {
   return (

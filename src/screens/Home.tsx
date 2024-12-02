@@ -14,6 +14,11 @@ import { getStyleUtil } from "../utils/styleUtil";
 import LoadingProgressBarGlobal from "../components/LoadingProgressbarGlobal";
 import QuickCallLightning from "./call/LightningQuickCall";
 import { useDataContext } from "../context/DataContext";
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 const defaultDoctor: DoctorRecord = {
   doctors_id: "",
   first_name: "",
@@ -49,8 +54,6 @@ const Home = () => {
     | "specialisttool"
   >("dashboard");
   const [fadeAnim] = useState(new Animated.Value(0));
-
-  const dynamicStyles = getStyleUtil({});
 
   const renderContent = () => {
     switch (selectedScreen) {

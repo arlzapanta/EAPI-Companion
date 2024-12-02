@@ -15,7 +15,11 @@ import {
 import { useDataContext } from "../../context/DataContext";
 import { getStyleUtil } from "../../utils/styleUtil";
 import { getBase64StringFormat } from "../../utils/commonUtil";
-const dynamicStyles = getStyleUtil({});
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const CustomLoading = () => {
   return (

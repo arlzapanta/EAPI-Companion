@@ -12,6 +12,7 @@
       "distribution": "internal",
       "env": {
         "API_URL_ENV": "https://cms.euroasiapharmainc.com/api",
+        "API_KEY": "https://cms.euroasiapharmainc.com/api",
         "TOKEN_USERNAME_ENV": "test",
         "TOKEN_PASSWORD_ENV": "test@123"
       }

@@ -28,7 +28,11 @@ import {
 import { getLocation } from "../../utils/currentLocation";
 import Octicons from "@expo/vector-icons/Octicons";
 import LoadingSub from "../../components/LoadingSub";
-const dynamicStyles = getStyleUtil({});
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const QuickCallLightning: React.FC<QuickCallBottomSheetProps> = ({
   closeSheet,

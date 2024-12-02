@@ -20,7 +20,12 @@ import { formatTimeHoursMinutes } from "../utils/dateUtils";
 import { customToast } from "../utils/customToast";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 import Ionicons from "@expo/vector-icons/Ionicons";
-const dynamicStyle = getStyleUtil({});
+import { useDataContext } from "../context/DataContext";
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const { width, height } = Dimensions.get("window");
 const SignatureCapture: React.FC<SignatureCaptureProps> = ({
@@ -158,14 +163,14 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
     <View style={styles.container}>
       <TouchableOpacity
         style={[
-          dynamicStyle.buttonContainer,
-          dynamicStyle.mainBgColor,
-          dynamicStyle.rowItem,
+          dynamicStyles.buttonContainer,
+          dynamicStyles.mainBgColor,
+          dynamicStyles.rowItem,
           { justifyContent: "center" },
         ]}
         onPress={() => setIsModalVisible(true)}>
         <FontAwesome5 name="signature" size={30} color="white" />
-        <Text style={[dynamicStyle.buttonText, { marginLeft: 10 }]}>
+        <Text style={[dynamicStyles.buttonText, { marginLeft: 10 }]}>
           Open Signature Pad
         </Text>
       </TouchableOpacity>
@@ -184,11 +189,11 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
             ]}
             {...panResponder.panHandlers}>
             {!duringScreenshot && (
-              <View style={dynamicStyle.centerItems}>
-                <Text style={dynamicStyle.mainTextBig}>Signature pad</Text>
+              <View style={dynamicStyles.centerItems}>
+                <Text style={dynamicStyles.mainTextBig}>Signature pad</Text>
                 <TouchableOpacity
                   style={[
-                    dynamicStyle.subBgColor,
+                    dynamicStyles.subBgColor,
                     {
                       justifyContent: "center",
                       paddingHorizontal: 10,
@@ -218,32 +223,32 @@ const SignatureCapture: React.FC<SignatureCaptureProps> = ({
               ))}
             </Svg>
           </View>
-          <View style={[dynamicStyle.trioRow]}>
+          <View style={[dynamicStyles.trioRow]}>
             <TouchableOpacity
               style={[
-                dynamicStyle.buttonContainer1,
-                dynamicStyle.mainBgColor,
-                dynamicStyle.rowItem,
+                dynamicStyles.buttonContainer1,
+                dynamicStyles.mainBgColor,
+                dynamicStyles.rowItem,
                 { justifyContent: "center" },
               ]}
               onPress={() =>
                 showConfirmAlert(captureSignature, "Signature save")
               }>
               <FontAwesome5 name="signature" size={30} color="white" />
-              <Text style={[dynamicStyle.buttonText, { marginLeft: 10 }]}>
+              <Text style={[dynamicStyles.buttonText, { marginLeft: 10 }]}>
                 Save Signature
               </Text>
             </TouchableOpacity>
 
             <View
               style={[
-                dynamicStyle.rowItem,
+                dynamicStyles.rowItem,
                 { position: "absolute", bottom: -70, left: -20 },
               ]}>
               <TouchableOpacity
-                style={dynamicStyle.buttonCancelContainer}
+                style={dynamicStyles.buttonCancelContainer}
                 onPress={() => setIsModalVisible(false)}>
-                <Text style={dynamicStyle.buttonText}>Close</Text>
+                <Text style={dynamicStyles.buttonText}>Close</Text>
               </TouchableOpacity>
             </View>
           </View>

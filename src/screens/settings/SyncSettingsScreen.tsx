@@ -15,7 +15,12 @@ import { getSyncHistoryRecordsLocalDb } from "../../utils/localDbUtils";
 import SyncTable from "../tables/SyncHistoryTable";
 import { AntDesign } from "@expo/vector-icons";
 import { getStyleUtil } from "../../utils/styleUtil";
-const dynamicStyles = getStyleUtil({});
+import { useDataContext } from "../../context/DataContext";
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const SyncSettingsScreen: React.FC = () => {
   const navigation = useNavigation<SyncScreenNavigationProp>();

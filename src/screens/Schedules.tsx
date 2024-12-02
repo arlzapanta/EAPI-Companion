@@ -24,6 +24,11 @@ import Loading from "../components/Loading";
 import { useDataContext } from "../context/DataContext";
 import { Picker } from "@react-native-picker/picker";
 import LoadingSub from "../components/LoadingSub";
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const Schedules = () => {
   const { isScheduleLoading, setLoadingGlobal, setIsLoading } =
@@ -35,7 +40,6 @@ const Schedules = () => {
     }, 1000);
     return () => clearTimeout(timer);
   }, []);
-  const dynamicStyles = getStyleUtil({});
   const [error, setError] = useState<string | null>(null);
   const [scheduleDataToday, setScheduleDataToday] = useState<any[]>([]);
   const [scheduleWeekData, setScheduleWeekData] = useState<any[]>([]);
