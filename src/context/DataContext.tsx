@@ -10,6 +10,7 @@ import {
   getDailyChartsData,
   getDatesAndTypeForCalendarView,
   getProductRecordsLocalDb,
+  getConfigLocalDb,
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import { getQuickCalls } from "../utils/quickCallUtil";
@@ -30,6 +31,7 @@ interface DataContextProps<T> {
   yearlyData: chartData[];
   ytdData: chartYtdData[];
   isLoading: boolean;
+  configData: AppConfigRecord[];
   loadingGlobal: LoadingSubRecords;
   isDashboardLoading: boolean;
   isScheduleLoading: boolean;
@@ -69,6 +71,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const plottedColor = "lightgray";
   const [currentDate, setCurrentDate] = useState<string>("");
   const [calendarData, setCalendarData] = useState<CalendarProps>({ data: [] });
+  const [configData, setConfigData] = useState<AppConfigRecord[]>([]);
   const [chartData, setChartData] = useState<ChartDashboardRecord[]>([]);
   const [dailyDataCompletion, setDailyDataCompletion] = useState<chartData[]>([
     { value: 0, color: "#046E37" },
@@ -106,6 +109,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   });
   const [isDashboardLoading, setIsDashboardLoading] = useState<boolean>(false);
   const { getCurrentDate } = useRefreshFetchDataContext();
+  const fetchConfigData = async () => {
+    const configData = (await getConfigLocalDb()) as AppConfigRecord[];
+    setConfigData(configData);
+  };
+
   const fetchDashboardData = async () => {
     try {
       setIsDashboardLoading(true);
@@ -359,6 +367,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchConfigData();
   }, [getCurrentDate, getDatesAndTypeForCalendarView, fetchChartDataLocalDb]);
   // ***************************************************************************
   // ***************************************************************************
@@ -469,6 +478,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         isLoading,
         isDashboardLoading,
         ytdDataMonthValues,
+        configData,
         loadingGlobal,
         setIsLoading,
         setLoadingGlobal,

@@ -50,7 +50,12 @@ import LoadingProgressBar from "../components/LoadingProgressbar";
 import { useDataContext } from "../context/DataContext";
 import axios from "axios";
 import { API_URL_ENV } from "@env";
-import * as SQLite from "expo-sqlite";
+
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyle = getStyleUtil([]);
 
 type SettingsScreenNavigationProp =
   NativeStackNavigationProp<RootStackParamList>;
@@ -73,9 +78,9 @@ const Settings = () => {
     created_at: string;
     updated_at: string;
   } | null>(null);
-  const dynamicStyle = getStyleUtil({});
   const navigation = useNavigation<SettingsScreenNavigationProp>();
-  const { setProductRecord, setIsLoading, setLoadingGlobal } = useDataContext();
+  const { setProductRecord, setIsLoading, setLoadingGlobal, configData } =
+    useDataContext();
 
   const handleLogout = () => {
     Alert.alert(
@@ -232,7 +237,11 @@ const Settings = () => {
           progress: 0.5,
           text: "fetching products: please wait...",
         });
-        await syncProducts();
+        let totalProd = 110;
+        if (configData && configData.length > 0) {
+          totalProd = Number(configData[0].productCount);
+        }
+        await syncProducts(totalProd);
       } catch (error) {
         msg = "Server Error : Failed to sync products please contact admin.";
         Alert.alert(msg);
@@ -252,7 +261,8 @@ const Settings = () => {
     }
   };
 
-  const syncProducts = async () => {
+  const syncProducts = async (totalProd: number) => {
+    console.log(totalProd, "totalProd");
     try {
       // TODO: this is static for now but need to make it dynamically depends on the # of products from API config table
       setIsLoading(true);
@@ -261,7 +271,9 @@ const Settings = () => {
         text: `Preparing products... Please dont close the app`,
       });
       await dropLocalTable("products_tbl");
-      const totalProd = 110;
+      const totalProd = configData[0].productCount
+        ? Number(configData[0].productCount)
+        : 110;
       for (let index = 0; index < totalProd; index += 5) {
         setLoadingGlobal({
           progress: index / totalProd,
@@ -303,7 +315,7 @@ const Settings = () => {
         );
         console.error("API syncProducts Error request:", request);
       } else {
-        console.error("An unexpected error occurred:", error);
+        console.error("An unexpected error occurred syncProducts:", error);
       }
       throw error;
     }

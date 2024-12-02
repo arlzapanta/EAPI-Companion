@@ -47,12 +47,17 @@ import {
 } from "../../utils/commonUtil";
 import { savePostCallNotesLocalDb } from "../../utils/callComponentsUtil";
 import LoadingSub from "../../components/LoadingSub";
-const dynamicStyles = getStyleUtil({});
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const { width, height } = Dimensions.get("window");
 const QuickCall = () => {
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
-  const { isQuickLoading, currentDate, quickCallData } = useDataContext();
+  const { isQuickLoading, currentDate, quickCallData, configData } =
+    useDataContext();
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeOutLoading(false);
@@ -60,6 +65,7 @@ const QuickCall = () => {
     return () => clearTimeout(timer);
   }, []);
   const [callData, setCallData] = useState<Call[]>([]);
+  const [isMaxLimit, setIsMaxLimit] = useState<boolean>(false);
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [selectedCallIdValue, setSelectedCallIdValue] = useState<number>(0);
   const [isInternalQuickLoading, setIsInternalQuickLoading] =
@@ -90,6 +96,14 @@ const QuickCall = () => {
             (call) => call.id === selectedCallIdValue
           );
           setSelectedCall(updatedCall || null);
+        }
+        if (
+          data.length >=
+          (configData && configData.length > 0
+            ? Number(configData[0].quickCallLimit)
+            : 10)
+        ) {
+          setIsMaxLimit(true);
         }
       } else {
         console.warn("Fetched data is not an array:", data);
@@ -141,6 +155,10 @@ const QuickCall = () => {
   };
 
   const handleAddCall = async () => {
+    if (isMaxLimit) {
+      customToast("You have reached the maximum number of quick calls");
+      return;
+    }
     try {
       const newCall: Call = {
         location: "",
@@ -273,6 +291,10 @@ const QuickCall = () => {
         customToast("Please select doctor");
         return;
       }
+      if (isMaxLimit) {
+        customToast("You have reached the maximum number of quick calls");
+        return;
+      }
 
       if (selectedDoctor) {
         const callDetails = {
@@ -295,7 +317,6 @@ const QuickCall = () => {
           feedback: "",
           scheduleId: selectedDoctor.schedule_id,
         });
-
         const result = await saveCallsDoneFromSchedules(
           selectedDoctor.schedule_id,
           callDetails

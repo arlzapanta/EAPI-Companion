@@ -1,8 +1,4 @@
 declare global {
-  export interface styleUtilProps {
-    theme?: "dark" | "light";
-  }
-
   export interface DoctorRecord {
     SecretaryPhone: any;
     OfficePhone: any;
@@ -24,6 +20,13 @@ declare global {
     notes_names: string;
     notes_values: string;
     update_date: string;
+  }
+  export interface AppConfigRecord {
+    id: string;
+    quickCallLimit: string;
+    productCount: string;
+    theme: string;
+    announcement: string;
   }
   export interface ProductRecord {
     id: string;

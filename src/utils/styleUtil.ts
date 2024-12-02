@@ -9,7 +9,11 @@ import { lightTheme, darkTheme } from "./themes";
 import { StyleSheet } from "react-native";
 const { width, height } = Dimensions.get("window");
 
-export const getStyleUtil = ({ theme = "light" }: styleUtilProps) => {
+export const getStyleUtil = (configData: AppConfigRecord[]) => {
+  let theme = "light";
+  if (configData && configData.length > 0) {
+    theme = configData[0].theme || "light";
+  }
   const currentTheme = theme === "dark" ? darkTheme : lightTheme;
 
   return {

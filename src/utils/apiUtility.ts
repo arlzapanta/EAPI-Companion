@@ -9,6 +9,7 @@ import {
   getProductRecordsLocalDb,
   getRescheduleRequestRecordsLocalDb,
   getUpdatedDoctorRecordsLocalDb,
+  saveAppConfigLocalDb,
   saveCallsAPILocalDb,
   saveChartDataLocalDb,
   saveDetailersDataLocalDb,
@@ -26,6 +27,7 @@ import {
   getPostCallNotesLocalDb,
   getPreCallNotesLocalDb,
 } from "./callComponentsUtil";
+import { customToast } from "./customToast";
 
 export const apiTimeIn = async (user: User, req: any) => {
   try {
@@ -44,10 +46,10 @@ export const apiTimeIn = async (user: User, req: any) => {
       {
         sales_portal_id: userInfo.sales_portal_id,
         location: loc,
-        signature: req.signatureVal,
-        signature_location: req.signatureLoc,
-        photo: req.selfieVal,
-        photo_location: req.selfieLoc,
+        signature: req[0].signatureVal,
+        signature_location: req[0].signatureLoc,
+        photo: req[0].selfieVal,
+        photo_location: req[0].selfieLoc,
       },
       {
         headers: {
@@ -60,13 +62,17 @@ export const apiTimeIn = async (user: User, req: any) => {
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const { response, request, message } = error;
-      console.error("API Time-In Error message:", message);
-      console.error("API Time-In Error response data:", response?.data);
-      console.error("API Time-In Error response status:", response?.status);
-      console.error("API Time-In Error response headers:", response?.headers);
-      console.error("API Time-In Error request:", request);
+      customToast(` Server is down,Please contact admin or DSM : ${message}`);
+      // console.error("API Time-In Error message:", message);
+      // console.error("API Time-In Error response data:", response?.data);
+      // console.error("API Time-In Error response status:", response?.status);
+      // console.error("API Time-In Error response headers:", response?.headers);
+      // console.error("API Time-In Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error(
+        "An unexpected error occurred apiTimeIn: Please contact admin or DSM",
+        error
+      );
     }
     throw error;
   }
@@ -105,7 +111,7 @@ export const apiTimeOut = async (user: User) => {
       console.error("API Time-Out Error response headers:", response?.headers);
       console.error("API Time-Out Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred apiTimeOut:", error);
     }
     throw error;
   }
@@ -185,7 +191,7 @@ export const syncUser = async (user: User): Promise<any> => {
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred syncUser:", error);
     }
     throw error;
   }
@@ -250,7 +256,7 @@ export const syncUserMid = async (user: User): Promise<any> => {
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred syncUserMid:", error);
     }
     throw error;
   }
@@ -298,17 +304,17 @@ export const doctorRecordsSync = async (user: User): Promise<any> => {
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred doctorRecordsSync:", error);
     }
     throw error;
   }
 };
 
-export const syncProducts = async () => {
+export const syncProducts = async (totalProd: number) => {
   try {
     // TODO: this is static for now but need to make it dynamically depends on the # of products from API config table
     await dropLocalTable("products_tbl");
-    const totalProd = 110;
+    // const totalProd = 110;
     for (let index = 0; index < totalProd; index += 5) {
       const responseDoc = await axios.post(
         `${API_URL_ENV}/getAllProductDetailers`,
@@ -340,7 +346,7 @@ export const syncProducts = async () => {
       );
       console.error("API syncProducts Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred syncProducts:", error);
     }
     throw error;
   }
@@ -390,7 +396,7 @@ export const requestRecordSync = async (user: User): Promise<any> => {
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred requestRecordSync:", error);
     }
     throw error;
   }
@@ -433,7 +439,7 @@ export const getSChedulesAPI = async (user: User): Promise<any> => {
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred getSChedulesAPI:", error);
     }
     throw error;
   }
@@ -464,7 +470,7 @@ export const getCallsAPI = async (user: User): Promise<any> => {
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred getCallsAPI:", error);
     }
     throw error;
   }
@@ -497,7 +503,7 @@ export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred getWeeklyCallsAPI:", error);
     }
     throw error;
   }
@@ -518,7 +524,6 @@ export const getDoctors = async (user: User): Promise<any> => {
         },
       }
     );
-
     await saveDoctorListLocalDb(response.data);
     return response.data;
   } catch (error: any) {
@@ -530,7 +535,45 @@ export const getDoctors = async (user: User): Promise<any> => {
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred getDoctors:", error);
+    }
+    throw error;
+  }
+};
+
+export const getConfig = async (user: User): Promise<any> => {
+  try {
+    const { territory_id, division } = user;
+    const response = await axios.post(
+      `${API_URL_ENV}/getAppConfig`,
+      {
+        territory_id,
+        division,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(
+      response.data.data[0].total_products,
+      "getconfig response.data"
+    );
+    console.log(response.data.isProceed, "getconfig response.data");
+    if (response.data.isProceed) {
+      await saveAppConfigLocalDb(response.data.data);
+    }
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred getConfig:", error);
     }
     throw error;
   }
@@ -563,7 +606,7 @@ export const getReschedulesData = async (user: User): Promise<any> => {
       console.error("API Error response headers:", response?.headers);
       console.error("API Error request:", request);
     } else {
-      console.error("An unexpected error occurred:", error);
+      console.error("An unexpected error occurred getReschedulesData:", error);
     }
     throw error;
   }
@@ -602,7 +645,7 @@ export const getChartData = async (user: User): Promise<any[]> => {
       );
       console.error("API getChartData Error request:", request);
     } else {
-      console.error("An unexpected error occurred: getChartData", error);
+      console.error("An unexpected error occurred : getChartData", error);
     }
     throw error;
   }
@@ -640,7 +683,7 @@ export const getDetailersData = async (): Promise<any[]> => {
       );
       console.error("API getChartData Error request123123:", request);
     } else {
-      console.error("An unexpected error occurred: getChartData", error);
+      console.error("An unexpected error occurred getDetailersData:", error);
     }
     throw error;
   }

@@ -76,6 +76,19 @@ const dropCreate_Doctors = `
     update_date TEXT
   );
 `;
+
+const dropCreate_appconfig = `
+  DROP TABLE IF EXISTS app_config_tbl;
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE app_config_tbl (
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    quickCallLimit TEXT,
+    productCount TEXT,
+    theme TEXT,
+    announcement TEXT,
+    created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`;
 const dropCreate_Reschedule = `
     DROP TABLE IF EXISTS reschedule_req_tbl;
     
@@ -152,6 +165,19 @@ const createIfNE_products = `
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 `;
+
+const createIfNE_appconfig = `
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE IF NOT EXISTS app_config_tbl (
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      quickCallLimit TEXT,
+      productCount TEXT,
+      theme TEXT,
+      announcement TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`;
+
 const createIfNE_userAttendance = `
   PRAGMA journal_mode = WAL;
   CREATE TABLE IF NOT EXISTS user_attendance_tbl (
@@ -556,10 +582,6 @@ export const saveSchedulesAPILocalDb = async (
     // console.log(testRecords,'asdasd saveSchedulesAPILocalDb');
     return "Success";
   } catch (error) {
-    console.error(
-      "Error saving data:       WHERE id NOT IN (SELECT schedule_id FROM calls_tbl)",
-      error
-    );
     return "Failed to save data";
   }
 };
@@ -678,9 +700,9 @@ export const saveDoctorListLocalDb = async (
 
   await db.execAsync(dropCreate_Doctors);
 
-  const insertPromises = doctors.map((doctors: DoctorRecord) => {
-    return db.execAsync(`
-      INSERT INTO doctors_tbl (
+  const insertPromises = doctors.map((doctor: DoctorRecord) => {
+    return db.runAsync(
+      `INSERT INTO doctors_tbl (
         doctors_id,
         first_name,
         last_name,
@@ -696,85 +718,79 @@ export const saveDoctorListLocalDb = async (
         phone_secretary,
         notes_names,
         notes_values
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        doctor.doctors_id || null,
+        doctor.first_name || null,
+        doctor.last_name || null,
+        doctor.specialization || null,
+        doctor.classification || null,
+        doctor.birthday || null,
+        doctor.address_1 || null,
+        doctor.address_2 || null,
+        doctor.municipality_city || null,
+        doctor.province || null,
+        doctor.phone_mobile || null,
+        doctor.phone_office || null,
+        doctor.phone_secretary || null,
+        doctor.notes_names || null,
+        doctor.notes_values || null,
+      ]
+    );
+  });
+
+  try {
+    await Promise.all(insertPromises);
+    // const testRecords = await db.getAllAsync("SELECT * FROM doctors_tbl");
+    // console.log(testRecords, "doctors_tbl");
+    return "Success";
+  } catch (error) {
+    console.error("Error saving data doctorListLocalDb:", error);
+    return "Failed to save data";
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const saveAppConfigLocalDb = async (
+  appConfig: AppConfigRecord[]
+): Promise<string> => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(dropCreate_appconfig);
+
+  const insertPromises = appConfig.map((appConfig: AppConfigRecord) => {
+    return db.execAsync(`
+      INSERT INTO app_config_tbl (
+        quickCallLimit,
+        productCount,
+        theme,
+        announcement
       )
       VALUES (
         ${
-          doctors.doctors_id !== undefined && doctors.doctors_id !== null
-            ? `'${doctors.doctors_id}'`
+          appConfig.quickCallLimit !== undefined &&
+          appConfig.quickCallLimit !== null
+            ? `'${appConfig.quickCallLimit}'`
             : "NULL"
         },
         ${
-          doctors.first_name !== undefined && doctors.first_name !== null
-            ? `'${doctors.first_name}'`
+          appConfig.productCount !== undefined &&
+          appConfig.productCount !== null
+            ? `'${appConfig.productCount}'`
             : "NULL"
         },
         ${
-          doctors.last_name !== undefined && doctors.last_name !== null
-            ? `'${doctors.last_name}'`
+          appConfig.theme !== undefined && appConfig.theme !== null
+            ? `'${appConfig.theme}'`
             : "NULL"
         },
         ${
-          doctors.specialization !== undefined &&
-          doctors.specialization !== null
-            ? `'${doctors.specialization}'`
-            : "NULL"
-        },
-        ${
-          doctors.classification !== undefined &&
-          doctors.classification !== null
-            ? `'${doctors.classification}'`
-            : "NULL"
-        },
-        ${
-          doctors.birthday !== undefined && doctors.birthday !== null
-            ? `'${doctors.birthday}'`
-            : "NULL"
-        },
-        ${
-          doctors.address_1 !== undefined && doctors.address_1 !== null
-            ? `'${doctors.address_1}'`
-            : "NULL"
-        },
-        ${
-          doctors.address_2 !== undefined && doctors.address_2 !== null
-            ? `'${doctors.address_2}'`
-            : "NULL"
-        },
-        ${
-          doctors.municipality_city !== undefined &&
-          doctors.municipality_city !== null
-            ? `'${doctors.municipality_city}'`
-            : "NULL"
-        },
-        ${
-          doctors.province !== undefined && doctors.province !== null
-            ? `'${doctors.province}'`
-            : "NULL"
-        },
-        ${
-          doctors.phone_mobile !== undefined && doctors.phone_mobile !== null
-            ? `'${doctors.phone_mobile}'`
-            : "NULL"
-        },
-        ${
-          doctors.phone_office !== undefined && doctors.phone_office !== null
-            ? `'${doctors.phone_office}'`
-            : "NULL"
-        },
-        ${
-          doctors.phone_secretary !== undefined &&
-          doctors.phone_secretary !== null
-            ? `'${doctors.phone_secretary}'`
-            : "NULL"
-        },
-        ${
-          doctors.notes_names !== undefined && doctors.notes_names !== null
-            ? `'${doctors.notes_names}'`
-            : "NULL"
-        },
-        ${
-          doctors.notes_values !== undefined && doctors.notes_values !== null
-            ? `'${doctors.notes_values}'`
+          appConfig.announcement !== undefined &&
+          appConfig.announcement !== null
+            ? `'${appConfig.announcement}'`
             : "NULL"
         }
       );
@@ -787,7 +803,7 @@ export const saveDoctorListLocalDb = async (
     // console.log(testRecords,'doctors_tbl');
     return "Success";
   } catch (error) {
-    console.error("Error saving data:", error);
+    console.error("Error saving app config data:", error);
     return "Failed to save data";
   }
 };
@@ -1190,6 +1206,27 @@ export const getProductRecordsLocalDb = async () => {
     return existingRows;
   } catch (error) {
     console.error("Error fetching attendance data:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getConfigLocalDb = async () => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNE_appconfig);
+
+  const query = `SELECT id, quickCallLimit, productCount, theme FROM app_config_tbl`;
+
+  try {
+    const existingRows = await db.getAllAsync(query);
+    // console.log("existingRows getDoctorRecordsLocalDb", existingRows);
+    return existingRows;
+  } catch (error) {
+    console.error("Error fetching app config data:", error);
     return [];
   } finally {
     await db.closeAsync();
@@ -2625,6 +2662,8 @@ export const dropLocalTablesDb = async () => {
     "doctors_tbl",
     "pre_call_notes_tbl",
     "post_call_notes_tbl",
+    "doctors_tbl",
+    "app_config_tbl",
   ];
   // const tableNames = ['user_attendance_tbl','user_sync_history_tbl'];
   // const tableNames = ['quick_call_tbl'];

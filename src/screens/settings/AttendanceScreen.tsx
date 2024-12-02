@@ -24,6 +24,7 @@ import {
   doctorRecordsSync,
   getCallsAPI,
   getChartData,
+  getConfig,
   getDoctors,
   getReschedulesData,
   getSChedulesAPI,
@@ -44,7 +45,11 @@ import { useDataContext } from "../../context/DataContext";
 import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
 import LoadingProgressBar from "../../components/LoadingProgressbar";
 
-const dynamicStyles = getStyleUtil({ theme: "light" });
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const Attendance: React.FC = () => {
   const navigation = useNavigation<AttendanceScreenNavigationProp>();
@@ -200,16 +205,25 @@ const Attendance: React.FC = () => {
             progress: 0.2,
             text: "Fetching data : reschedule requests",
           });
-          await getDoctors(userInfo);
-          await getReschedulesData(userInfo);
+          await getConfig(userInfo);
           setLoadingProgressData({
             progress: 0.3,
+            text: "Fetching data : app config",
+          });
+          await getDoctors(userInfo);
+          setLoadingProgressData({
+            progress: 0.4,
+            text: "Fetching data : reschedule requests",
+          });
+          await getReschedulesData(userInfo);
+          setLoadingProgressData({
+            progress: 0.5,
             text: "Fetching data : charts and calendar",
           });
           await getChartData(userInfo);
 
           setLoadingProgressData({
-            progress: 0.5,
+            progress: 0.6,
             text: "Checking data : actual calls",
           });
           await getCallsAPI(userInfo);
@@ -219,7 +233,7 @@ const Attendance: React.FC = () => {
           });
           await getSChedulesAPI(userInfo);
           setLoadingProgressData({
-            progress: 0.9,
+            progress: 0.8,
             text: "Fetching data : schedules",
           });
         } catch (error) {
@@ -240,7 +254,7 @@ const Attendance: React.FC = () => {
         if (!hasError) {
           setLoading(true);
           setLoadingProgressData({
-            progress: 0.8,
+            progress: 0.9,
             text: "Saving : Sync logs",
           });
           await saveUserSyncHistoryLocalDb(
@@ -250,7 +264,7 @@ const Attendance: React.FC = () => {
           );
 
           setLoadingProgressData({
-            progress: 0.9,
+            progress: 0.99,
             text: "Saving : Attendace logs",
           });
           await saveUserAttendanceLocalDb(
@@ -260,7 +274,7 @@ const Attendance: React.FC = () => {
           );
 
           setLoadingProgressData({
-            progress: 0.9,
+            progress: 0.99,
             text: "Refreshing data",
           });
           await fetchAttendanceData();
@@ -428,6 +442,15 @@ const Attendance: React.FC = () => {
               <View style={styles.centerItems}>
                 {!hasTimedIn && !loading && (
                   <>
+                    <View style={styles.requirementStatus}>
+                      <Text style={styles.requirementText}>
+                        Signature: {signatureVal ? "✅" : "❌"}
+                      </Text>
+                      <Text style={styles.requirementText}>
+                        Photo: {selfieVal ? "✅" : "❌"}
+                      </Text>
+                    </View>
+
                     <TouchableOpacity
                       onPress={
                         signatureVal && selfieVal
@@ -446,7 +469,11 @@ const Attendance: React.FC = () => {
                         color="white"
                         style={{ alignSelf: "center" }}
                       />
-                      <Text style={styles.buttonText}>Time In</Text>
+                      <Text style={styles.buttonText}>
+                        {!(signatureVal && selfieVal)
+                          ? "Complete Requirements First"
+                          : "Time In"}
+                      </Text>
                     </TouchableOpacity>
 
                     {signatureVal ? (
@@ -623,5 +650,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     minWidth: 60,
+  },
+  requirementStatus: {
+    marginBottom: 15,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: "#f5f5f5",
+  },
+  requirementText: {
+    fontSize: 16,
+    marginVertical: 5,
+    fontWeight: "500",
   },
 });

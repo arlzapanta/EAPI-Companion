@@ -4,6 +4,7 @@ import { API_URL_ENV, TOKEN_USERNAME_ENV, TOKEN_PASSWORD_ENV } from "@env";
 import axios from "axios";
 import { View, Text } from "react-native";
 import Loading from "../components/Loading";
+import { customToast } from "../utils/customToast";
 
 const AuthContext = createContext<AuthProps>({
   authState: { token: null, authenticated: false },
@@ -69,19 +70,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         const { response, request, message } = error;
-        console.error("API refreshToken Error message:", message);
-        console.error("API refreshToken Error response data:", response?.data);
-        console.error(
-          "API refreshToken Error response status:",
-          response?.status
-        );
-        console.error(
-          "API refreshToken Error response headers:",
-          response?.headers
-        );
-        console.error("API refreshToken Error request:", request);
+        customToast(` Server is down,Please contact admin or DSM : ${message}`);
+        // console.error("API refreshToken Error message:", message);
+        // console.error("API refreshToken Error response data:", response?.data);
+        // console.error(
+        //   "API refreshToken Error response status:",
+        //   response?.status
+        // );
+        // console.error(
+        //   "API refreshToken Error response headers:",
+        //   response?.headers
+        // );
+        // console.error("API refreshToken Error request:", request);
       } else {
-        console.error("An unexpected error occurred: refreshToken", error);
+        console.error("An unexpected error occurred refreshToken:", error);
       }
       throw error;
     }
@@ -167,13 +169,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
         const { response, request, message } = error;
-        console.error("API login Error message:", message);
-        console.error("API login Error response data:", response?.data);
-        console.error("API login Error response status:", response?.status);
-        console.error("API login Error response headers:", response?.headers);
-        console.error("API login Error request:", request);
+        customToast(` Server is down,Please contact admin or DSM : ${message}`);
+        // console.error("API Time-In Error message:", message);
+        // console.error("API Time-In Error response data:", response?.data);
+        // console.error("API Time-In Error response status:", response?.status);
+        // console.error("API Time-In Error response headers:", response?.headers);
+        // console.error("API Time-In Error request:", request);
       } else {
-        console.error("An unexpected error occurred: login", error);
+        console.error("An unexpected error occurred login:", error);
       }
       throw error;
     }

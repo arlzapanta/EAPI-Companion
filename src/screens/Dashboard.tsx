@@ -7,7 +7,12 @@ import { formatDatev1 } from "../utils/dateUtils";
 import { Ionicons } from "@expo/vector-icons";
 import { useDataContext } from "../context/DataContext";
 import Loading from "../components/Loading";
-const dynamicStyles = getStyleUtil({});
+
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const Dashboard = () => {
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
@@ -27,9 +32,6 @@ const Dashboard = () => {
     <View style={{ height: size }} />
   );
 
-  const announcementText =
-    "Welcome to CMMS companion App! No announcement for today";
-
   const {
     currentDate,
     calendarData,
@@ -45,9 +47,17 @@ const Dashboard = () => {
     yearlyData,
     ytdData,
     isLoading,
+    configData,
     isDashboardLoading,
     ytdDataMonthValues,
   } = useDataContext();
+
+  let announcementText =
+    "Welcome to CMMS companion App! No announcement for today";
+
+  if (configData && configData.length > 0) {
+    announcementText = configData[0].announcement;
+  }
 
   const actualColor = "#046E37";
   const plottedColor = "lightgray";
