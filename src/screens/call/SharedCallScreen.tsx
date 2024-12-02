@@ -7,7 +7,7 @@ import {
   Image,
 } from "react-native";
 import React, { useEffect, useState } from "react";
-import { RouteProp, useNavigation } from "@react-navigation/native";
+import { RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../type/navigation";
 import { getStyleUtil } from "../../utils/styleUtil";
@@ -16,8 +16,6 @@ import {
   getBase64StringFormat,
   showConfirmAlert,
 } from "../../utils/commonUtil";
-import Icon from "react-native-vector-icons/Ionicons";
-import { getLocation } from "../../utils/currentLocation";
 import { useAuth } from "../../context/AuthContext";
 import { getCurrentDatePH } from "../../utils/dateUtils";
 import {

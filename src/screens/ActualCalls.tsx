@@ -261,14 +261,7 @@ const ActualCalls = () => {
                                 }}>
                                 {`${actual.doctors_name} \n${moment(
                                   actual.created_at
-                                ).format("MMMM DD YYYY")}`}{" "}
-                                {actual.done == "1" && (
-                                  <Entypo
-                                    name="arrow-with-circle-up"
-                                    size={24}
-                                    color="black"
-                                  />
-                                )}
+                                ).format("MMMM DD YYYY")} `}{" "}
                                 {cardActiveId === actual.id &&
                                   cardActiveDate === actual.date &&
                                   actual.done == "1" && (
@@ -281,6 +274,17 @@ const ActualCalls = () => {
                                       color="green"
                                     />
                                   )}
+                                {actual.done == "1" && (
+                                  <Ionicons
+                                    name="cloud-done"
+                                    style={{
+                                      alignSelf: "center",
+                                      marginLeft: 10,
+                                    }}
+                                    size={20}
+                                    color="white"
+                                  />
+                                )}
                               </Text>
                             </TouchableOpacity>
                           ))
@@ -331,32 +335,34 @@ const ActualCalls = () => {
                             }}>
                             {`${call.doctors_name} \n${moment(
                               call.created_date
-                            ).format("MMMM DD YYYY")}`}{" "}
-                          </Text>
-                          {call.done == "1" && (
-                            <Ionicons
-                              name="cloud-done"
-                              style={{
-                                alignSelf: "center",
-                                marginLeft: 10,
-                              }}
-                              size={20}
-                              color="white"
-                            />
-                          )}
+                            ).format("MMMM DD YYYY")}  `}
 
-                          {cardActiveId === call.id &&
-                            cardActiveDate === call.date &&
-                            call.done == "1" && (
+                            {cardActiveId === call.id &&
+                              cardActiveDate === call.date &&
+                              call.done == "1" && (
+                                <Ionicons
+                                  name="cloud-done"
+                                  style={{
+                                    alignSelf: "center",
+                                    marginLeft: 10,
+                                  }}
+                                  size={20}
+                                  color="green"
+                                />
+                              )}
+
+                            {call.done == "1" && (
                               <Ionicons
                                 name="cloud-done"
                                 style={{
                                   alignSelf: "center",
+                                  marginLeft: 10,
                                 }}
                                 size={20}
-                                color="green"
+                                color="white"
                               />
                             )}
+                          </Text>
                         </View>
                       </TouchableOpacity>
                     ))}

@@ -1235,7 +1235,7 @@ export const getRescheduleListLocalDb = async (): Promise<
 
   await db.execAsync(createIfNERescheduleReq);
 
-  const query = `SELECT * FROM reschedule_req_tbl`;
+  const query = `SELECT * FROM reschedule_req_tbl WHERE schedule_id NOT IN (SELECT schedule_id FROM calls_tbl)`;
 
   try {
     const result = await db.getAllAsync(query);
@@ -1806,17 +1806,12 @@ export const getDoctorsWeekSchedLocalDb = async (): Promise<
   await db.execAsync(createIfNEscheduleAPI);
 
   const weekDates = await getWeekdaysRange();
-  console.log(
-    weekDates,
-    "getDoctorsWeekSchedLocalDbgetDoctorsWeekSchedLocalDb week dates"
-  );
   const placeholders = weekDates.map(() => "?").join(", ");
   const query = `SELECT * FROM schedule_API_tbl WHERE DATE(date) IN (${placeholders})`;
 
   try {
     const result = await db.getAllAsync(query, weekDates);
     const existingRows = result as ScheduleAPIRecord[];
-    console.log(existingRows, "exustak dlkasjd");
     return existingRows;
   } catch (error) {
     console.error("Error fetching schedule records data6:", error);
@@ -1905,10 +1900,10 @@ export const updateActualCallsToDone = async () => {
 
   try {
     await db.execAsync(`UPDATE calls_tbl SET done = 1`);
-    const test = await db.getAllAsync(
-      `SELECT id,done,schedule_id FROM calls_tbl`
-    );
-    console.log(test);
+    // const test = await db.getAllAsync(
+    //   `SELECT id,done,schedule_id FROM calls_tbl`
+    // );
+    // console.log(test);
   } catch (error) {
     console.error("Error updating calls_tblcalls_tbl status:", error);
   } finally {

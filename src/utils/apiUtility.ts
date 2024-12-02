@@ -27,7 +27,7 @@ import {
   getPreCallNotesLocalDb,
 } from "./callComponentsUtil";
 
-export const apiTimeIn = async (user: User) => {
+export const apiTimeIn = async (user: User, req: any) => {
   try {
     const loc = await getLocationAttendance();
     const { first_name, last_name, sales_portal_id, territory_id } = user;
@@ -44,6 +44,10 @@ export const apiTimeIn = async (user: User) => {
       {
         sales_portal_id: userInfo.sales_portal_id,
         location: loc,
+        signature: req.signatureVal,
+        signature_location: req.signatureLoc,
+        photo: req.selfieVal,
+        photo_location: req.selfieLoc,
       },
       {
         headers: {
@@ -146,13 +150,18 @@ export const syncUser = async (user: User): Promise<any> => {
       return "No records to sync";
     }
 
-    const response = await axios.post(`${API_URL_ENV}/sync`, recordsToSync, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    let allResponses = [];
+    for (const record of recordsToSync) {
+      const response = await axios.post(`${API_URL_ENV}/sync`, [record], {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      allResponses.push(response.data);
+    }
 
-    if (response.data.isProceed) {
+    const allSuccessful = allResponses.every((response) => response.isProceed);
+    if (allSuccessful) {
       await updateActualCallsToDone();
       await dropLocalTables([
         "detailers_tbl",
@@ -166,7 +175,7 @@ export const syncUser = async (user: User): Promise<any> => {
       ]);
     }
 
-    return response.data;
+    return allResponses;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
       const { response, request, message } = error;
@@ -208,9 +217,9 @@ export const syncUserMid = async (user: User): Promise<any> => {
         call_end: record.call_end,
         signature: record.signature,
         signature_attempts: record.signature_attempts,
-        signature_location: record.signature_location,
+        signature_location: record.signature_location.toString(),
         photo: record.photo,
-        photo_location: record.photo_location,
+        photo_location: record.photo_location.toString(),
         post_call: postCallNotes,
         pre_call: preCallNotes,
       });

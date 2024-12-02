@@ -170,9 +170,11 @@ const Attendance: React.FC = () => {
       return;
     }
 
+    const req = [{ signatureVal, signatureLoc, selfieVal, selfieLoc }];
+
     try {
       setLoading(true);
-      const timeInIsProceed = await apiTimeIn(userInfo);
+      const timeInIsProceed = await apiTimeIn(userInfo, req);
       if (timeInIsProceed.isProceed) {
         let hasError = false;
         try {

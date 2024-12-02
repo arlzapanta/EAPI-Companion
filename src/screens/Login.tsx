@@ -52,7 +52,6 @@ const Login = () => {
 
     try {
       setIsLoginLoading(true);
-      console.log(isLoginLoading, "isLoginLoading");
       const result = await onLogin!(email, password);
       if (result && result.error) {
         Alert.alert("Login Error", result.msg);

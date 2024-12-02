@@ -9,13 +9,8 @@ import {
 import { Provider, Card, DataTable, Button, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { format, parseISO } from "date-fns";
-import {
-  deleteRescheduleReqLocalDb,
-  dropLocalTablesDb,
-} from "../../utils/localDbUtils";
 import { getStatusText, showConfirmAlert } from "../../utils/commonUtil";
 import { Ionicons } from "@expo/vector-icons";
-import { customToast } from "../../utils/customToast";
 import { AntDesign } from "@expo/vector-icons";
 import { getStyleUtil } from "../../utils/styleUtil";
 const dynamicStyles = getStyleUtil({ theme: "light" });

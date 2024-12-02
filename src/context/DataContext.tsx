@@ -6,16 +6,13 @@ import React, {
   ReactNode,
 } from "react";
 import {
-  fetchAllDetailers,
   fetchChartDataLocalDb,
-  fetchDetailersDataLocalDb,
   getDailyChartsData,
   getDatesAndTypeForCalendarView,
   getProductRecordsLocalDb,
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import { getQuickCalls } from "../utils/quickCallUtil";
-import { customToast } from "../utils/customToast";
 
 // todo : add necessary states from components
 interface DataContextProps<T> {
@@ -53,18 +50,11 @@ interface DataContextProps<T> {
   setCalendarData: (newCalendarRecord: CalendarProps) => void;
   setLoadingGlobal: (newLoadingGlobalData: LoadingSubRecords) => void;
   setIsLoading: (newIsLoadingValue: boolean) => void;
-  // coreProductVal: ProductRecord | null | undefined;
-  // secProductVal: ProductRecord | null | undefined;
-  // remindProductVal: ProductRecord | null | undefined;
-  // setCoreProductVal: (newCoreProductVal: ProductRecord | undefined) => void;
-  // setSecProductVal: (newSecProductVal: ProductRecord | undefined) => void;
-  // setRemindProductVal: (newRemindProductVal: ProductRecord | undefined) => void;
 }
 interface DataProviderProps {
   children: ReactNode;
 }
 
-// const DataContext = createContext<DataContextProps | undefined>(undefined);
 const DataContext = createContext<
   DataContextProps<DetailersRecord> | undefined
 >(undefined);
@@ -116,7 +106,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   });
   const [isDashboardLoading, setIsDashboardLoading] = useState<boolean>(false);
   const { getCurrentDate } = useRefreshFetchDataContext();
-  const { refreshSchedData } = useRefreshFetchDataContext();
   const fetchDashboardData = async () => {
     try {
       setIsDashboardLoading(true);
@@ -452,6 +441,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   useEffect(() => {
     fetchQuickCallsData();
   }, []);
+
   // ***************************************************************************
   // ***************************************************************************
   // QUICK DATA END
@@ -495,12 +485,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setDetailersRecord,
         setProductRecord,
         setCalendarData,
-        // coreProductVal,
-        // secProductVal,
-        // remindProductVal,
-        // setCoreProductVal,
-        // setSecProductVal,
-        // setRemindProductVal,
         // ***************************************************************************
         // SCHEDULE DATA END
         // ***************************************************************************
