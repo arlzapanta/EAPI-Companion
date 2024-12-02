@@ -20,7 +20,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#000"
       },
-      "permissions": ["ACCESS_NETWORK_STATE", "INTERNET"],
+      "permissions": [
+        "ACCESS_NETWORK_STATE",
+        "INTERNET"
+      ],
       "package": "com.akainzapantadev.EAPICompanion"
     },
     "web": {
@@ -34,12 +37,20 @@
           "initialOrientation": "landscape"
         }
       ],
-      ["expo-build-properties", { "android": { "usesCleartextTraffic": true } }]
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {
         "projectId": "9ee2a6a9-c3cf-4412-8deb-d2407b509a8e"
       }
-    }
+    },
+    "owner": "akainzapantadev"
   }
 }
