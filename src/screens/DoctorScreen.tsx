@@ -40,7 +40,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeOutLoading(false);
-    }, 1000);
+    }, 200);
     return () => clearTimeout(timer);
   }, []);
 
@@ -122,7 +122,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const handleCallClick = (doc: DoctorRecord) => {
     setSelectedDoctor(doc);
     setIsInternalDoctorLoading(true);
-    setTimeout(() => setIsInternalDoctorLoading(false), 500);
+    setTimeout(() => setIsInternalDoctorLoading(false), 200);
   };
 
   const DetailRow = ({ label, value }: { label: string; value: string }) => (
@@ -369,9 +369,8 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
 
   return (
     <View style={dynamicStyles.container}>
-      {isDoctorLoading || timeOutLoading ? (
-        <Loading />
-      ) : (
+      {(isDoctorLoading || timeOutLoading) && <LoadingSub />}
+      {!isDoctorLoading && !timeOutLoading && (
         <View style={styles.row}>
           <View style={styles.column1}>
             <View style={dynamicStyles.card1Col}>

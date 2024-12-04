@@ -145,86 +145,88 @@ const Settings = () => {
 
   const MidSync = async () => {
     let msg = "";
-    // if (isTimeBetween12and1PM()) {
-    // const check = await getDatesAndTypeForCalendarView();
-    // console.log(check);
-    try {
-      setLoading(true);
-      const checkQC = await getQuickCalls();
-      const checkPost = await checkPostCallUnsetExist();
-      if (checkQC.length > 0) {
-        msg = "Existing quick calls, kindly complete or remove any data";
-        Alert.alert(msg);
-        return;
-      }
-      if (checkPost) {
-        msg = "Existing empty post calls, kindly complete all post calls";
-        Alert.alert(msg);
-        return;
-      }
-      if (!userInfo) {
-        msg = "Server Error : User information is missing.";
-        Alert.alert(msg);
-        return;
-      }
-
+    if (isTimeBetween12and1PM()) {
+      const check = await getDatesAndTypeForCalendarView();
+      console.log(check);
       try {
         setLoading(true);
-        setLoadingProgressData({
-          progress: 0.2,
-          text: "Syncing data : preparing ...",
-        });
-        let hasError = false;
+        const checkQC = await getQuickCalls();
+        const checkPost = await checkPostCallUnsetExist();
+        if (checkQC.length > 0) {
+          msg = "Existing quick calls, kindly complete or remove any data";
+          Alert.alert(msg);
+          return;
+        }
+        if (checkPost) {
+          msg = "Existing empty post calls, kindly complete all post calls";
+          Alert.alert(msg);
+          return;
+        }
+        if (!userInfo) {
+          msg = "Server Error : User information is missing.";
+          Alert.alert(msg);
+          return;
+        }
+
         try {
           setLoading(true);
           setLoadingProgressData({
-            progress: 0.5,
-            text: "Syncing data : checking actual calls ...",
+            progress: 0.2,
+            text: "Syncing data : preparing ...",
           });
-          await syncUserMid(userInfo);
+          let hasError = false;
+          try {
+            setLoading(true);
+            setLoadingProgressData({
+              progress: 0.5,
+              text: "Syncing data : checking actual calls ...",
+            });
+            await syncUserMid(userInfo);
+          } catch (error) {
+            hasError = true;
+            msg = "Server Error : Failed to mid sync please contact admin.";
+            Alert.alert(msg);
+            throw error;
+          } finally {
+            setLoading(false);
+          }
+
+          if (!hasError) {
+            setLoading(true);
+            setLoadingProgressData({
+              progress: 0.7,
+              text: "Syncing data : saving sync logs ...",
+            });
+            await saveUserSyncHistoryLocalDb(userInfo, 3, {
+              Date: await getCurrentDatePH(),
+              Time: await getCurrentTimePH(),
+            });
+            setLoadingProgressData({
+              progress: 0.9,
+              text: "Almost there ...",
+            });
+          }
         } catch (error) {
-          hasError = true;
           msg = "Server Error : Failed to mid sync please contact admin.";
           Alert.alert(msg);
-          throw error;
         } finally {
           setLoading(false);
         }
-
-        if (!hasError) {
-          setLoading(true);
-          setLoadingProgressData({
-            progress: 0.7,
-            text: "Syncing data : saving sync logs ...",
-          });
-          await saveUserSyncHistoryLocalDb(userInfo, 3, {
-            Date: await getCurrentDatePH(),
-            Time: await getCurrentTimePH(),
-          });
-          setLoadingProgressData({
-            progress: 0.9,
-            text: "Almost there ...",
-          });
-        }
       } catch (error) {
-        msg = "Server Error : Failed to mid sync please contact admin.";
-        Alert.alert(msg);
+        Alert.alert(
+          "Server Error",
+          " Failed to mid sync please contact admin."
+        );
       } finally {
+        setLoadingProgressData({
+          progress: 1,
+          text: "DONE!",
+        });
         setLoading(false);
       }
-    } catch (error) {
-      Alert.alert("Server Error", " Failed to mid sync please contact admin.");
-    } finally {
-      setLoadingProgressData({
-        progress: 1,
-        text: "DONE!",
-      });
-      setLoading(false);
+    } else {
+      customToast("Mid sync is available between 12pm and 1pm");
     }
-
-    // } else {
-    //   customToast("Mid sync is available between 12pm and 1pm");
-    // }
   };
 
   const handleSyncProducts = async () => {
@@ -262,9 +264,7 @@ const Settings = () => {
   };
 
   const syncProducts = async (totalProd: number) => {
-    console.log(totalProd, "totalProd");
     try {
-      // TODO: this is static for now but need to make it dynamically depends on the # of products from API config table
       setIsLoading(true);
       setLoadingGlobal({
         progress: 0.01,
@@ -357,103 +357,106 @@ const Settings = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeOutLoading(false);
-    }, 500);
+    }, 200);
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <View style={dynamicStyle.container}>
-      {timeOutLoading ? (
-        <Loading />
-      ) : (
-        <>
-          {loading ? (
-            <LoadingProgressBar data={loadingProgressData} />
-          ) : (
-            <View style={dynamicStyle.card}>
-              <Text style={styles.title}>Settings</Text>
-              <View style={styles.centerItems}>
-                <TouchableOpacity
-                  style={dynamicStyle.buttonContainer}
-                  onPress={handleAttendanceOnPress}>
-                  <Text style={styles.buttonText}>Attendance</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={dynamicStyle.buttonContainer}
-                  onPress={handleSyncSettingsOnPress}>
-                  <Text style={styles.buttonText}>Sync History</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={dynamicStyle.buttonContainer}
-                  onPress={handleRequestreschedOnPress}>
-                  <Text style={styles.buttonText}>Request Reschedule</Text>
-                </TouchableOpacity>
-                {/* 
+      <>
+        {(loading || timeOutLoading) && <Loading />}
+        {loading ? (
+          <LoadingProgressBar data={loadingProgressData} />
+        ) : (
+          <>
+            {!loading && !timeOutLoading && (
+              <View style={dynamicStyle.card}>
+                <Text style={styles.title}>Settings</Text>
+                <View style={styles.centerItems}>
                   <TouchableOpacity
-                    onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
-                    style={styles.button}>
-                    <Text style={styles.buttonText}>Mid Sync</Text>
-                  </TouchableOpacity> */}
+                    style={dynamicStyle.buttonContainer}
+                    onPress={handleAttendanceOnPress}>
+                    <Text style={styles.buttonText}>Attendance</Text>
+                  </TouchableOpacity>
 
-                <TouchableOpacity
-                  disabled={loading}
-                  style={[
-                    dynamicStyle.buttonContainer,
-                    loading && dynamicStyle.isLoadingButtonContainer,
-                  ]}
-                  onPress={() => showConfirmAlert(MidSync, "Mid Sync calls")}>
-                  {loading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={dynamicStyle.buttonText}>Mid Sync Calls</Text>
-                  )}
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={dynamicStyle.buttonContainer}
+                    onPress={handleSyncSettingsOnPress}>
+                    <Text style={styles.buttonText}>Sync History</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={dynamicStyle.buttonContainer}
+                    onPress={handleRequestreschedOnPress}>
+                    <Text style={styles.buttonText}>Request Reschedule</Text>
+                  </TouchableOpacity>
+                  {/* 
+                     <TouchableOpacity
+                       onPress={() => showConfirmAlert(MidSync, "Mid Sync")}
+                       style={styles.button}>
+                       <Text style={styles.buttonText}>Mid Sync</Text>
+                     </TouchableOpacity> */}
 
-                <TouchableOpacity
-                  style={dynamicStyle.buttonContainer}
-                  disabled={syncProdLoading}
-                  onPress={() =>
-                    showConfirmAlert(handleSyncProducts, "Sync Products")
-                  }>
-                  {syncProdLoading ? (
-                    <>
+                  <TouchableOpacity
+                    disabled={loading}
+                    style={[
+                      dynamicStyle.buttonContainer,
+                      loading && dynamicStyle.isLoadingButtonContainer,
+                    ]}
+                    onPress={() => showConfirmAlert(MidSync, "Mid Sync calls")}>
+                    {loading ? (
                       <ActivityIndicator size="small" color="#fff" />
-
-                      <Text style={{ color: "#fff", marginEnd: 20 }}>
-                        {prodProgressText.text}
+                    ) : (
+                      <Text style={dynamicStyle.buttonText}>
+                        Mid Sync Calls
                       </Text>
-                    </>
-                  ) : (
-                    <Text style={styles.buttonText}>
-                      Sync Product Detailers
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={dynamicStyle.buttonContainer}
+                    disabled={syncProdLoading}
+                    onPress={() =>
+                      showConfirmAlert(handleSyncProducts, "Sync Products")
+                    }>
+                    {syncProdLoading ? (
+                      <>
+                        <ActivityIndicator size="small" color="#fff" />
+
+                        <Text style={{ color: "#fff", marginEnd: 20 }}>
+                          {prodProgressText.text}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text style={styles.buttonText}>
+                        Sync Product Detailers
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.buttonLogout, dynamicStyle.buttonLogout]}
+                    onPress={handleLogout}>
+                    <Text style={styles.buttonTextLogout}>Logout</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.buttonTest}
+                    onPress={() =>
+                      showConfirmAlert(
+                        dropLocalTables,
+                        "DROP ALL TABLES (THIS IS FOR DEV ONLY PLEASE DONT CONFIRM)"
+                      )
+                    }>
+                    <Text style={styles.buttonTextTest}>
+                      DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
                     </Text>
-                  )}
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.buttonLogout, dynamicStyle.buttonLogout]}
-                  onPress={handleLogout}>
-                  <Text style={styles.buttonTextLogout}>Logout</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={styles.buttonTest}
-                  onPress={() =>
-                    showConfirmAlert(
-                      dropLocalTables,
-                      "DROP ALL TABLES (THIS IS FOR DEV ONLY PLEASE DONT CONFIRM)"
-                    )
-                  }>
-                  <Text style={styles.buttonTextTest}>
-                    DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
-                  </Text>
-                </TouchableOpacity>
+                  </TouchableOpacity>
+                </View>
               </View>
-            </View>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
+      </>
     </View>
   );
 };

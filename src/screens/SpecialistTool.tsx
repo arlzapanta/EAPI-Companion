@@ -37,7 +37,7 @@ export const useStyles = (theme: string) => {
 const dynamicStyles = getStyleUtil([]);
 
 const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
-  const { isDoctorLoading } = useDataContext();
+  const { isDoctorLoading, setIsDoctorLoading } = useDataContext();
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
   const [isInternalDoctorLoading, setIsInternalDoctorLoading] =
     useState<boolean>(false);
@@ -45,7 +45,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeOutLoading(false);
-    }, 1000);
+    }, 200);
     return () => clearTimeout(timer);
   }, []);
 
@@ -188,8 +188,15 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
 
   useEffect(() => {
     if (userInfo) {
-      fetchDoctorData();
-      fetchProductData();
+      try {
+        setIsDoctorLoading(true);
+        fetchDoctorData();
+        fetchProductData();
+      } catch (error) {
+        console.log("fetch doctor and product data error", error);
+      } finally {
+        setIsDoctorLoading(false);
+      }
     }
   }, [userInfo]);
 
@@ -215,7 +222,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
     setSelectedProdIdVal("");
     setSelectedDoctor(doc);
     setIsInternalDoctorLoading(true);
-    setTimeout(() => setIsInternalDoctorLoading(false), 500);
+    setTimeout(() => setIsInternalDoctorLoading(false), 200);
   };
 
   const handleProductClick = (prod: ProductWoDetailsRecord) => {
@@ -224,7 +231,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
     setSelectedDocId("");
     setSelectedProduct(prod);
     setIsInternalDoctorLoading(true);
-    setTimeout(() => setIsInternalDoctorLoading(false), 500);
+    setTimeout(() => setIsInternalDoctorLoading(false), 200);
   };
 
   const DetailRow = ({ label, value }: { label: string; value: string }) => (
@@ -519,9 +526,8 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
 
   return (
     <View style={dynamicStyles.container}>
-      {isDoctorLoading || timeOutLoading ? (
-        <Loading />
-      ) : (
+      {(isDoctorLoading || timeOutLoading) && <Loading />}
+      {!isDoctorLoading && !timeOutLoading && (
         <View style={dynamicStyles.row}>
           <View style={dynamicStyles.column1}>
             <View

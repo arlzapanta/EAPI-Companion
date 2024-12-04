@@ -14,6 +14,7 @@ import { getStyleUtil } from "../utils/styleUtil";
 import LoadingProgressBarGlobal from "../components/LoadingProgressbarGlobal";
 import QuickCallLightning from "./call/LightningQuickCall";
 import { useDataContext } from "../context/DataContext";
+import Loading from "../components/Loading";
 export const useStyles = (theme: string) => {
   const { configData } = useDataContext();
   return getStyleUtil(configData);
@@ -43,7 +44,7 @@ const defaultDoctor: DoctorRecord = {
 };
 
 const Home = () => {
-  const { loadingGlobal, isLoading } = useDataContext();
+  const { loadingGlobal, isLoading, isSimpleLoading } = useDataContext();
   const refRBSheet = useRef<RBSheet>(null);
   const [selectedScreen, setSelectedScreen] = useState<
     | "dashboard"
@@ -80,6 +81,7 @@ const Home = () => {
   return (
     <>
       {isLoading && <LoadingProgressBarGlobal data={loadingGlobal} />}
+      {isSimpleLoading && <Loading />}
       <View style={dynamicStyles.homeContainer_home}>
         <View style={dynamicStyles.navContainer_home}>
           <NavLinkComponent

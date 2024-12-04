@@ -33,6 +33,7 @@ interface DataContextProps<T> {
   isLoading: boolean;
   configData: AppConfigRecord[];
   loadingGlobal: LoadingSubRecords;
+  isSimpleLoading: boolean;
   isDashboardLoading: boolean;
   isScheduleLoading: boolean;
   isActualLoading: boolean;
@@ -40,7 +41,6 @@ interface DataContextProps<T> {
   isQuickLoading: boolean;
   detailersRecord: T[];
   productRecord: ProductWoDetailsRecord[];
-  quickCallData: Call[];
   ytdDataMonthValues: Array<{
     value: number;
     frontColor: string;
@@ -52,6 +52,12 @@ interface DataContextProps<T> {
   setCalendarData: (newCalendarRecord: CalendarProps) => void;
   setLoadingGlobal: (newLoadingGlobalData: LoadingSubRecords) => void;
   setIsLoading: (newIsLoadingValue: boolean) => void;
+  setIsSimpleLoading: (newIsSimpleLoadingValue: boolean) => void;
+  setIsActualLoading: (newIsActualLoadingValue: boolean) => void;
+  setIsDashboardLoading: (newIsDashboardLoadingValue: boolean) => void;
+  setIsScheduleLoading: (newIsScheduleLoadingValue: boolean) => void;
+  setIsDoctorLoading: (newIsDoctorLoadingValue: boolean) => void;
+  setIsQuickLoading: (newIsQuickLoadingValue: boolean) => void;
 }
 interface DataProviderProps {
   children: ReactNode;
@@ -103,6 +109,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     { value: [0, 0, 0] },
   ]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSimpleLoading, setIsSimpleLoading] = useState<boolean>(false);
   const [loadingGlobal, setLoadingGlobal] = useState<LoadingSubRecords>({
     progress: 0,
     text: "",
@@ -110,14 +117,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [isDashboardLoading, setIsDashboardLoading] = useState<boolean>(false);
   const { getCurrentDate } = useRefreshFetchDataContext();
   const fetchConfigData = async () => {
-    const configData = (await getConfigLocalDb()) as AppConfigRecord[];
-    setConfigData(configData);
+    try {
+      const configData = (await getConfigLocalDb()) as AppConfigRecord[];
+      setConfigData(configData);
+    } catch (error) {
+      console.log("fetchConfigData error", error);
+    }
   };
 
   const fetchDashboardData = async () => {
     try {
-      setIsDashboardLoading(true);
-
       const date = await getCurrentDate();
       setCurrentDate(date);
 
@@ -260,10 +269,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setMonthlyData(monthlyData);
         setYtdData(ytdData);
       }
-      setIsDashboardLoading(false);
     } catch (error) {
       console.error("Error fetching chart data123:", error);
-      setIsDashboardLoading(false);
     }
   };
 
@@ -366,8 +373,15 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   ];
 
   useEffect(() => {
-    fetchDashboardData();
-    fetchConfigData();
+    try {
+      setIsDashboardLoading(true);
+      fetchDashboardData();
+      fetchConfigData();
+    } catch (error) {
+      console.log("fetchDashboardData error", error);
+    } finally {
+      setIsDashboardLoading(false);
+    }
   }, [getCurrentDate, getDatesAndTypeForCalendarView, fetchChartDataLocalDb]);
   // ***************************************************************************
   // ***************************************************************************
@@ -380,23 +394,12 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // SCHEDULE DATA START
   // ***************************************************************************
   // ***************************************************************************
-  const [isScheduleLoading, setIsScheduleLoading] = useState<boolean>(false);
   const [detailersRecord, setDetailersRecord] = useState<DetailersRecord[]>([]);
-  const [productRecord, setProductRecord] = useState<ProductWoDetailsRecord[]>(
-    []
-  );
-  const fetchProducts = async () => {
-    const productData =
-      (await getProductRecordsLocalDb()) as ProductWoDetailsRecord[];
-    setProductRecord(productData);
-  };
-  useEffect(() => {
-    fetchProducts();
-  }, []);
 
   // ADD SCHEDULE DATA HERE
   // ***************************************************************************
   // ***************************************************************************
+  const [isScheduleLoading, setIsScheduleLoading] = useState<boolean>(false);
   // SCHEDULE DATA END
   // ***************************************************************************
   // ***************************************************************************
@@ -406,7 +409,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // ACTUAL DATA START
   // ***************************************************************************
   // ***************************************************************************
-  const [isActualLoading, setIsaCTUALLoading] = useState<boolean>(false);
+  const [isActualLoading, setIsActualLoading] = useState<boolean>(false);
   // ADD ACTUAL DATA HERE
   // ***************************************************************************
   // ***************************************************************************
@@ -420,7 +423,24 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // ***************************************************************************
   // ***************************************************************************
   const [isDoctorLoading, setIsDoctorLoading] = useState<boolean>(false);
-  // ADD DOCTOR DATA HERE
+  const [productRecord, setProductRecord] = useState<ProductWoDetailsRecord[]>(
+    []
+  );
+  const fetchProducts = async () => {
+    const productData =
+      (await getProductRecordsLocalDb()) as ProductWoDetailsRecord[];
+    setProductRecord(productData);
+  };
+  useEffect(() => {
+    try {
+      setIsDoctorLoading(true);
+      fetchProducts();
+    } catch (error) {
+      console.log("fetchProducts error", error);
+    } finally {
+      setIsDoctorLoading(false);
+    }
+  }, []);
   // ***************************************************************************
   // ***************************************************************************
   // DOCTOR DATA END
@@ -433,24 +453,6 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   // ***************************************************************************
   // ***************************************************************************
   const [isQuickLoading, setIsQuickLoading] = useState<boolean>(false);
-  const [quickCallData, setQuickCallData] = useState<Call[]>([]);
-  const fetchQuickCallsData = async () => {
-    try {
-      const data = await getQuickCalls();
-      if (Array.isArray(data)) {
-        setQuickCallData(data);
-      } else {
-        console.warn("Fetched data is not an array:", data);
-        setQuickCallData([]);
-      }
-    } catch (error) {
-      console.log("fetchCallsData error", error);
-    }
-  };
-  useEffect(() => {
-    fetchQuickCallsData();
-  }, []);
-
   // ***************************************************************************
   // ***************************************************************************
   // QUICK DATA END
@@ -480,8 +482,11 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         ytdDataMonthValues,
         configData,
         loadingGlobal,
+        isSimpleLoading,
         setIsLoading,
+        setIsSimpleLoading,
         setLoadingGlobal,
+        setIsDashboardLoading,
         // ***************************************************************************
         // DASHBOARD DATA END
         // ***************************************************************************
@@ -493,6 +498,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         detailersRecord,
         productRecord,
         setDetailersRecord,
+        setIsScheduleLoading,
         setProductRecord,
         setCalendarData,
         // ***************************************************************************
@@ -503,6 +509,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         // ACTUAL DATA START
         // ***************************************************************************
         isActualLoading,
+        setIsActualLoading,
         // ***************************************************************************
         // ACTUAL DATA END
         // ***************************************************************************
@@ -511,6 +518,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         // DOCTOR DATA START
         // ***************************************************************************
         isDoctorLoading,
+        setIsDoctorLoading,
         // ***************************************************************************
         // DOCTOR DATA END
         // ***************************************************************************
@@ -519,7 +527,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         // QUICK DATA START
         // ***************************************************************************
         isQuickLoading,
-        quickCallData,
+        setIsQuickLoading,
         // ***************************************************************************
         // QUICK DATA END
         // ***************************************************************************

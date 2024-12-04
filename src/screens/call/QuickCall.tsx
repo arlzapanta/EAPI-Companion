@@ -56,12 +56,12 @@ const dynamicStyles = getStyleUtil([]);
 const { width, height } = Dimensions.get("window");
 const QuickCall = () => {
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
-  const { isQuickLoading, currentDate, quickCallData, configData } =
+  const { isQuickLoading, setIsQuickLoading, currentDate, configData } =
     useDataContext();
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeOutLoading(false);
-    }, 1000);
+    }, 200);
     return () => clearTimeout(timer);
   }, []);
   const [callData, setCallData] = useState<Call[]>([]);
@@ -124,8 +124,15 @@ const QuickCall = () => {
   };
 
   useEffect(() => {
-    fetchCallsData();
-    fetchDoctorSchedules();
+    try {
+      setIsQuickLoading(true);
+      fetchCallsData();
+      fetchDoctorSchedules();
+    } catch (error) {
+      console.log("useEffect error", error);
+    } finally {
+      setIsQuickLoading(false);
+    }
   }, []);
 
   const handlePhotoCaptured = async (
@@ -454,9 +461,8 @@ const QuickCall = () => {
 
   return (
     <View style={dynamicStyles.container}>
-      {isQuickLoading || timeOutLoading ? (
-        <Loading />
-      ) : (
+      {(isQuickLoading || timeOutLoading) && <Loading />}
+      {!isQuickLoading && !timeOutLoading && (
         <View style={dynamicStyles.row}>
           <View style={dynamicStyles.column1}>
             <View style={dynamicStyles.card1Col}>

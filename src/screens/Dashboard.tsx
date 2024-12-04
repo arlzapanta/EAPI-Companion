@@ -20,7 +20,7 @@ const Dashboard = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setTimeOutLoading(false);
-    }, 1000);
+    }, 200);
     return () => clearTimeout(timer);
   }, []);
 
@@ -49,6 +49,7 @@ const Dashboard = () => {
     isLoading,
     configData,
     isDashboardLoading,
+    setIsDashboardLoading,
     ytdDataMonthValues,
   } = useDataContext();
 
@@ -94,10 +95,9 @@ const Dashboard = () => {
 
   return (
     <View style={dynamicStyles.container}>
-      {isDashboardLoading || timeOutLoading ? (
-        <Loading />
-      ) : (
-        <>
+      <>
+        {isDashboardLoading || (timeOutLoading && <Loading />)}
+        {!isDashboardLoading && !timeOutLoading && (
           <ScrollView>
             <View style={styles.announcementContainer}>
               <Text style={styles.announcementTitle}>Announcement</Text>
@@ -641,8 +641,8 @@ const Dashboard = () => {
               </View>
             </View>
           </ScrollView>
-        </>
-      )}
+        )}
+      </>
     </View>
   );
 };

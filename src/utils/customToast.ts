@@ -1,5 +1,5 @@
-import { ToastAndroid } from 'react-native';
+import { ToastAndroid } from "react-native";
 
 export const customToast = (msg: string) => {
-  ToastAndroid.show(msg, ToastAndroid.SHORT);
+  ToastAndroid.show(msg, ToastAndroid.LONG);
 };

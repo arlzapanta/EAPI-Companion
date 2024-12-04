@@ -6,6 +6,7 @@ import {
   UIManager,
   BackHandler,
   Alert,
+  View,
 } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -50,21 +51,20 @@ const Layout = () => {
       console.error("Permission request failed:", error);
     }
   };
-  if (
-    Platform.OS === "android" &&
-    UIManager.setLayoutAnimationEnabledExperimental
-  ) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
   React.useEffect(() => {
     console.log("Layout initialized");
+    if (
+      Platform.OS === "android" &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
     NavigationBar.setBackgroundColorAsync("black");
     requestPermissions();
   }, []);
   return (
     <SafeAreaView style={styles.container}>
       <ExpoStatusBar style="light" backgroundColor="black" animated />
-
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
