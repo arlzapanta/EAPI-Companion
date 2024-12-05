@@ -56,7 +56,7 @@ const Dashboard = () => {
   let announcementText =
     "Welcome to CMMS companion App! No announcement for today";
 
-  if (configData && configData.length > 0) {
+  if (configData && configData.length > 0 && configData[0].announcement) {
     announcementText = configData[0].announcement;
   }
 

@@ -34,9 +34,13 @@ import {
 import { customToast } from "../../utils/customToast";
 import RescheduleTable from "../tables/RescheduleTable";
 import { AntDesign } from "@expo/vector-icons";
+import { useDataContext } from "../../context/DataContext";
 import { getStyleUtil } from "../../utils/styleUtil";
-import { lightTheme, darkTheme } from "../../utils/themes";
-const dynamicStyles = getStyleUtil({ theme: "light" });
+export const useStyles = (theme: string) => {
+  const { configData } = useDataContext();
+  return getStyleUtil(configData);
+};
+const dynamicStyles = getStyleUtil([]);
 
 const RescheduleScreen: React.FC = () => {
   const navigation = useNavigation<RescheduleScreenNavigationProp>();
@@ -75,6 +79,7 @@ const RescheduleScreen: React.FC = () => {
         email,
         sales_portal_id,
         territory_id,
+        user_type,
         division,
       } = authState.user;
       setUserInfo({
@@ -86,7 +91,7 @@ const RescheduleScreen: React.FC = () => {
         territory_name: "",
         district_id: "",
         division,
-        user_type: "",
+        user_type,
         created_at: "",
         updated_at: "",
       });

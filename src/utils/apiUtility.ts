@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_KEY } from "@env";
+import { API_KEY, API_KEY_DEV } from "@env";
 import {
   deleteDoctorsTodayLocalDb,
   dropLocalTable,
@@ -29,20 +29,30 @@ import {
 } from "./callComponentsUtil";
 import { customToast } from "./customToast";
 
+const useAPIKey = (user: User) => {
+  if (user.user_type == "admin" || user.email === "test@123.com") {
+    return API_KEY_DEV;
+  } else {
+    console.log("API USED : ", API_KEY);
+    return API_KEY;
+  }
+};
+
 export const apiTimeIn = async (user: User, req: any) => {
   try {
     const loc = await getLocationAttendance();
-    const { first_name, last_name, sales_portal_id, territory_id } = user;
+    const { first_name, last_name, sales_portal_id, territory_id, user_type } =
+      user;
 
     const userInfo = {
       first_name,
       last_name,
       sales_portal_id,
       territory_id,
+      user_type,
     };
-
     const response = await axios.post(
-      `${API_KEY}/timeIn`,
+      `${useAPIKey(user)}/timeIn`,
       {
         sales_portal_id: userInfo.sales_portal_id,
         location: loc,
@@ -83,16 +93,17 @@ export const apiTimeIn = async (user: User, req: any) => {
 export const apiTimeOut = async (user: User) => {
   try {
     const loc = await getLocationAttendance();
-    const { first_name, last_name, sales_portal_id } = user;
+    const { first_name, last_name, sales_portal_id, user_type } = user;
 
     const userInfo = {
       first_name,
       last_name,
       sales_portal_id,
+      user_type,
     };
 
     const response = await axios.post(
-      `${API_KEY}/timeOut`,
+      `${useAPIKey(user)}/timeOut`,
       {
         sales_portal_id: userInfo.sales_portal_id,
         location: loc,
@@ -160,7 +171,7 @@ export const syncUser = async (user: User): Promise<any> => {
 
     let allResponses = [];
     for (const record of recordsToSync) {
-      const response = await axios.post(`${API_KEY}/sync`, [record], {
+      const response = await axios.post(`${useAPIKey(user)}/sync`, [record], {
         headers: {
           "Content-Type": "application/json",
         },
@@ -238,11 +249,15 @@ export const syncUserMid = async (user: User): Promise<any> => {
       return "No records to sync";
     }
 
-    const response = await axios.post(`${API_KEY}/sync`, recordsToSync, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await axios.post(
+      `${useAPIKey(user)}/sync`,
+      recordsToSync,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
     if (response.data.isProceed) {
       await updateActualCallsToDone();
@@ -278,7 +293,7 @@ export const doctorRecordsSync = async (user: User): Promise<any> => {
     );
 
     const responseDoc = await axios.post(
-      `${API_KEY}/updateDoctorsNotes`,
+      `${useAPIKey(user)}/updateDoctorsNotes`,
       docRecordsToSync,
       {
         headers: {
@@ -370,7 +385,7 @@ export const requestRecordSync = async (user: User): Promise<any> => {
       }));
 
     const responseResreq = await axios.post(
-      `${API_KEY}/rescheduleRequest`,
+      `${useAPIKey(user)}/rescheduleRequest`,
       rescheduleRecordsToSync,
       {
         headers: {
@@ -406,11 +421,12 @@ export const requestRecordSync = async (user: User): Promise<any> => {
 
 export const getSChedulesAPI = async (user: User): Promise<any> => {
   try {
-    const { sales_portal_id } = user;
+    const { sales_portal_id, user_type } = user;
     const response = await axios.post(
-      `${API_KEY}/getSchedules`,
+      `${useAPIKey(user)}/getSchedules`,
       {
         sales_portal_id,
+        user_type,
       },
       {
         headers: {
@@ -420,7 +436,7 @@ export const getSChedulesAPI = async (user: User): Promise<any> => {
     );
 
     const schedForMakeUp = await axios.post(
-      `${API_KEY}/getSchedulesForMakeup`,
+      `${useAPIKey(user)}/getSchedulesForMakeup`,
       {
         sales_portal_id,
       },
@@ -450,11 +466,12 @@ export const getSChedulesAPI = async (user: User): Promise<any> => {
 export const getCallsAPI = async (user: User): Promise<any> => {
   const now = await getCurrentDatePH();
   try {
-    const { sales_portal_id } = user;
+    const { sales_portal_id, user_type } = user;
     const response = await axios.post(
-      `${API_KEY}/getCalls`,
+      `${useAPIKey(user)}/getCalls`,
       {
         sales_portal_id,
+        user_type,
       },
       {
         headers: {
@@ -481,12 +498,13 @@ export const getCallsAPI = async (user: User): Promise<any> => {
 export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
   const now = await getCurrentDatePH();
   try {
-    const { sales_portal_id } = user;
+    const { sales_portal_id, user_type } = user;
     const response = await axios.post(
-      `${API_KEY}/checkSchedules`,
+      `${useAPIKey(user)}/checkSchedules`,
       {
         sales_portal_id,
         date: formatDateYMD(now),
+        user_type,
       },
       {
         headers: {
@@ -513,12 +531,13 @@ export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
 
 export const getDoctors = async (user: User): Promise<any> => {
   try {
-    const { territory_id, division } = user;
+    const { territory_id, division, user_type } = user;
     const response = await axios.post(
-      `${API_KEY}/getDoctors`,
+      `${useAPIKey(user)}/getDoctors`,
       {
         territory_id,
         division,
+        user_type,
       },
       {
         headers: {
@@ -545,22 +564,20 @@ export const getDoctors = async (user: User): Promise<any> => {
 
 export const getConfig = async (user: User): Promise<any> => {
   try {
-    const { territory_id, division } = user;
+    console.log(useAPIKey(user), "useAPIKey(user)");
+    const { territory_id, division, user_type } = user;
     const response = await axios.post(
-      `${API_KEY}/getAppConfig`,
+      `${useAPIKey(user)}/getAppConfig`,
       {
         territory_id,
         division,
+        user_type,
       },
       {
         headers: {
           "Content-Type": "application/json",
         },
       }
-    );
-    console.log(
-      response.data.data[0].total_products,
-      "getconfig response.data"
     );
     console.log(response.data.isProceed, "getconfig response.data");
     if (response.data.isProceed) {
@@ -583,11 +600,12 @@ export const getConfig = async (user: User): Promise<any> => {
 
 export const getReschedulesData = async (user: User): Promise<any> => {
   try {
-    const { sales_portal_id } = user;
+    const { sales_portal_id, user_type } = user;
     const response = await axios.post(
-      `${API_KEY}/getRescheduleRequestsSPI`,
+      `${useAPIKey(user)}/getRescheduleRequestsSPI`,
       {
         sales_portal_id,
+        user_type,
       },
       {
         headers: {
@@ -616,12 +634,12 @@ export const getReschedulesData = async (user: User): Promise<any> => {
 
 export const getChartData = async (user: User): Promise<any[]> => {
   try {
-    const { sales_portal_id } = user;
+    const { sales_portal_id, user_type } = user;
     const response = await axios.post(
-      `${API_KEY}/getChartData`,
+      `${useAPIKey(user)}/getChartData`,
       {
         sales_portal_id,
-        user_type: "medrep",
+        user_type,
       },
       {
         headers: {

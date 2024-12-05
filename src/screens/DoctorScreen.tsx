@@ -72,6 +72,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
         email,
         sales_portal_id,
         territory_id,
+        user_type,
         division,
       } = authState.user;
       setUserInfo({
@@ -83,7 +84,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
         territory_name: "",
         district_id: "",
         division,
-        user_type: "",
+        user_type,
         created_at: "",
         updated_at: "",
       });

@@ -1219,7 +1219,7 @@ export const getConfigLocalDb = async () => {
 
   await db.execAsync(createIfNE_appconfig);
 
-  const query = `SELECT id, quickCallLimit, productCount, theme FROM app_config_tbl`;
+  const query = `SELECT id, quickCallLimit, productCount, theme, announcement FROM app_config_tbl`;
 
   try {
     const existingRows = await db.getAllAsync(query);

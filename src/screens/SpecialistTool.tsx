@@ -8,6 +8,7 @@ import {
   TextInput,
   Image,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import moment from "moment";
 import { getCurrentDatePH } from "../utils/dateUtils";
@@ -94,6 +95,11 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
   const { productRecord } = useDataContext();
   const [selectedProdId, setSelectedProdId] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [isProductListLoading, setIsProductListLoading] =
+    useState<boolean>(false);
+  const [isDoctorListLoading, setIsDoctorListLoading] =
+    useState<boolean>(false);
+
   const openModal = (prodId: string) => {
     setSelectedProdId(prodId);
     setModalVisible(true);
@@ -125,6 +131,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
         email,
         sales_portal_id,
         territory_id,
+        user_type,
         division,
       } = authState.user;
       setUserInfo({
@@ -136,7 +143,7 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
         territory_name: "",
         district_id: "",
         division,
-        user_type: "",
+        user_type,
         created_at: "",
         updated_at: "",
       });
@@ -540,21 +547,49 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
                 optional: add last update date here
               </Text>
               <TouchableOpacity
-                onPress={toggleAccordionDoctors}
-                style={dynamicStyles.accordionButton}>
-                <Text style={dynamicStyles.accordionTitle}>
-                  {!accordionExpandedDoctors
-                    ? `View Doctor List [${doctorList.length}]`
-                    : `Hide Doctor List [${doctorList.length}]`}
-                </Text>
-                <Ionicons
-                  name={
-                    accordionExpandedDoctors ? "chevron-up" : "chevron-down"
+                onPress={() => {
+                  if (!accordionExpandedDoctors) {
+                    setIsDoctorListLoading(true);
+                    setTimeout(() => {
+                      setIsDoctorListLoading(false);
+                      toggleAccordionDoctors();
+                    }, 500);
+                  } else {
+                    toggleAccordionDoctors();
                   }
-                  size={20}
-                  color="#007BFF"
-                  style={dynamicStyles.icon}
-                />
+                }}
+                disabled={isDoctorListLoading}
+                style={dynamicStyles.accordionButton}>
+                {isDoctorListLoading && (
+                  <View
+                    style={[dynamicStyles.row, { justifyContent: "center" }]}>
+                    <ActivityIndicator size="small" color="#d3d3d3" />
+                    <Text
+                      style={[
+                        dynamicStyles.accordionTitle,
+                        { color: "#d3d3d3" },
+                      ]}>
+                      Loading...
+                    </Text>
+                  </View>
+                )}
+                {!isDoctorListLoading && (
+                  <>
+                    <Text style={dynamicStyles.accordionTitle}>
+                      {!accordionExpandedDoctors
+                        ? `View Doctor List [${doctorList.length}]`
+                        : `Hide Doctor List [${doctorList.length}]`}
+                    </Text>
+                    <Ionicons
+                      name={
+                        accordionExpandedDoctors ? "chevron-up" : "chevron-down"
+                      }
+                      size={20}
+                      color="#007BFF"
+                      style={dynamicStyles.icon}
+                    />
+                  </>
+                )}
               </TouchableOpacity>
               {accordionExpandedDoctors && (
                 <View style={{ maxHeight: 300 }}>
@@ -623,21 +658,51 @@ const DoctorScreen = ({ doc }: { doc: DoctorRecord }) => {
               )}
 
               <TouchableOpacity
-                onPress={toggleAccordionProducts}
-                style={dynamicStyles.accordionButton}>
-                <Text style={dynamicStyles.accordionTitle}>
-                  {accordionExpandedProducts
-                    ? `Hide Products [${productList.length}]`
-                    : `View Products [${productList.length}]`}
-                </Text>
-                <Ionicons
-                  name={
-                    accordionExpandedProducts ? "chevron-up" : "chevron-down"
+                onPress={() => {
+                  if (!accordionExpandedProducts) {
+                    setIsProductListLoading(true);
+                    setTimeout(() => {
+                      setIsProductListLoading(false);
+                      toggleAccordionProducts();
+                    }, 500);
+                  } else {
+                    toggleAccordionProducts();
                   }
-                  size={20}
-                  color="#007BFF"
-                  style={dynamicStyles.icon}
-                />
+                }}
+                disabled={isProductListLoading}
+                style={dynamicStyles.accordionButton}>
+                {isProductListLoading && (
+                  <View
+                    style={[dynamicStyles.row, { justifyContent: "center" }]}>
+                    <ActivityIndicator size="small" color="#d3d3d3" />
+                    <Text
+                      style={[
+                        dynamicStyles.accordionTitle,
+                        { color: "#d3d3d3" },
+                      ]}>
+                      Loading...
+                    </Text>
+                  </View>
+                )}
+                {!isProductListLoading && (
+                  <>
+                    <Text style={dynamicStyles.accordionTitle}>
+                      {accordionExpandedProducts
+                        ? `Hide Products [${productList.length}]`
+                        : `View Products [${productList.length}]`}
+                    </Text>
+                    <Ionicons
+                      name={
+                        accordionExpandedProducts
+                          ? "chevron-up"
+                          : "chevron-down"
+                      }
+                      size={20}
+                      color="#007BFF"
+                      style={dynamicStyles.icon}
+                    />
+                  </>
+                )}
               </TouchableOpacity>
               {accordionExpandedProducts && (
                 <>

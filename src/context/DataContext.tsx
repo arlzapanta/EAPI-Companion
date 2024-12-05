@@ -14,6 +14,8 @@ import {
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import { getQuickCalls } from "../utils/quickCallUtil";
+import { useAuth } from "../context/AuthContext";
+import { API_KEY, API_KEY_DEV } from "@env";
 
 // todo : add necessary states from components
 interface DataContextProps<T> {
@@ -39,6 +41,7 @@ interface DataContextProps<T> {
   isActualLoading: boolean;
   isDoctorLoading: boolean;
   isQuickLoading: boolean;
+  currentAPIkey: string;
   detailersRecord: T[];
   productRecord: ProductWoDetailsRecord[];
   ytdDataMonthValues: Array<{
@@ -68,6 +71,52 @@ const DataContext = createContext<
 >(undefined);
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
+  const { authState } = useAuth();
+  const [userInfo, setUserInfo] = useState<{
+    first_name: string;
+    last_name: string;
+    email: string;
+    sales_portal_id: string;
+    territory_id: string;
+    territory_name: string;
+    district_id: string;
+    division: string;
+    user_type: string;
+    created_at: string;
+    updated_at: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (authState.authenticated && authState.user) {
+      const {
+        first_name,
+        last_name,
+        email,
+        sales_portal_id,
+        territory_id,
+        division,
+        user_type,
+      } = authState.user;
+      setUserInfo({
+        first_name,
+        last_name,
+        email,
+        sales_portal_id,
+        territory_id,
+        territory_name: "",
+        district_id: "",
+        division,
+        user_type,
+        created_at: "",
+        updated_at: "",
+      });
+      if (user_type == "admin" || email == "test@123.com") {
+        setCurrentAPIkey(API_KEY_DEV);
+      } else {
+        setCurrentAPIkey(API_KEY);
+      }
+    }
+  }, [authState]);
   // ***************************************************************************
   // ***************************************************************************
   // DASHBOARD DATA START
@@ -76,6 +125,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const actualColor = "#046E37";
   const plottedColor = "lightgray";
   const [currentDate, setCurrentDate] = useState<string>("");
+  const [currentAPIkey, setCurrentAPIkey] = useState<string>("");
   const [calendarData, setCalendarData] = useState<CalendarProps>({ data: [] });
   const [configData, setConfigData] = useState<AppConfigRecord[]>([]);
   const [chartData, setChartData] = useState<ChartDashboardRecord[]>([]);
@@ -480,6 +530,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         isLoading,
         isDashboardLoading,
         ytdDataMonthValues,
+        currentAPIkey,
         configData,
         loadingGlobal,
         isSimpleLoading,

@@ -329,6 +329,7 @@ const Settings = () => {
         email,
         sales_portal_id,
         territory_id,
+        user_type,
         division,
       } = authState.user;
       setUserInfo({
@@ -340,7 +341,7 @@ const Settings = () => {
         territory_name: "",
         district_id: "",
         division,
-        user_type: "",
+        user_type,
         created_at: "",
         updated_at: "",
       });
@@ -439,18 +440,21 @@ const Settings = () => {
                     <Text style={styles.buttonTextLogout}>Logout</Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={styles.buttonTest}
-                    onPress={() =>
-                      showConfirmAlert(
-                        dropLocalTables,
-                        "DROP ALL TABLES (THIS IS FOR DEV ONLY PLEASE DONT CONFIRM)"
-                      )
-                    }>
-                    <Text style={styles.buttonTextTest}>
-                      DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
-                    </Text>
-                  </TouchableOpacity>
+                  {userInfo?.user_type == "admin" ||
+                    (userInfo?.email == "test@123.com" && (
+                      <TouchableOpacity
+                        style={styles.buttonTest}
+                        onPress={() =>
+                          showConfirmAlert(
+                            dropLocalTables,
+                            "DROP ALL TABLES (THIS IS FOR DEV ONLY PLEASE DONT CONFIRM)"
+                          )
+                        }>
+                        <Text style={styles.buttonTextTest}>
+                          DROP ALL LOCAL DB TABLES (FOR TESTING ONLY)
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                 </View>
               </View>
             )}
