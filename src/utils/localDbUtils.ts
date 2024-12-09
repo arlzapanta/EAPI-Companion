@@ -1,7 +1,5 @@
 import * as SQLite from "expo-sqlite";
 import {
-  formatDate,
-  formatDateYMD,
   getCurrentDatePH,
   getRelevantDateRange,
   getWeekdaysRange,
@@ -10,7 +8,6 @@ import {
   getMonthRangeExGTToday,
 } from "./dateUtils";
 import moment from "moment";
-import { customToast } from "./customToast";
 
 // ************************************************************
 // ************************************************************
@@ -130,13 +127,15 @@ const dropCreate_chartData = `
     );
 `;
 
-const dropCreate_detailersData = `
-    DROP TABLE IF EXISTS detailers_tbl;
+const dropCreate_comcalData = `
+    DROP TABLE IF EXISTS comcal_tbl;
     PRAGMA journal_mode = WAL;
-    CREATE TABLE detailers_tbl (
+    CREATE TABLE comcal_tbl (
       id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       category TEXT,
-      detailers TEXT,
+      item_code TEXT,
+      item_description TEXT,
+      detailer TEXT,
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 `;
@@ -174,6 +173,18 @@ const createIfNE_appconfig = `
       productCount TEXT,
       theme TEXT,
       announcement TEXT,
+      created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+  );
+`;
+
+const createIfNE_comcalData = `
+  PRAGMA journal_mode = WAL;
+  CREATE TABLE IF NOT EXISTS comcal_tbl (
+  id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+      category TEXT,
+      item_code TEXT,
+      item_description TEXT,
+      detailer TEXT,
       created_date TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 `;
@@ -892,7 +903,7 @@ export const saveRescheduleListLocalDb = async (
   try {
     await Promise.all(insertPromises);
 
-    const query = `SELECT * FROM reschedule_req_tbl`;
+    // const query = `SELECT * FROM reschedule_req_tbl`;
     // const existingRows = await db.getAllAsync(query);
     //  console.log('test test existingRows reschedule_req_tbl', existingRows);
     return "Success";
@@ -992,10 +1003,6 @@ export const saveChartDataLocalDb = async (
 
   try {
     await Promise.all(insertPromises);
-
-    // const query = `SELECT * FROM chart_data_tbl`;
-    // const existingRows = await db.getAllAsync(query);
-    // console.log('test test existingRows chart_data_tbl', existingRows);
     return "Success";
   } catch (error) {
     console.error(
@@ -1006,66 +1013,59 @@ export const saveChartDataLocalDb = async (
   }
 };
 
-export const saveDetailersDataLocalDb = async (
-  detailersData: DetailersDataRecord | DetailersDataRecord[]
+export const saveComcalDetailersLocalDb = async (
+  detailersData: ComcalResponseData | ComcalResponseData[]
 ): Promise<string> => {
   const db = await SQLite.openDatabaseAsync("cmms", {
     useNewConnection: true,
   });
 
-  await db.execAsync(dropCreate_detailersData);
-  const insertPromises = Array.isArray(detailersData)
+  await db.execAsync(dropCreate_comcalData);
+  const dataToInsert = Array.isArray(detailersData)
     ? detailersData
     : [detailersData];
 
   try {
-    await Promise.all(
-      insertPromises.map(async (detail) => {
-        let coreDetailersJSON = Array.isArray(detail.coreDetailers)
-          ? detail.coreDetailers
-          : JSON.parse(detail.coreDetailers || "[]");
-        let secondaryDetailersJSON = Array.isArray(detail.secondaryDetailers)
-          ? detail.secondaryDetailers
-          : JSON.parse(detail.secondaryDetailers || "[]");
-        let reminderDetailersJSON = Array.isArray(detail.reminderDetailers)
-          ? detail.reminderDetailers
-          : JSON.parse(detail.reminderDetailers || "[]");
+    const insertPromises = dataToInsert.flatMap((data) => [
+      ...data.coreProductData.map((product) =>
+        db.runAsync(
+          `INSERT INTO comcal_tbl (category, item_code, item_description, detailer) 
+           VALUES (?, ?, ?, ?)`,
+          ["core", product.item_code, product.item_description, "core"]
+        )
+      ),
+      ...data.secondaryProductData.map((product) =>
+        db.runAsync(
+          `INSERT INTO comcal_tbl (category, item_code, item_description, detailer)
+           VALUES (?, ?, ?, ?)`,
+          [
+            "secondary",
+            product.item_code,
+            product.item_description,
+            "secondary",
+          ]
+        )
+      ),
+      ...data.reminderProductData.map((product) =>
+        db.runAsync(
+          `INSERT INTO comcal_tbl (category, item_code, item_description, detailer)
+           VALUES (?, ?, ?, ?)`,
+          ["reminder", product.item_code, product.item_description, "reminder"]
+        )
+      ),
+    ]);
 
-        const coreDetailersValues = coreDetailersJSON
-          .map((item: any) => item.detailer)
-          .join(",");
-        const secondaryDetailersValues = secondaryDetailersJSON
-          .map((item: any) => item.detailer)
-          .join(",");
-        const reminderDetailersValues = reminderDetailersJSON
-          .map((item: any) => item.detailer)
-          .join(",");
+    await Promise.all(insertPromises);
 
-        await db.runAsync(
-          `INSERT INTO detailers_tbl (category, detailers) VALUES (?, ?)`,
-          ["1", coreDetailersValues]
-        );
-
-        await db.runAsync(
-          `INSERT INTO detailers_tbl (category, detailers) VALUES (?, ?)`,
-          ["2", secondaryDetailersValues]
-        );
-
-        await db.runAsync(
-          `INSERT INTO detailers_tbl (category, detailers) VALUES (?, ?)`,
-          ["3", reminderDetailersValues]
-        );
-      })
-    );
-
-    // const query = `SELECT * FROM detailers_tbl`;
-    // const existingRows = await db.getAllAsync(query);
-    // console.log("GUMANA:", existingRows);
-
+    const query = `SELECT * FROM comcal_tbl`;
+    const existingRows = await db.getAllAsync(query);
+    console.log("GUMANA productsproductsproducts:", existingRows);
     return "Success";
   } catch (error) {
     console.error("Error saving detailers data:", error);
     return "Error saving data";
+  } finally {
+    await db.closeAsync();
   }
 };
 
@@ -1220,6 +1220,27 @@ export const getConfigLocalDb = async () => {
   await db.execAsync(createIfNE_appconfig);
 
   const query = `SELECT id, quickCallLimit, productCount, theme, announcement FROM app_config_tbl`;
+
+  try {
+    const existingRows = await db.getAllAsync(query);
+    // console.log("existingRows getDoctorRecordsLocalDb", existingRows);
+    return existingRows;
+  } catch (error) {
+    console.error("Error fetching app config data:", error);
+    return [];
+  } finally {
+    await db.closeAsync();
+  }
+};
+
+export const getComcalDataLocalDb = async () => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNE_comcalData);
+
+  const query = `SELECT * FROM comcal_tbl`;
 
   try {
     const existingRows = await db.getAllAsync(query);
@@ -2655,24 +2676,32 @@ export const dropLocalTablesDb = async () => {
     "quick_call_tbl",
     "reschedule_history_tbl",
     "reschedule_req_tbl",
-    "user_attendance_tbl",
     "schedule_API_tbl",
     "calls_tbl",
-    "user_sync_history_tbl",
-    "doctors_tbl",
     "pre_call_notes_tbl",
     "post_call_notes_tbl",
     "doctors_tbl",
     "app_config_tbl",
   ];
-  // const tableNames = ['user_attendance_tbl','user_sync_history_tbl'];
-  // const tableNames = ['quick_call_tbl'];
+
   for (const tableName of tableNames) {
     const query = `DROP TABLE IF EXISTS ${tableName};`;
     await db.getAllAsync(query);
     console.log(tableName, "has been dropped");
   }
 
+  const currentDatePH = await getCurrentDatePH();
+
+  await db.runAsync(
+    `DELETE FROM user_attendance_tbl WHERE DATE(date) = ?`,
+    currentDatePH
+  );
+  await db.runAsync(
+    `DELETE FROM user_sync_history_tbl WHERE DATE(date) = ?`,
+    currentDatePH
+  );
+
+  console.log("Today's attendance and sync history records have been deleted");
   await db.closeAsync();
 };
 

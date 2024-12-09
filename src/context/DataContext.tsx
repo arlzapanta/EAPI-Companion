@@ -11,6 +11,7 @@ import {
   getDatesAndTypeForCalendarView,
   getProductRecordsLocalDb,
   getConfigLocalDb,
+  getComcalDataLocalDb,
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
 import { getQuickCalls } from "../utils/quickCallUtil";
@@ -34,6 +35,7 @@ interface DataContextProps<T> {
   ytdData: chartYtdData[];
   isLoading: boolean;
   configData: AppConfigRecord[];
+  comcalData: ComcalDetailersRecord[];
   loadingGlobal: LoadingSubRecords;
   isSimpleLoading: boolean;
   isDashboardLoading: boolean;
@@ -128,6 +130,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [currentAPIkey, setCurrentAPIkey] = useState<string>("");
   const [calendarData, setCalendarData] = useState<CalendarProps>({ data: [] });
   const [configData, setConfigData] = useState<AppConfigRecord[]>([]);
+  const [comcalData, setComcalData] = useState<ComcalDetailersRecord[]>([]);
   const [chartData, setChartData] = useState<ChartDashboardRecord[]>([]);
   const [dailyDataCompletion, setDailyDataCompletion] = useState<chartData[]>([
     { value: 0, color: "#046E37" },
@@ -170,6 +173,15 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     try {
       const configData = (await getConfigLocalDb()) as AppConfigRecord[];
       setConfigData(configData);
+    } catch (error) {
+      console.log("fetchConfigData error", error);
+    }
+  };
+  const fetchComcalData = async () => {
+    try {
+      const comcalData =
+        (await getComcalDataLocalDb()) as ComcalDetailersRecord[];
+      setComcalData(comcalData);
     } catch (error) {
       console.log("fetchConfigData error", error);
     }
@@ -427,12 +439,19 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       setIsDashboardLoading(true);
       fetchDashboardData();
       fetchConfigData();
+      fetchComcalData();
     } catch (error) {
       console.log("fetchDashboardData error", error);
     } finally {
       setIsDashboardLoading(false);
     }
-  }, [getCurrentDate, getDatesAndTypeForCalendarView, fetchChartDataLocalDb]);
+  }, [
+    getCurrentDate,
+    getDatesAndTypeForCalendarView,
+    fetchChartDataLocalDb,
+    fetchConfigData,
+    fetchComcalData,
+  ]);
   // ***************************************************************************
   // ***************************************************************************
   // DASHBOARD DATA END
@@ -532,6 +551,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         ytdDataMonthValues,
         currentAPIkey,
         configData,
+        comcalData,
         loadingGlobal,
         isSimpleLoading,
         setIsLoading,

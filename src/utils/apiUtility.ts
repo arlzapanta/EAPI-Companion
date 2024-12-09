@@ -4,15 +4,13 @@ import {
   deleteDoctorsTodayLocalDb,
   dropLocalTable,
   dropLocalTables,
-  getCallsTodayLocalDb,
   getCallsTodayNotSyncedLocalDb,
-  getProductRecordsLocalDb,
   getRescheduleRequestRecordsLocalDb,
   getUpdatedDoctorRecordsLocalDb,
   saveAppConfigLocalDb,
   saveCallsAPILocalDb,
   saveChartDataLocalDb,
-  saveDetailersDataLocalDb,
+  saveComcalDetailersLocalDb,
   saveDoctorListLocalDb,
   saveProductsLocalDb,
   saveRescheduleHistoryLocalDb,
@@ -33,7 +31,6 @@ const useAPIKey = (user: User) => {
   if (user.user_type == "admin" || user.email === "test@123.com") {
     return API_KEY_DEV;
   } else {
-    console.log("API USED : ", API_KEY);
     return API_KEY;
   }
 };
@@ -495,6 +492,31 @@ export const getCallsAPI = async (user: User): Promise<any> => {
   }
 };
 
+export const getComcalAPI = async (user: User): Promise<any> => {
+  try {
+    const response = await axios.post(`${useAPIKey(user)}/getComcalDetailers`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.data.isProceed) {
+      await saveComcalDetailersLocalDb(response.data.data);
+    }
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred getComcalAPI:", error);
+    }
+    throw error;
+  }
+};
+
 export const getWeeklyCallsAPI = async (user: User): Promise<any> => {
   const now = await getCurrentDatePH();
   try {
@@ -666,44 +688,6 @@ export const getChartData = async (user: User): Promise<any[]> => {
       console.error("API getChartData Error request:", request);
     } else {
       console.error("An unexpected error occurred : getChartData", error);
-    }
-    throw error;
-  }
-};
-
-export const getDetailersData = async (): Promise<any[]> => {
-  try {
-    const response = await axios.post(`${API_KEY}/getDetailers`, {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    await saveDetailersDataLocalDb(response.data);
-
-    const query = `SELECT * FROM detailers_tbl`;
-    const db = await SQLite.openDatabaseAsync("cmms", {
-      useNewConnection: true,
-    });
-    const existingRows = await db.getAllAsync(query);
-
-    return existingRows;
-  } catch (error: any) {
-    if (axios.isAxiosError(error)) {
-      const { response, request, message } = error;
-      console.error("API getChartData Error message:", message);
-      console.error("API getChartData Error response data:", response?.data);
-      console.error(
-        "API getChartData Error response status:",
-        response?.status
-      );
-      console.error(
-        "API getChartData Error response headers:",
-        response?.headers
-      );
-      console.error("API getChartData Error request123123:", request);
-    } else {
-      console.error("An unexpected error occurred getDetailersData:", error);
     }
     throw error;
   }

@@ -2,8 +2,6 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import * as SecureStore from "expo-secure-store";
 import { API_KEY, TOKEN_USERNAME_ENV, TOKEN_PASSWORD_ENV } from "@env";
 import axios from "axios";
-import { View, Text } from "react-native";
-import Loading from "../components/Loading";
 import { customToast } from "../utils/customToast";
 
 const AuthContext = createContext<AuthProps>({
@@ -24,8 +22,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     user: null,
   });
 
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const loadToken = async () => {
       const token = await SecureStore.getItemAsync(TOKEN_KEY);
@@ -40,7 +36,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           user,
         });
       }
-      setLoading(false);
     };
     loadToken();
   }, []);
@@ -73,17 +68,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         customToast(
           ` Server is down,Please contact admin or DSM : ${message} api : ${API_KEY}`
         );
-        // console.error("API refreshToken Error message:", message);
-        // console.error("API refreshToken Error response data:", response?.data);
-        // console.error(
-        //   "API refreshToken Error response status:",
-        //   response?.status
-        // );
-        // console.error(
-        //   "API refreshToken Error response headers:",
-        //   response?.headers
-        // );
-        // console.error("API refreshToken Error request:", request);
       } else {
         console.error("An unexpected error occurred refreshToken:", error);
       }
@@ -129,9 +113,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
       );
 
-      // const jsonData = JSON.parse(getTokenResponse.data.replace("test", ""));
-      // const token = jsonData.token;
-
       const token = getTokenResponse.data.token;
       if (!token) {
         return { error: true, msg: "Failed to get token" };
@@ -174,11 +155,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         customToast(
           ` Server is down,Please contact admin or DSM : ${message} api : ${API_KEY}`
         );
-        // console.error("API Time-In Error message:", message);
-        // console.error("API Time-In Error response data:", response?.data);
-        // console.error("API Time-In Error response status:", response?.status);
-        // console.error("API Time-In Error response headers:", response?.headers);
-        // console.error("API Time-In Error request:", request);
       } else {
         console.error("An unexpected error occurred login:", error);
       }
@@ -203,15 +179,5 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     authState,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {loading ? (
-        <View>
-          <Loading />
-        </View>
-      ) : (
-        children
-      )}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

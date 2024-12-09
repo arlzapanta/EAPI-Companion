@@ -24,6 +24,7 @@ import {
   doctorRecordsSync,
   getCallsAPI,
   getChartData,
+  getComcalAPI,
   getConfig,
   getDoctors,
   getReschedulesData,
@@ -44,6 +45,8 @@ import { checkPostCallUnsetExist } from "../../utils/callComponentsUtil";
 import { useDataContext } from "../../context/DataContext";
 import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
 import LoadingProgressBar from "../../components/LoadingProgressbar";
+import { getCurrentDatePH } from "../../utils/dateUtils";
+import moment from "moment";
 
 export const useStyles = (theme: string) => {
   const { configData } = useDataContext();
@@ -73,7 +76,7 @@ const Attendance: React.FC = () => {
   const [loadingProgressData, setLoadingProgressData] =
     useState<LoadingSubRecords>({
       progress: 0.001,
-      text: "Syncing data ... Please wait",
+      text: "Preparing ... Please wait",
     });
   const [hasTimedIn, setHasTimedIn] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
@@ -190,7 +193,6 @@ const Attendance: React.FC = () => {
             text: "Preparing ...",
           });
           await dropLocalTables([
-            "detailers_tbl",
             "quick_call_tbl",
             "reschedule_req_tbl",
             "schedule_API_tbl",
@@ -204,7 +206,7 @@ const Attendance: React.FC = () => {
           setLoading(true);
           setLoadingProgressData({
             progress: 0.2,
-            text: "Fetching data : reschedule requests",
+            text: "Fetching data : app config",
           });
           await getConfig(userInfo);
           setLoadingProgressData({
@@ -237,6 +239,11 @@ const Attendance: React.FC = () => {
             progress: 0.8,
             text: "Fetching data : schedules",
           });
+
+          const currentMoment = moment(await getCurrentDatePH());
+          if (currentMoment.date() === 1) {
+            await getComcalAPI(userInfo);
+          }
         } catch (error) {
           await dropLocalTables([
             "detailers_tbl",
@@ -428,109 +435,99 @@ const Attendance: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        <LoadingProgressBar data={loadingProgressData} />
-      ) : (
-        <>
-          <ScrollView contentContainerStyle={styles.scrollViewContent}>
-            <View style={styles.content}>
-              <Text style={styles.title_stack_settings}>Attendance</Text>
-              {statusMessage && (
-                <Text style={[styles.statusLabel, { color: statusColor }]}>
-                  {statusMessage}
-                </Text>
-              )}
-              <View style={styles.centerItems}>
-                {!hasTimedIn && !loading && (
-                  <>
-                    <View style={styles.requirementStatus}>
-                      <Text style={styles.requirementText}>
-                        Signature: {signatureVal ? "✅" : "❌"}
-                      </Text>
-                      <Text style={styles.requirementText}>
-                        Photo: {selfieVal ? "✅" : "❌"}
-                      </Text>
-                    </View>
+      {loading && <LoadingProgressBar data={loadingProgressData} />}
+      {!loading && (
+        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+          <View style={styles.content}>
+            <Text style={styles.title_stack_settings}>Attendance</Text>
+            {statusMessage && (
+              <Text style={[styles.statusLabel, { color: statusColor }]}>
+                {statusMessage}
+              </Text>
+            )}
+            <View style={styles.centerItems}>
+              {!hasTimedIn && !loading && (
+                <>
+                  <View style={styles.requirementStatus}>
+                    <Text style={styles.requirementText}>
+                      Signature: {signatureVal ? "✅" : "❌"}
+                    </Text>
+                    <Text style={styles.requirementText}>
+                      Photo: {selfieVal ? "✅" : "❌"}
+                    </Text>
+                  </View>
 
-                    <TouchableOpacity
-                      onPress={
-                        signatureVal && selfieVal
-                          ? () => showConfirmAlert(timeIn, "Time In")
-                          : undefined
-                      }
-                      disabled={!(signatureVal && selfieVal)}
-                      style={[
-                        styles.buttonContainer,
-                        !(signatureVal && selfieVal) &&
-                          styles.buttonContainerDisabled,
-                      ]}>
-                      <AntDesign
-                        name="clockcircle"
-                        size={24}
-                        color="white"
-                        style={{ alignSelf: "center" }}
-                      />
-                      <Text style={styles.buttonText}>
-                        {!(signatureVal && selfieVal)
-                          ? "Complete Requirements First"
-                          : "Time In"}
-                      </Text>
-                    </TouchableOpacity>
-
-                    {signatureVal ? (
-                      <></>
-                    ) : (
-                      <SignatureCapture
-                        callId={12340000}
-                        onSignatureUpdate={handleSignatureUpdate}
-                      />
-                    )}
-
-                    {!selfieVal ? (
-                      <TouchableOpacity
-                        style={[
-                          dynamicStyles.takePhotoButton,
-                          dynamicStyles.mainBgColor,
-                          dynamicStyles.rowItem,
-                          { justifyContent: "center" },
-                        ]}
-                        onPress={handleImagePicker}>
-                        <Octicons
-                          name="device-camera"
-                          size={30}
-                          color="white"
-                        />
-                        <Text
-                          style={[
-                            dynamicStyles.buttonText,
-                            { marginLeft: 10 },
-                          ]}>
-                          Take a photo
-                        </Text>
-                      </TouchableOpacity>
-                    ) : (
-                      <></>
-                    )}
-                  </>
-                )}
-                {!hasTimedOut && hasTimedIn && !loading && (
                   <TouchableOpacity
-                    onPress={() => showConfirmAlert(timeOut, "Time Out")}
-                    style={styles.buttonContainer}>
+                    onPress={
+                      signatureVal && selfieVal
+                        ? () => showConfirmAlert(timeIn, "Time In")
+                        : undefined
+                    }
+                    disabled={!(signatureVal && selfieVal)}
+                    style={[
+                      styles.buttonContainer,
+                      !(signatureVal && selfieVal) &&
+                        styles.buttonContainerDisabled,
+                    ]}>
                     <AntDesign
                       name="clockcircle"
                       size={24}
                       color="white"
                       style={{ alignSelf: "center" }}
                     />
-                    <Text style={styles.buttonText}> Time Out</Text>
+                    <Text style={styles.buttonText}>
+                      {!(signatureVal && selfieVal)
+                        ? "Complete Requirements First"
+                        : "Time In"}
+                    </Text>
                   </TouchableOpacity>
-                )}
-              </View>
-              <AttendanceTable data={attendanceData} />
+
+                  {signatureVal ? (
+                    <></>
+                  ) : (
+                    <SignatureCapture
+                      callId={12340000}
+                      onSignatureUpdate={handleSignatureUpdate}
+                    />
+                  )}
+
+                  {!selfieVal ? (
+                    <TouchableOpacity
+                      style={[
+                        dynamicStyles.takePhotoButton,
+                        dynamicStyles.mainBgColor,
+                        dynamicStyles.rowItem,
+                        { justifyContent: "center" },
+                      ]}
+                      onPress={handleImagePicker}>
+                      <Octicons name="device-camera" size={30} color="white" />
+                      <Text
+                        style={[dynamicStyles.buttonText, { marginLeft: 10 }]}>
+                        Take a photo
+                      </Text>
+                    </TouchableOpacity>
+                  ) : (
+                    <></>
+                  )}
+                </>
+              )}
+              {!hasTimedOut && hasTimedIn && !loading && (
+                <TouchableOpacity
+                  onPress={() => showConfirmAlert(timeOut, "Time Out")}
+                  style={styles.buttonContainer}>
+                  <AntDesign
+                    name="clockcircle"
+                    size={24}
+                    color="white"
+                    style={{ alignSelf: "center" }}
+                  />
+                  <Text style={styles.buttonText}> Time Out</Text>
+                </TouchableOpacity>
+              )}
             </View>
-          </ScrollView>
-        </>
+            <AttendanceTable data={attendanceData} />
+          </View>
+        </ScrollView>
       )}
     </View>
   );

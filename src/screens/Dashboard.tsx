@@ -16,22 +16,6 @@ const dynamicStyles = getStyleUtil([]);
 
 const Dashboard = () => {
   const [timeOutLoading, setTimeOutLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTimeOutLoading(false);
-    }, 200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const SpacerW = ({ size }: { size: number }) => (
-    <View style={{ width: size }} />
-  );
-
-  const SpacerH = ({ size }: { size: number }) => (
-    <View style={{ height: size }} />
-  );
-
   const {
     currentDate,
     calendarData,
@@ -47,11 +31,27 @@ const Dashboard = () => {
     yearlyData,
     ytdData,
     isLoading,
+    comcalData,
     configData,
     isDashboardLoading,
     setIsDashboardLoading,
     ytdDataMonthValues,
   } = useDataContext();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeOutLoading(false);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const SpacerW = ({ size }: { size: number }) => (
+    <View style={{ width: size }} />
+  );
+
+  const SpacerH = ({ size }: { size: number }) => (
+    <View style={{ height: size }} />
+  );
 
   let announcementText =
     "Welcome to CMMS companion App! No announcement for today";
@@ -640,6 +640,51 @@ const Dashboard = () => {
                 </View>
               </View>
             </View>
+            <View style={styles.chartRow}>
+              <View style={styles.chartContainer}>
+                <View style={styles.chartCard}>
+                  <Text style={styles.chartTitle}>Communication Calendar</Text>
+                  <View style={styles.productContainer}>
+                    {[
+                      {
+                        title: "Core Products",
+                        data: comcalData.filter(
+                          (item) => item.category === "core"
+                        ),
+                      },
+                      {
+                        title: "Secondary Products",
+                        data: comcalData.filter(
+                          (item) => item.category === "secondary"
+                        ),
+                      },
+                      {
+                        title: "Reminder Products",
+                        data: comcalData.filter(
+                          (item) => item.category === "reminder"
+                        ),
+                      },
+                    ].map((section, index) => (
+                      <View key={index} style={styles.productSection}>
+                        <Text style={styles.productSectionTitle}>
+                          {section.title}
+                        </Text>
+                        {section.data.map((item) => (
+                          <View key={item.id} style={styles.productItem}>
+                            <Text style={styles.productCode}>
+                              {item.item_code}
+                            </Text>
+                            <Text style={styles.productDescription}>
+                              {item.item_description}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </View>
+            </View>
           </ScrollView>
         )}
       </>
@@ -777,6 +822,35 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     color: "#333333",
+  },
+  productContainer: {
+    padding: 10,
+  },
+  productSection: {
+    marginBottom: 15,
+  },
+  productSectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333333",
+    marginBottom: 8,
+  },
+  productItem: {
+    flexDirection: "row",
+    padding: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEEEEE",
+  },
+  productCode: {
+    width: 100,
+    fontSize: 14,
+    color: "#046E37",
+    fontWeight: "500",
+  },
+  productDescription: {
+    flex: 1,
+    fontSize: 14,
+    color: "#666666",
   },
 });
 

@@ -16,36 +16,21 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import {
   dropLocalTable,
   dropLocalTablesDb,
-  getCallsTodayLocalDb,
-  getDailyChartsData,
   getDatesAndTypeForCalendarView,
-  getDoctorsSchedLocalDb,
   getProductRecordsLocalDb,
-  insertDummyRecords,
   saveProductsLocalDb,
   saveUserSyncHistoryLocalDb,
 } from "../utils/localDbUtils";
-import {
-  doctorRecordsSync,
-  getDetailersData,
-  syncProducts,
-  syncUser,
-  syncUserMid,
-} from "../utils/apiUtility";
+import { getComcalAPI, syncUserMid } from "../utils/apiUtility";
 import {
   getCurrentDatePH,
   getCurrentTimePH,
   isTimeBetween12and1PM,
 } from "../utils/dateUtils";
 import Loading from "../components/Loading";
-import { getLocation } from "../utils/currentLocation";
 import { showConfirmAlert } from "../utils/commonUtil";
 import { getQuickCalls } from "../utils/quickCallUtil";
-import {
-  checkPostCallUnsetExist,
-  getPostCallNotesLocalDb,
-  getPreCallNotesLocalDb,
-} from "../utils/callComponentsUtil";
+import { checkPostCallUnsetExist } from "../utils/callComponentsUtil";
 import LoadingProgressBar from "../components/LoadingProgressbar";
 import { useDataContext } from "../context/DataContext";
 import axios from "axios";
@@ -134,13 +119,7 @@ const Settings = () => {
 
   // const MidSync = async () => {
   //   // this is for testing
-  //   const getDetailersRes = await getProductRecordsLocalDb();
-  //   const detailersString = JSON.stringify(getDetailersRes);
-  //   console.log(
-  //     detailersString,
-  //     "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-  //   );
-  //   customToast(`${getDetailersRes}, asdsadsad`);
+  //   const test = await getComcalAPI(authState.user!); // Add non-null assertion since we know user exists here
   // };
 
   const MidSync = async () => {
