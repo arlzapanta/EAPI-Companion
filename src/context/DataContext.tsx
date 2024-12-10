@@ -88,37 +88,38 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     updated_at: string;
   } | null>(null);
 
-  useEffect(() => {
-    if (authState.authenticated && authState.user) {
-      const {
-        first_name,
-        last_name,
-        email,
-        sales_portal_id,
-        territory_id,
-        division,
-        user_type,
-      } = authState.user;
-      setUserInfo({
-        first_name,
-        last_name,
-        email,
-        sales_portal_id,
-        territory_id,
-        territory_name: "",
-        district_id: "",
-        division,
-        user_type,
-        created_at: "",
-        updated_at: "",
-      });
-      if (user_type == "admin" || email == "test@123.com") {
-        setCurrentAPIkey(API_KEY_DEV);
-      } else {
-        setCurrentAPIkey(API_KEY);
-      }
-    }
-  }, [authState]);
+  // useEffect(() => {
+  //   if (authState.authenticated && authState.user) {
+  //     const {
+  //       first_name,
+  //       last_name,
+  //       email,
+  //       sales_portal_id,
+  //       territory_id,
+  //       division,
+  //       user_type,
+  //     } = authState.user;
+  //     setUserInfo({
+  //       first_name,
+  //       last_name,
+  //       email,
+  //       sales_portal_id,
+  //       territory_id,
+  //       territory_name: "",
+  //       district_id: "",
+  //       division,
+  //       user_type,
+  //       created_at: "",
+  //       updated_at: "",
+  //     });
+  //     if (user_type == "admin" || email == "test@123.com") {
+  //       setCurrentAPIkey(API_KEY_DEV);
+  //     } else {
+  //       setCurrentAPIkey(API_KEY);
+  //     }
+  //   }
+  // }, [authState]);
+
   // ***************************************************************************
   // ***************************************************************************
   // DASHBOARD DATA START
@@ -127,7 +128,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const actualColor = "#046E37";
   const plottedColor = "lightgray";
   const [currentDate, setCurrentDate] = useState<string>("");
-  const [currentAPIkey, setCurrentAPIkey] = useState<string>("");
+  const [currentAPIkey, setCurrentAPIkey] = useState<string>(API_KEY);
   const [calendarData, setCalendarData] = useState<CalendarProps>({ data: [] });
   const [configData, setConfigData] = useState<AppConfigRecord[]>([]);
   const [comcalData, setComcalData] = useState<ComcalDetailersRecord[]>([]);
