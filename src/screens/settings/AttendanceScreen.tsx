@@ -16,6 +16,7 @@ import {
   saveUserSyncHistoryLocalDb,
   dropLocalTables,
   getDatesAndTypeForCalendarView,
+  delete2MonthsRecords,
 } from "../../utils/localDbUtils";
 import Octicons from "@expo/vector-icons/Octicons";
 import {
@@ -265,6 +266,9 @@ const Attendance: React.FC = () => {
             progress: 0.9,
             text: "Saving : Sync logs",
           });
+
+          await delete2MonthsRecords();
+
           await saveUserSyncHistoryLocalDb(
             userInfo,
             1,
