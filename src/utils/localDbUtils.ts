@@ -444,6 +444,33 @@ export const saveUserSyncHistoryLocalDb = async (
   return result;
 };
 
+export const delete2MonthsRecords = async () => {
+  const db = await SQLite.openDatabaseAsync("cmms", {
+    useNewConnection: true,
+  });
+
+  await db.execAsync(createIfNE_rescheduleHistory);
+  await db.execAsync(createIfNE_userAttendance);
+  await db.execAsync(createIfNE_userSyncHistory);
+
+  await db.execAsync(
+    `DELETE FROM user_sync_history_tbl
+        WHERE DATE(date) < DATE('now', '-2 month');`
+  );
+
+  await db.execAsync(
+    `DELETE FROM user_attendance_tbl
+      WHERE DATE(date) < DATE('now', '-2 month');`
+  );
+
+  await db.execAsync(
+    `DELETE FROM reschedule_history_tbl
+      WHERE DATE(date) < DATE('now', '-2 month');`
+  );
+
+  db.closeSync();
+};
+
 export const saveRescheduleHistoryLocalDb = async (
   rescheduleDetails: RescheduleDetails[]
 ): Promise<string> => {

@@ -16,6 +16,7 @@ import {
   saveUserSyncHistoryLocalDb,
   dropLocalTables,
   getDatesAndTypeForCalendarView,
+  delete2MonthsRecords,
 } from "../../utils/localDbUtils";
 import Octicons from "@expo/vector-icons/Octicons";
 import {
@@ -327,6 +328,7 @@ const Attendance: React.FC = () => {
             progress: 0.1,
             text: "Syncing data : reschedule requests",
           });
+          await delete2MonthsRecords();
           await doctorRecordsSync(userInfo);
           await requestRecordSync(userInfo);
           setLoadingProgressData({
