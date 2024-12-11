@@ -182,8 +182,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         //   100;
         // const remainingPercentage = 100 - completedPercentage;
 
-        dailyPlottingCount = 20;
-        dailyCallsCount = 10;
+        // dailyPlottingCount = 20;
+        // dailyCallsCount = 10;
 
         dailyCallsCount = dailyCallsCount < 15 ? dailyCallsCount : 15;
 
