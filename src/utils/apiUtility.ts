@@ -12,6 +12,7 @@ import {
   saveAppConfigLocalDb,
   saveCallsAPILocalDb,
   saveChartDataLocalDb,
+  saveComcalDetailersLocalDb,
   saveDetailersDataLocalDb,
   saveDoctorListLocalDb,
   saveProductsLocalDb,
@@ -704,6 +705,31 @@ export const getDetailersData = async (): Promise<any[]> => {
       console.error("API getChartData Error request123123:", request);
     } else {
       console.error("An unexpected error occurred getDetailersData:", error);
+    }
+    throw error;
+  }
+};
+
+export const getComcalAPI = async (user: User): Promise<any> => {
+  try {
+    const response = await axios.post(`${useAPIKey(user)}/getComcalDetailers`, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    if (response.data.isProceed) {
+      await saveComcalDetailersLocalDb(response.data.data);
+    }
+  } catch (error: any) {
+    if (axios.isAxiosError(error)) {
+      const { response, request, message } = error;
+      console.error("API Error message:", message);
+      console.error("API Error response data:", response?.data);
+      console.error("API Error response status:", response?.status);
+      console.error("API Error response headers:", response?.headers);
+      console.error("API Error request:", request);
+    } else {
+      console.error("An unexpected error occurred getComcalAPI:", error);
     }
     throw error;
   }

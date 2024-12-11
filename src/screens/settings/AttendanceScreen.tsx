@@ -25,6 +25,7 @@ import {
   doctorRecordsSync,
   getCallsAPI,
   getChartData,
+  getComcalAPI,
   getConfig,
   getDoctors,
   getReschedulesData,
@@ -45,6 +46,8 @@ import { checkPostCallUnsetExist } from "../../utils/callComponentsUtil";
 import { useDataContext } from "../../context/DataContext";
 import { useRefreshFetchDataContext } from "../../context/RefreshFetchDataContext";
 import LoadingProgressBar from "../../components/LoadingProgressbar";
+import { getCurrentDatePH } from "../../utils/dateUtils";
+import moment from "moment";
 
 export const useStyles = (theme: string) => {
   const { configData } = useDataContext();
@@ -74,7 +77,7 @@ const Attendance: React.FC = () => {
   const [loadingProgressData, setLoadingProgressData] =
     useState<LoadingSubRecords>({
       progress: 0.001,
-      text: "Syncing data ... Please wait",
+      text: "Please wait",
     });
   const [hasTimedIn, setHasTimedIn] = useState(false);
   const [hasTimedOut, setHasTimedOut] = useState(false);
@@ -191,18 +194,24 @@ const Attendance: React.FC = () => {
             text: "Preparing ...",
           });
           await dropLocalTables([
-            "detailers_tbl",
-            "quick_call_tbl",
-            "reschedule_req_tbl",
-            "schedule_API_tbl",
+            "app_config_tbl",
             "doctors_tbl",
-            "pre_call_notes_tbl",
-            "post_call_notes_tbl",
+            "reschedule_req_tbl",
             "chart_data_tbl",
             "calls_tbl",
+            "schedule_API_tbl",
+            "quick_call_tbl",
+            "pre_call_notes_tbl",
+            "post_call_notes_tbl",
           ]);
-
-          setLoading(true);
+          const currentMoment = moment(await getCurrentDatePH());
+          // if (currentMoment.date() === 1) {
+          setLoadingProgressData({
+            progress: 0.1,
+            text: "Fetching data : Communication Calendar",
+          });
+          await getComcalAPI(userInfo);
+          // }
           setLoadingProgressData({
             progress: 0.2,
             text: "Fetching data : reschedule requests",
@@ -240,15 +249,15 @@ const Attendance: React.FC = () => {
           });
         } catch (error) {
           await dropLocalTables([
-            "detailers_tbl",
-            "quick_call_tbl",
-            "reschedule_req_tbl",
-            "schedule_API_tbl",
-            "calls_tbl",
+            "app_config_tbl",
             "doctors_tbl",
+            "reschedule_req_tbl",
+            "chart_data_tbl",
+            "calls_tbl",
+            "schedule_API_tbl",
+            "quick_call_tbl",
             "pre_call_notes_tbl",
             "post_call_notes_tbl",
-            "chart_data_tbl",
           ]);
           hasError = true;
         }
@@ -445,15 +454,6 @@ const Attendance: React.FC = () => {
               <View style={styles.centerItems}>
                 {!hasTimedIn && !loading && (
                   <>
-                    <View style={styles.requirementStatus}>
-                      <Text style={styles.requirementText}>
-                        Signature: {signatureVal ? "✅" : "❌"}
-                      </Text>
-                      <Text style={styles.requirementText}>
-                        Photo: {selfieVal ? "✅" : "❌"}
-                      </Text>
-                    </View>
-
                     <TouchableOpacity
                       onPress={
                         signatureVal && selfieVal
@@ -474,7 +474,9 @@ const Attendance: React.FC = () => {
                       />
                       <Text style={styles.buttonText}>
                         {!(signatureVal && selfieVal)
-                          ? "Complete Requirements First"
+                          ? `Complete Requirements (Signature ${
+                              signatureVal ? "✅" : "❌"
+                            } | Photo ${selfieVal ? "✅" : "❌"})`
                           : "Time In"}
                       </Text>
                     </TouchableOpacity>

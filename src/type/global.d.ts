@@ -121,6 +121,22 @@ declare global {
     color: string;
   }
 
+  export interface ComcalDetailersRecord {
+    id: string;
+    category: string;
+    product_id: string;
+    item_code: string;
+    item_description: string;
+    detailer: string;
+    created_date: string;
+  }
+
+  export interface ComcalResponseData {
+    coreProductData: ProductRecord[];
+    secondaryProductData: ProductRecord[];
+    reminderProductData: ProductRecord[];
+  }
+
   interface DailyChartData {
     calls_count: number;
     schedule_api_count: number;

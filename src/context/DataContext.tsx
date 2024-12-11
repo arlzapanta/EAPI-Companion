@@ -11,12 +11,9 @@ import {
   getDatesAndTypeForCalendarView,
   getProductRecordsLocalDb,
   getConfigLocalDb,
+  getComcalDataLocalDb,
 } from "../utils/localDbUtils";
 import { useRefreshFetchDataContext } from "../context/RefreshFetchDataContext";
-import { getQuickCalls } from "../utils/quickCallUtil";
-import { useAuth } from "../context/AuthContext";
-import { API_KEY, API_KEY_DEV } from "@env";
-
 // todo : add necessary states from components
 interface DataContextProps<T> {
   currentDate: string;
@@ -34,6 +31,7 @@ interface DataContextProps<T> {
   ytdData: chartYtdData[];
   isLoading: boolean;
   configData: AppConfigRecord[];
+  comcalData: ComcalDetailersRecord[];
   loadingGlobal: LoadingSubRecords;
   isSimpleLoading: boolean;
   isDashboardLoading: boolean;
@@ -41,7 +39,6 @@ interface DataContextProps<T> {
   isActualLoading: boolean;
   isDoctorLoading: boolean;
   isQuickLoading: boolean;
-  currentAPIkey: string;
   detailersRecord: T[];
   productRecord: ProductWoDetailsRecord[];
   ytdDataMonthValues: Array<{
@@ -71,52 +68,6 @@ const DataContext = createContext<
 >(undefined);
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
-  const { authState } = useAuth();
-  const [userInfo, setUserInfo] = useState<{
-    first_name: string;
-    last_name: string;
-    email: string;
-    sales_portal_id: string;
-    territory_id: string;
-    territory_name: string;
-    district_id: string;
-    division: string;
-    user_type: string;
-    created_at: string;
-    updated_at: string;
-  } | null>(null);
-
-  useEffect(() => {
-    if (authState.authenticated && authState.user) {
-      const {
-        first_name,
-        last_name,
-        email,
-        sales_portal_id,
-        territory_id,
-        division,
-        user_type,
-      } = authState.user;
-      setUserInfo({
-        first_name,
-        last_name,
-        email,
-        sales_portal_id,
-        territory_id,
-        territory_name: "",
-        district_id: "",
-        division,
-        user_type,
-        created_at: "",
-        updated_at: "",
-      });
-      if (user_type == "admin" || email == "test@123.com") {
-        setCurrentAPIkey(API_KEY_DEV);
-      } else {
-        setCurrentAPIkey(API_KEY);
-      }
-    }
-  }, [authState]);
   // ***************************************************************************
   // ***************************************************************************
   // DASHBOARD DATA START
@@ -125,9 +76,9 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const actualColor = "#046E37";
   const plottedColor = "lightgray";
   const [currentDate, setCurrentDate] = useState<string>("");
-  const [currentAPIkey, setCurrentAPIkey] = useState<string>("");
   const [calendarData, setCalendarData] = useState<CalendarProps>({ data: [] });
   const [configData, setConfigData] = useState<AppConfigRecord[]>([]);
+  const [comcalData, setComcalData] = useState<ComcalDetailersRecord[]>([]);
   const [chartData, setChartData] = useState<ChartDashboardRecord[]>([]);
   const [dailyDataCompletion, setDailyDataCompletion] = useState<chartData[]>([
     { value: 0, color: "#046E37" },
@@ -177,6 +128,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
 
   const fetchDashboardData = async () => {
     try {
+      setIsDashboardLoading(true);
       const date = await getCurrentDate();
       setCurrentDate(date);
 
@@ -230,8 +182,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         //   100;
         // const remainingPercentage = 100 - completedPercentage;
 
-        // dailyPlottingCount = 20;
-        // dailyCallsCount = 10;
+        dailyPlottingCount = 20;
+        dailyCallsCount = 10;
 
         dailyCallsCount = dailyCallsCount < 15 ? dailyCallsCount : 15;
 
@@ -291,16 +243,18 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         setMonthlyTargetVal(monthlyTargetCount);
         const monthlyData: chartData[] = [
           {
-            value: monthlyPlottingCount - monthlyCallsCount,
+            // value: monthlyPlottingCount - monthlyCallsCount,
+            value: monthlyTargetCount,
             color: "lightgray",
           },
           { value: monthlyCallsCount, color: "#046E37" },
           // { value: monthlyTargetCount, color: "lightgray" },
         ];
+
         setYearlyTargetVal(yearlyTargetCount);
         const yearlyData: chartData[] = [
           // { value: yearlyPlottingCount - yearlyCallsCount, color: "#6ED7A5" },
-          { value: yearlyPlottingCount - yearlyCallsCount, color: "lightgray" },
+          { value: yearlyTargetCount, color: "lightgray" },
           { value: yearlyCallsCount, color: "#046E37" },
           // { value: yearlyTargetCount, color: "lightgray" },
         ];
@@ -321,6 +275,8 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error("Error fetching chart data123:", error);
+    } finally {
+      setIsDashboardLoading(false);
     }
   };
 
@@ -422,11 +378,22 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     { value: ytdData[11]?.value[1] ?? 0, frontColor: plottedColor },
   ];
 
+  const fetchComcalData = async () => {
+    try {
+      const comcalData =
+        (await getComcalDataLocalDb()) as ComcalDetailersRecord[];
+      setComcalData(comcalData);
+    } catch (error) {
+      console.log("fetchConfigData error", error);
+    }
+  };
+
   useEffect(() => {
     try {
       setIsDashboardLoading(true);
       fetchDashboardData();
       fetchConfigData();
+      fetchComcalData();
     } catch (error) {
       console.log("fetchDashboardData error", error);
     } finally {
@@ -527,10 +494,10 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
         yearlyTargetVal,
         yearlyData,
         ytdData,
+        comcalData,
         isLoading,
         isDashboardLoading,
         ytdDataMonthValues,
-        currentAPIkey,
         configData,
         loadingGlobal,
         isSimpleLoading,
