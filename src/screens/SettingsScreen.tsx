@@ -318,6 +318,12 @@ const Settings = () => {
         console.error("An unexpected error occurred syncProducts:", error);
       }
       throw error;
+    } finally {
+      setIsLoading(false);
+      setLoadingGlobal({
+        progress: 0,
+        text: "",
+      });
     }
   };
 

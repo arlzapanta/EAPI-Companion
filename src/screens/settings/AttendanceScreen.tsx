@@ -205,13 +205,13 @@ const Attendance: React.FC = () => {
             "post_call_notes_tbl",
           ]);
           const currentMoment = moment(await getCurrentDatePH());
-          // if (currentMoment.date() === 1) {
-          setLoadingProgressData({
-            progress: 0.1,
-            text: "Fetching data : Communication Calendar",
-          });
-          await getComcalAPI(userInfo);
-          // }
+          if (currentMoment.date() === 1) {
+            setLoadingProgressData({
+              progress: 0.1,
+              text: "Fetching data : Communication Calendar",
+            });
+            await getComcalAPI(userInfo);
+          }
           setLoadingProgressData({
             progress: 0.2,
             text: "Fetching data : reschedule requests",
