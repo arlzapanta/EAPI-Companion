@@ -184,14 +184,11 @@ export const syncUser = async (user: User): Promise<any> => {
     if (allSuccessful) {
       await updateActualCallsToDone();
       await dropLocalTables([
-        "detailers_tbl",
         "quick_call_tbl",
-        "reschedule_req_tbl",
         "schedule_API_tbl",
         "doctors_tbl",
         "pre_call_notes_tbl",
         "post_call_notes_tbl",
-        "chart_data_tbl",
       ]);
     }
 
